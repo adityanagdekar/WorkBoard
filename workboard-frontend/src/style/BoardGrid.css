@@ -1,0 +1,113 @@
+/* Main Board Container */
+/* html,
+body {
+  overflow-x: hidden;
+  max-width: 100vw;
+  margin: 0;
+  padding: 0;
+} */
+
+* {
+  margin: 0;
+  box-sizing: border-box;
+}
+
+body {
+  overflow-x: hidden;
+  max-width: 100vw;
+  padding: 1rem;
+}
+
+.BoardContainer {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  min-height: 80vh;
+  align-items: center;
+  background-color: #f8f9fc;
+  border: 1px solid #2b6cb0;
+  border-radius: 1rem;
+  font-family: "Inter", sans-serif;
+  padding: 1rem;
+}
+
+.BoardHeader {
+  width: 100%;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 1rem;
+  flex-wrap: wrap;
+  margin: 0;
+  /* border: 1px solid black; */
+}
+
+.BoardHeaderTitle {
+  flex-grow: 1;
+  /* border: 1px solid black; */
+}
+
+.BoardHeaderBtnContainer {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  /* border: 1px solid black; */
+}
+
+/* Horizontal scrollable list row */
+.PhaseContainer {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  width: 100%;
+  padding: 1.5rem 0;
+  gap: 1.5rem;
+  overflow-x: auto;
+}
+
+/* Each list panel (To-Do, WIP, etc.) */
+.BoardPhase {
+  background-color: #ffffff;
+  border-radius: 1rem; /* 16px */
+  box-shadow: 0 0.25rem 0.75rem rgba(38, 78, 118, 0.06);
+  min-width: 18rem; /* ~288px */
+  max-width: 20rem; /* ~320px */
+  padding: 1rem;
+  display: flex;
+  flex-direction: column;
+}
+
+/* List heading */
+.BoardPhaseHeader {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  margin-bottom: 1rem; /* add spacing below if needed */
+  border: none;
+  /* border: 1px solid black; */
+}
+
+.BoardPhaseHeader p {
+  font-weight: 600;
+  font-size: 1.125rem; /* 18px */
+  color: #1a202c;
+  margin-bottom: 1rem;
+  flex-grow: 1;
+  margin: 0; /* ✅ remove default spacing */
+  padding: 0.25rem 0; /* ✅ optional: vertical centering tweak */
+  /* border: 1px solid black; */
+}
+
+/* Task container inside a list */
+.TaskContainer {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+  border: 1px solid black;
+  border-radius: 1rem;
+  padding: 1rem;
+}

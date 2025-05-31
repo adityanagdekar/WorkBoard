@@ -1,0 +1,38 @@
+/* Individual task card */
+.TaskCard {
+  background-color: #fdfdfe;
+  border: 1px solid #edf2f7;
+  padding: 0.75rem 1rem;
+  border-radius: 0.75rem;
+  box-shadow: 0 0.063rem 0.188rem rgba(44, 62, 80, 0.05);
+  transition: box-shadow 0.2s ease;
+}
+
+.TaskCard:hover {
+  box-shadow: 0 0.25rem 1rem rgba(38, 78, 118, 0.1);
+}
+
+.TaskCardHeader {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  flex-wrap: wrap;
+  width: 100%;
+}
+
+.TaskCardHeader h4 {
+  flex-grow: 1;
+}
+
+.TaskCard h4 {
+  margin: 0;
+  font-size: 1rem; /* 16px */
+  font-weight: 600;
+  color: #2d3748;
+}
+
+.TaskCard p {
+  margin: 0.25rem 0 0;
+  font-size: 0.875rem;
+  color: #4a5568;
+}
