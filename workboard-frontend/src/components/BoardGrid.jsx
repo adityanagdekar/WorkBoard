@@ -2,6 +2,7 @@ import { useState } from "react";
 import BoardBtn from "./BoardBtn";
 import "../style/BoardGrid.css";
 import TaskCard from "./TaskCard";
+import Modal from "./Modal";
 
 const BoardGrid = () => {
   const priorities = ["P1", "P2"];
@@ -23,6 +24,21 @@ const BoardGrid = () => {
       cards: [{ name: "card 2", description: "This is the card 2" }],
     },
   ]);
+
+  const [toggleModal, setModal] = useState(false);
+
+  const [phaseToRemoveIdx, setPhaseToRemoveIdx] = useState(null);
+
+  const openModalForPhase = (index) => {
+    console.log("openModalForPhase with index: ", index);
+    setPhaseToRemoveIdx(index);
+    setModal(true);
+  };
+
+  const closeModal = () => {
+    console.log("close the modal");
+    setModal(false);
+  };
 
   const getListName = (text) => {
     return text
@@ -87,12 +103,14 @@ const BoardGrid = () => {
 
   const removePhaseOnClick = (index) => {
     console.log("removePhaseOnClick index: ", index);
-    setDataList((prev) => {
-      const updatedPhases = [...prev];
-      // Remove from source
-      updatedPhases.splice(index, 1);
-      return updatedPhases;
-    });
+    if (index != null) {
+      setDataList((prev) => {
+        const updatedPhases = [...prev];
+        // Remove from source
+        updatedPhases.splice(index, 1);
+        return updatedPhases;
+      });
+    }
   };
 
   const taskMenuOnClick = () => {
@@ -186,7 +204,7 @@ const BoardGrid = () => {
                 <div className="BoardPhaseHeader">
                   <p>{phase.phase_name}</p>
                   <BoardBtn
-                    onClick={(e) => removePhaseOnClick(phaseIdx)}
+                    onClick={() => openModalForPhase(phaseIdx)}
                     label="X"
                     variant="close"
                   />
@@ -227,6 +245,19 @@ const BoardGrid = () => {
           <p>Click on Add Phase button to Add new phases</p>
         )}
       </div>
+      {toggleModal && (
+        <Modal
+          modalMsg={"Do you want to remove this Phase ?"}
+          modalYesOnClick={() => {
+            removePhaseOnClick(phaseToRemoveIdx);
+            closeModal();
+          }}
+          modalNoOnClick={() => {
+            closeModal();
+          }}
+          onBackdropClick={() => closeModal()}
+        />
+      )}
     </div>
   );
 };
