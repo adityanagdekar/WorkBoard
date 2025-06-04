@@ -1,0 +1,8 @@
+
+CREATE TABLE board (
+    id SERIAL PRIMARY KEY,
+    user_id INTEGER NOT NULL,
+    name VARCHAR(255) NOT NULL,
+    created_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT fk_board_user FOREIGN KEY (user_id) REFERENCES app_user(id) ON DELETE CASCADE
+);

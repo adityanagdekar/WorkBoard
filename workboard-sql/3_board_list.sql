@@ -1,0 +1,8 @@
+
+CREATE TABLE board_list (
+    id SERIAL PRIMARY KEY,
+    board_id INTEGER NOT NULL,
+    name VARCHAR(255) NOT NULL,
+    created_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT fk_list_board FOREIGN KEY (board_id) REFERENCES board(id) ON DELETE CASCADE
+);
