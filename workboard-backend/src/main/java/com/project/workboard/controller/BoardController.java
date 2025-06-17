@@ -16,6 +16,7 @@ import com.project.workboard.repository.BoardRepository;
 @RequestMapping("/api/board")
 public class BoardController {
 
+	
 	@Autowired
 	private BoardRepository boardRepository;
 	

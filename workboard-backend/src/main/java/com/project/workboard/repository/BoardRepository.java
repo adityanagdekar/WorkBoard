@@ -6,6 +6,6 @@ import org.springframework.stereotype.Repository;
 import com.project.workboard.entity.Board;
 
 @Repository
-public interface BoardRepository extends JpaRepository<Board, Long> {
+public interface BoardRepository extends JpaRepository<Board, Integer> {
 
 }

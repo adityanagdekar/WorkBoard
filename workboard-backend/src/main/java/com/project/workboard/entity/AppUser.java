@@ -12,10 +12,19 @@ import jakarta.persistence.Table;
 public class AppUser {
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
-	private Integer user_id;
+	private Integer id;
 
 	private String name;
 	private String email;
+	private String pwd;
+
+	public String getPwd() {
+		return pwd;
+	}
+
+	public void setPwd(String pwd) {
+		this.pwd = pwd;
+	}
 
 	public String getName() {
 		return name;
@@ -32,6 +41,7 @@ public class AppUser {
 	public void setEmail(String email) {
 		this.email = email;
 	}
+
 
 	// Add @ManyToOne or @OneToMany relationships here if needed
 }

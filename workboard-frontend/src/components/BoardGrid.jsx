@@ -3,6 +3,7 @@ import BoardBtn from "./BoardBtn";
 import "../style/BoardGrid.css";
 import TaskCard from "./TaskCard";
 import Modal from "./Modal";
+import BoardContainer from "./BoardContainer";
 
 const BoardGrid = () => {
   const priorities = ["P1", "P2"];
@@ -178,7 +179,7 @@ const BoardGrid = () => {
   };
 
   return (
-    <div className="BoardContainer">
+    <BoardContainer>
       <div className="BoardHeader">
         <div className="BoardHeaderTitle">
           <h2>Project Demo</h2>
@@ -258,7 +259,7 @@ const BoardGrid = () => {
           onBackdropClick={() => closeModal()}
         />
       )}
-    </div>
+    </BoardContainer>
   );
 };
 export default BoardGrid;

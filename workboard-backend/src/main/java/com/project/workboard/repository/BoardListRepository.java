@@ -6,6 +6,6 @@ import org.springframework.stereotype.Repository;
 import com.project.workboard.entity.BoardList;
 
 @Repository
-public interface BoardListRepository extends JpaRepository<BoardList, Long>{
+public interface BoardListRepository extends JpaRepository<BoardList, Integer>{
 
 }

@@ -1,0 +1,12 @@
+.BoardContainer {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  min-height: 80vh;
+  align-items: center;
+  background-color: #f8f9fc;
+  border: 1px solid #2b6cb0;
+  border-radius: 0.75rem;
+  font-family: "Inter", sans-serif;
+  padding: 1rem;
+}

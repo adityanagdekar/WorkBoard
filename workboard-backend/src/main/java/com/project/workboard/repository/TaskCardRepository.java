@@ -6,6 +6,6 @@ import org.springframework.stereotype.Repository;
 import com.project.workboard.entity.TaskCard;
 
 @Repository
-public interface TaskCardRepository extends JpaRepository<TaskCard, Long>{
+public interface TaskCardRepository extends JpaRepository<TaskCard, Integer>{
 
 }
