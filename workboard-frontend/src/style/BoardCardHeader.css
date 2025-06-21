@@ -1,0 +1,14 @@
+.BoardCardHeader {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  margin-bottom: 1rem; /* add spacing below if needed */
+  border: none;
+}
+
+.BoardCardHeader p {
+  font-weight: bold;
+  cursor: pointer;
+}

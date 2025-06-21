@@ -1,0 +1,26 @@
+.Dashboard-Container {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  padding: 1rem;
+}
+
+.DashboardHeader {
+  width: 100%;
+  margin: 1rem;
+  padding: 0.25rem;
+  text-align: left;
+}
+
+.BoardCardContainer {
+  width: 100%;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid black;
+  border-radius: 1rem;
+  padding: 1rem;
+}

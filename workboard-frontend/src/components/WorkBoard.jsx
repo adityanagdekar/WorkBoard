@@ -1,9 +1,8 @@
 import BoardGrid from "./BoardGrid";
-import WorkBoardHeader from "./WorkBoardHeader";
+import MainHeader from "./MainHeader";
 const WorkBoard = () => {
   return (
     <div>
-      <WorkBoardHeader message="Workboard" />
       <BoardGrid />
     </div>
   );

@@ -1,14 +1,24 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import BoardBtn from "./BoardBtn";
 import "../style/BoardGrid.css";
 import TaskCard from "./TaskCard";
 import Modal from "./Modal";
 import BoardContainer from "./BoardContainer";
+import BoardHeader from "./BoardHeader";
+import MainHeader from "./MainHeader";
 
 const BoardGrid = () => {
+  const navigate = useNavigate();
+
   const priorities = ["P1", "P2"];
   const phases = ["To-Do", "WIP", "Test", "Review", "Deploy"];
-  const headerBtnLabels = ["Add Phase", "Add Members", "Assign Roles"];
+  const headerBtnLabels = [
+    "Projects",
+    "Add Phase",
+    "Add Members",
+    "Assign Roles",
+  ];
 
   const taskExists = (phase) => {
     if (["To-Do", "WIP", "Test"].includes(phase)) return true;
@@ -68,6 +78,9 @@ const BoardGrid = () => {
 
   const handleHeaderBtnClick = (label) => {
     switch (label) {
+      case "Projects":
+        backToDashboard();
+        break;
       case "Add Phase":
         addPhaseOnClick();
         break;
@@ -82,6 +95,10 @@ const BoardGrid = () => {
       default:
         console.warn("Unknown header button clicked");
     }
+  };
+
+  const backToDashboard = () => {
+    navigate("/dashboard");
   };
 
   const addPhaseOnClick = () => {
@@ -136,7 +153,7 @@ const BoardGrid = () => {
     taskCard.style.opacity = 1;
   };
 
-  const handTaskContainerOnDrop = (e, targetPhaseIdx) => {
+  const handleTaskContainerOnDrop = (e, targetPhaseIdx) => {
     console.log("on drop for task container");
 
     const { fromPhaseIdx, fromCardIdx } = JSON.parse(
@@ -180,23 +197,13 @@ const BoardGrid = () => {
 
   return (
     <BoardContainer>
-      <div className="BoardHeader">
-        <div className="BoardHeaderTitle">
-          <h2>Project Demo</h2>
-        </div>
-        <div className="BoardHeaderBtnContainer">
-          {headerBtnLabels.map((headerBtnLabel, index) => {
-            return (
-              <BoardBtn
-                key={index}
-                onClick={() => handleHeaderBtnClick(headerBtnLabel)}
-                label={headerBtnLabel}
-                variant="header"
-              />
-            );
-          })}
-        </div>
-      </div>
+      <MainHeader message="Workboard" />
+
+      <BoardHeader
+        projectName={"Project Demo"}
+        btnLabels={headerBtnLabels}
+        headerBtnOnClick={handleHeaderBtnClick}
+      />
       <div className="PhaseContainer">
         {dataList.length > 0 ? (
           dataList.map((phase, phaseIdx) => {
@@ -212,7 +219,7 @@ const BoardGrid = () => {
                 </div>
                 <div
                   className="TaskContainer"
-                  onDrop={(e) => handTaskContainerOnDrop(e, phaseIdx)}
+                  onDrop={(e) => handleTaskContainerOnDrop(e, phaseIdx)}
                   onDragOver={handleTaskContainerDragOver}
                 >
                   {/* <p>These are the cards in {data.phase_name}</p> */}

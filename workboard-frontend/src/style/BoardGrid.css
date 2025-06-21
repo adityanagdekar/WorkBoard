@@ -39,12 +39,10 @@ body {
   gap: 1rem;
   flex-wrap: wrap;
   margin: 0;
-  /* border: 1px solid black; */
 }
 
 .BoardHeaderTitle {
   flex-grow: 1;
-  /* border: 1px solid black; */
 }
 
 .BoardHeaderBtnContainer {
@@ -52,7 +50,6 @@ body {
   flex-direction: row;
   flex-wrap: wrap;
   gap: 0.5rem;
-  /* border: 1px solid black; */
 }
 
 /* Horizontal scrollable list row */
