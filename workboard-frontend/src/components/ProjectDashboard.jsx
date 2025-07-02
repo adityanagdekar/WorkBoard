@@ -6,12 +6,14 @@ import BoardCard from "./BoardCard";
 import BoardCardHeader from "./BoardCardHeader";
 import BoardHeader from "./BoardHeader";
 import Modal from "./Modal";
+import AddProjectModal from "./AddProjectModal";
 import "../style/ProjectDashboard.css";
 
 const ProjectDashboard = () => {
   const navigate = useNavigate();
 
   const [toggleModal, setModal] = useState(false);
+  const [toggleAddProjectModal, setAddProjectModal] = useState(false);
 
   const [projectList, setProjectList] = useState([
     {
@@ -48,7 +50,7 @@ const ProjectDashboard = () => {
   const handleHeaderBtnClick = (label) => {
     switch (label) {
       case "Add Project":
-        console.log("Add Project clicked");
+        showAddProjectModal();
         break;
       case "Add Members":
         console.log("Add Members clicked");
@@ -61,6 +63,16 @@ const ProjectDashboard = () => {
       default:
         console.warn("Unknown header button clicked");
     }
+  };
+
+  const showAddProjectModal = () => {
+    console.log("show Project modal");
+    setAddProjectModal((prevState) => prevState || true);
+  };
+
+  const closeAddProjectModal = () => {
+    console.log("close Project modal");
+    setAddProjectModal((prevState) => prevState && false);
   };
 
   const boardCardHeaderOnClick = () => {
@@ -81,7 +93,7 @@ const ProjectDashboard = () => {
   const removeProjectOnClick = (index) => {
     console.log("removeProjectOnClick index: ", index);
     if (index != null) {
-      setDataList((prev) => {
+      setProjectList((prev) => {
         const updatedProjectList = [...prev];
         // Remove from source
         updatedProjectList.splice(index, 1);
@@ -98,7 +110,7 @@ const ProjectDashboard = () => {
         <BoardHeader
           projectName={"Projects"}
           btnLabels={headerBtnLabels}
-          onClick={handleHeaderBtnClick}
+          headerBtnOnClick={handleHeaderBtnClick}
         />
 
         <div className="BoardCardContainer">
@@ -122,13 +134,20 @@ const ProjectDashboard = () => {
           <Modal
             modalMsg={"Do you want to remove this Project ?"}
             modalYesOnClick={() => {
-              removeProjectOnClick(phaseToRemoveIdx);
+              removeProjectOnClick(projectToRemoveIdx);
               closeModal();
             }}
             modalNoOnClick={() => {
               closeModal();
             }}
             onBackdropClick={() => closeModal()}
+          />
+        )}
+
+        {toggleAddProjectModal && (
+          <AddProjectModal
+            doneBtnOnClick={closeAddProjectModal}
+            onBackDropClick={closeAddProjectModal}
           />
         )}
       </div>

@@ -61,3 +61,7 @@
 .BoardBtn--modal-no button:hover {
   background-color: #c53030;
 }
+
+.BoardBtn--register button:hover {
+  background-color: #4caf50;
+}

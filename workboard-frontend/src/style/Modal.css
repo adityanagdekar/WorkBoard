@@ -29,12 +29,32 @@
   font-family: "Inter", sans-serif;
 }
 
-.ModalContent {
-  font-weight: 700;
+.ModalContent,
+.ModalContent-Project {
+  width: 100%;
+  font-weight: 400;
   font-size: 1.125rem;
   color: #2d3748;
   margin-bottom: 1.5rem;
-  text-align: center;
+
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  /* border: 1px solid black; */
+}
+
+.ModalContent {
+  align-items: center;
+}
+
+.ModalContent-Project label {
+  margin: 1rem 0rem;
+}
+
+.ModalContent-Project input {
+  padding: 0.5rem;
+  border-width: 0.05rem;
+  border-radius: 0.25rem;
 }
 
 .ModalFooter {
