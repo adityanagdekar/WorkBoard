@@ -45,7 +45,12 @@ const ProjectDashboard = () => {
 
   const [projectToRemoveIdx, setProjectToRemoveIdx] = useState(null);
 
-  const headerBtnLabels = ["Add Project", "Add Members", "Assign Roles"];
+  const headerBtnLabels = [
+    "Add Project",
+    "Add Members",
+    "Assign Roles",
+    "Logout",
+  ];
 
   const handleHeaderBtnClick = (label) => {
     switch (label) {
@@ -54,14 +59,32 @@ const ProjectDashboard = () => {
         break;
       case "Add Members":
         console.log("Add Members clicked");
-        // addMembersOnClick(); // Implement when ready
+        // addMembersOnClick();
         break;
       case "Assign Roles":
         console.log("Assign Roles clicked");
-        // assignRolesOnClick(); // Implement when ready
+        // assignRolesOnClick();
+        break;
+      case "Logout":
+        console.log("Logout btn clicked");
+        handleLogOut();
         break;
       default:
         console.warn("Unknown header button clicked");
+    }
+  };
+
+  const handleLogout = async (navigate) => {
+    try {
+      await axios.post(
+        "http://localhost:8080//api/user/logout",
+        {},
+        { withCredentials: true }
+      );
+      localStorage.clear();
+      navigate("/");
+    } catch (error) {
+      console.error("Logout failed", error);
     }
   };
 

@@ -22,6 +22,10 @@ import com.project.workboard.entity.AppUser;
 import com.project.workboard.repository.AppUserRepository;
 import com.project.workboard.security.JwtService;
 
+import jakarta.servlet.http.Cookie;
+import jakarta.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpSession;
+
 @RestController
 @RequestMapping("/api/user")
 public class AppUserController {
@@ -62,7 +66,8 @@ public class AppUserController {
 	}
 
 	@PostMapping("/login")
-	public ResponseEntity<JwtResponseDTO> loginUser(@RequestBody LoginRequestDTO loginReq) {
+	public ResponseEntity<?> loginUser(@RequestBody LoginRequestDTO loginReq,  
+			HttpServletResponse response) {
 		
 		System.out.println("login req: "+loginReq.toString());
 		
@@ -72,7 +77,28 @@ public class AppUserController {
 								loginReq.getPassword()
 								));
 		String tokenString = jwtService.generateToken(authentication);
-		JwtResponseDTO jwtResponse = new JwtResponseDTO(tokenString);
-		return ResponseEntity.ok(jwtResponse);
+		
+		Cookie jwtCookie = new Cookie("jwt", tokenString);
+		jwtCookie.setHttpOnly(true);
+		jwtCookie.setSecure(true);
+		jwtCookie.setPath("/");
+		jwtCookie.setMaxAge(2*60);
+		response.addCookie(jwtCookie);
+		
+//		JwtResponseDTO jwtResponse = new JwtResponseDTO(tokenString);
+		return ResponseEntity.ok("Logged in successfully");
+	}
+	
+	@PostMapping("/logout")
+    public ResponseEntity<?> logout(HttpServletResponse response) {
+		Cookie cookie = new Cookie("jwt", null);
+	    cookie.setHttpOnly(true);
+	    cookie.setSecure(true);
+	    cookie.setPath("/");
+	    // to delete the cookie immediately
+	    cookie.setMaxAge(0); 
+	    response.addCookie(cookie);
+
+	    return ResponseEntity.ok("Logged out successfully");
 	}
 }
