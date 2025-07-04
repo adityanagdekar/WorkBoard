@@ -1,5 +1,6 @@
 package com.project.workboard.security;
 
+import java.nio.charset.StandardCharsets;
 import java.security.Key;
 import java.util.Date;
 
@@ -16,14 +17,18 @@ import io.jsonwebtoken.security.Keys;
 @Component
 public class JwtService {
 
-	private static final Key KEY = Keys.secretKeyFor(SignatureAlgorithm.HS512);
+//	private static final Key KEY = Keys.secretKeyFor(SignatureAlgorithm.HS512);
+	
+	private static final String SECRET = SecurityConstants.SECRET;
+	private static final Key KEY = Keys.hmacShaKeyFor(SECRET.getBytes(StandardCharsets.UTF_8));
+
 
 	public String generateToken(Authentication authentication) {
 		String email = authentication.getName();
 		Date currentDate = new Date();
 		Date expireDate = new Date(currentDate.getTime() + SecurityConstants.JWT_EXPIRATION);
 
-		String token = Jwts.builder()
+		String tokenString = Jwts.builder()
 				.setSubject(email)
 				.setIssuedAt(currentDate)
 				.setExpiration(expireDate)
@@ -31,8 +36,8 @@ public class JwtService {
 				.compact();
 
 		System.out.println("New JWT :");
-		System.out.println(token);
-		return token;
+		System.out.println(tokenString);
+		return tokenString;
 	}
 
 	public String getEmailFromJWT(String token) {

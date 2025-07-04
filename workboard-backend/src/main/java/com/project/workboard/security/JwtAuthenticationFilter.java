@@ -45,23 +45,30 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 			String token = authHeader.substring(7);
 		*/
 
-		String jwtToken = null;
-		// Read JWT from Cookie
+		String jwtTokenString = ""; 
 	    if (request.getCookies() != null) {
+			// traversing thru all the Cookies to get the JWT token
 	        for (Cookie cookie : request.getCookies()) {
 	            if (cookie.getName().equals("jwt")) {
-	                jwtToken = cookie.getValue();
+	                jwtTokenString = cookie.getValue();
 	                break;
 	            }
 	        }
 	    }
+		System.out.println("jwt token: "+jwtTokenString);
 		
-		String email = jwtService.getEmailFromJWT(jwtToken);
+		if (jwtTokenString.length()==0){
+			// JWT token has not yet been assigned
+			filterChain.doFilter(request, response);
+			return;
+		}
+		
+		String email = jwtService.getEmailFromJWT(jwtTokenString);
 
 		if (email != null && SecurityContextHolder.getContext().getAuthentication() == null) {
 			UserDetails userDetails = userDetailsService.loadUserByUsername(email);
 
-			if (jwtService.validateToken(jwtToken, userDetails)) {
+			if (jwtService.validateToken(jwtTokenString, userDetails)) {
 				UsernamePasswordAuthenticationToken authenticationToken = new 
 						UsernamePasswordAuthenticationToken(userDetails,
 						null, userDetails.getAuthorities());

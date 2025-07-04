@@ -1,5 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import axios from "axios";
+
 import BoardContainer from "./BoardContainer";
 import WorkBoardHeader from "./MainHeader";
 import BoardCard from "./BoardCard";
@@ -7,6 +9,7 @@ import BoardCardHeader from "./BoardCardHeader";
 import BoardHeader from "./BoardHeader";
 import Modal from "./Modal";
 import AddProjectModal from "./AddProjectModal";
+
 import "../style/ProjectDashboard.css";
 
 const ProjectDashboard = () => {
@@ -67,21 +70,25 @@ const ProjectDashboard = () => {
         break;
       case "Logout":
         console.log("Logout btn clicked");
-        handleLogOut();
+        handleLogout();
         break;
       default:
         console.warn("Unknown header button clicked");
     }
   };
 
-  const handleLogout = async (navigate) => {
+  const handleLogout = async () => {
     try {
       await axios.post(
-        "http://localhost:8080//api/user/logout",
+        "http://localhost:8080/api/user/logout",
         {},
-        { withCredentials: true }
+        {
+          withCredentials: true,
+          headers: {
+            "Content-Type": "application/json",
+          },
+        }
       );
-      localStorage.clear();
       navigate("/");
     } catch (error) {
       console.error("Logout failed", error);

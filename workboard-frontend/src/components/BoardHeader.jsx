@@ -12,7 +12,10 @@ const BoardHeader = ({ projectName, btnLabels, headerBtnOnClick }) => {
           return (
             <BoardBtn
               key={index}
-              onClick={() => headerBtnOnClick(headerBtnLabel)}
+              onClick={(e) => {
+                e.preventDefault();
+                headerBtnOnClick(headerBtnLabel);
+              }}
               label={headerBtnLabel}
               variant="header"
             />

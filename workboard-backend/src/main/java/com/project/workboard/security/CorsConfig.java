@@ -20,6 +20,9 @@ public class CorsConfig {
         config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
         // To Allow "Authorization" & "Content-Type" headers used in API communication
         config.setAllowedHeaders(List.of("Authorization", "Content-Type"));
+        // , "X-Requested-With"
+        // bcoz we are sending cookies in our API calls
+//        config.setExposedHeaders(List.of("Set-Cookie"));
         // This is Needed since we'r sending JWT in headers or cookies
         config.setAllowCredentials(true);
         // To cache pre-flight response for 1 hour

@@ -77,12 +77,17 @@ public class AppUserController {
 								loginReq.getPassword()
 								));
 		String tokenString = jwtService.generateToken(authentication);
+		System.out.println("tokenString in AppUserController: "+tokenString);
 		
 		Cookie jwtCookie = new Cookie("jwt", tokenString);
 		jwtCookie.setHttpOnly(true);
-		jwtCookie.setSecure(true);
+		
+		// isLocal = true -> which means we'r currently in dev env.: localhost
+		boolean isLocal = true;
+		jwtCookie.setSecure(!isLocal);
+		
 		jwtCookie.setPath("/");
-		jwtCookie.setMaxAge(2*60);
+		jwtCookie.setMaxAge(10*60);
 		response.addCookie(jwtCookie);
 		
 //		JwtResponseDTO jwtResponse = new JwtResponseDTO(tokenString);
@@ -93,7 +98,7 @@ public class AppUserController {
     public ResponseEntity<?> logout(HttpServletResponse response) {
 		Cookie cookie = new Cookie("jwt", null);
 	    cookie.setHttpOnly(true);
-	    cookie.setSecure(true);
+	    cookie.setSecure(false);
 	    cookie.setPath("/");
 	    // to delete the cookie immediately
 	    cookie.setMaxAge(0); 
