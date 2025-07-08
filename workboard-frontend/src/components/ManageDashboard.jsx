@@ -8,15 +8,15 @@ import BoardCard from "./BoardCard";
 import BoardCardHeader from "./BoardCardHeader";
 import BoardHeader from "./BoardHeader";
 import Modal from "./Modal";
-import AddProjectModal from "./AddProjectModal";
+import AddBoardModal from "./AddBoardModal";
 
-import "../style/ProjectDashboard.css";
+import "../style/ManageDashboard.css";
 
-const ProjectDashboard = () => {
+const ManageDashboard = () => {
   const navigate = useNavigate();
 
   const [toggleModal, setModal] = useState(false);
-  const [toggleAddProjectModal, setAddProjectModal] = useState(false);
+  const [toggleAddBoardModal, setAddBoardModal] = useState(false);
 
   const [projectList, setProjectList] = useState([
     {
@@ -49,7 +49,7 @@ const ProjectDashboard = () => {
   const [projectToRemoveIdx, setProjectToRemoveIdx] = useState(null);
 
   const headerBtnLabels = [
-    "Add Project",
+    "Add Board",
     "Add Members",
     "Assign Roles",
     "Logout",
@@ -57,8 +57,8 @@ const ProjectDashboard = () => {
 
   const handleHeaderBtnClick = (label) => {
     switch (label) {
-      case "Add Project":
-        showAddProjectModal();
+      case "Add Board":
+        showAddBoardModal();
         break;
       case "Add Members":
         console.log("Add Members clicked");
@@ -95,14 +95,14 @@ const ProjectDashboard = () => {
     }
   };
 
-  const showAddProjectModal = () => {
+  const showAddBoardModal = () => {
     console.log("show Project modal");
-    setAddProjectModal((prevState) => prevState || true);
+    setAddBoardModal((prevState) => prevState || true);
   };
 
-  const closeAddProjectModal = () => {
+  const closeAddBoardModal = () => {
     console.log("close Project modal");
-    setAddProjectModal((prevState) => prevState && false);
+    setAddBoardModal((prevState) => prevState && false);
   };
 
   const boardCardHeaderOnClick = () => {
@@ -138,7 +138,7 @@ const ProjectDashboard = () => {
         <WorkBoardHeader message="Workboard" />
 
         <BoardHeader
-          projectName={"Projects"}
+          headerName={"Your Boards"}
           btnLabels={headerBtnLabels}
           headerBtnOnClick={handleHeaderBtnClick}
         />
@@ -174,14 +174,14 @@ const ProjectDashboard = () => {
           />
         )}
 
-        {toggleAddProjectModal && (
-          <AddProjectModal
-            doneBtnOnClick={closeAddProjectModal}
-            onBackDropClick={closeAddProjectModal}
+        {toggleAddBoardModal && (
+          <AddBoardModal
+            doneBtnOnClick={closeAddBoardModal}
+            onBackDropClick={closeAddBoardModal}
           />
         )}
       </div>
     </BoardContainer>
   );
 };
-export default ProjectDashboard;
+export default ManageDashboard;

@@ -3,7 +3,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 
 import WorkBoard from "./WorkBoard";
 import Login from "./Login";
-import ProjectDashboard from "./ProjectDashboard";
+import ManageDashboard from "./ManageDashboard";
 // import "./App.css";
 
 function App() {
@@ -14,7 +14,7 @@ function App() {
       <BrowserRouter>
         <Routes>
           <Route path="/" element={<Login />} />
-          <Route path="/dashboard" element={<ProjectDashboard />} />
+          <Route path="/dashboard" element={<ManageDashboard />} />
           <Route path="/board" element={<WorkBoard />} />
         </Routes>
       </BrowserRouter>

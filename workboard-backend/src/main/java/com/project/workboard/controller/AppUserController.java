@@ -1,6 +1,7 @@
 package com.project.workboard.controller;
 
 import java.util.List;
+import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -15,6 +16,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.project.workboard.dto.AppUserDTO;
 import com.project.workboard.dto.JwtResponseDTO;
 import com.project.workboard.dto.LoginRequestDTO;
 import com.project.workboard.dto.RegisterRequestDTO;
@@ -23,6 +25,7 @@ import com.project.workboard.repository.AppUserRepository;
 import com.project.workboard.security.JwtService;
 
 import jakarta.servlet.http.Cookie;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
 
@@ -43,8 +46,11 @@ public class AppUserController {
 	private AuthenticationManager authenticationManager;
 
 	@GetMapping("/all")
-	public ResponseEntity<String> getAllUsers() {
-		return new ResponseEntity<>("Hey Hi", HttpStatus.OK);
+	public ResponseEntity<List<AppUserDTO>> getAllUsers() {
+		List<AppUserDTO> users = userRepo.findAll()
+				.stream()
+				.map(AppUserDTO::new).toList();
+	    return ResponseEntity.ok(users);
 	}
 
 	@PostMapping("/register")
@@ -87,7 +93,7 @@ public class AppUserController {
 		jwtCookie.setSecure(!isLocal);
 		
 		jwtCookie.setPath("/");
-		jwtCookie.setMaxAge(10*60);
+		jwtCookie.setMaxAge(2*60);
 		response.addCookie(jwtCookie);
 		
 //		JwtResponseDTO jwtResponse = new JwtResponseDTO(tokenString);
@@ -105,5 +111,31 @@ public class AppUserController {
 	    response.addCookie(cookie);
 
 	    return ResponseEntity.ok("Logged out successfully");
+	}
+	
+	@GetMapping("/session")
+	public ResponseEntity<?> checkSession(HttpServletRequest request){
+		String jwtString=null;
+		if (request.getCookies() != null) {
+			for(Cookie cookie: request.getCookies()) {
+				
+				if ( "jwt".equals(cookie.getName()) ) {
+					jwtString = cookie.getValue();
+				}
+			}
+		}
+		
+		if (jwtString == null || jwtString.isEmpty()) {
+			return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("JWT not found");
+		}
+		
+		try {
+			// To Extract email
+	        String email = jwtService.getEmailFromJWT(jwtString); 
+	        return ResponseEntity.ok(Map.of("email", email));
+	    } catch (Exception e) {
+	        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Invalid or expired JWT");
+	    }
+		
 	}
 }

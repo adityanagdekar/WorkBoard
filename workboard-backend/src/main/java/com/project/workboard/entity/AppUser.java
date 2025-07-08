@@ -13,10 +13,10 @@ public class AppUser {
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	private Integer id;
-
 	private String name;
 	private String email;
 	private String pwd;
+	
 
 	public String getPwd() {
 		return pwd;
@@ -24,6 +24,10 @@ public class AppUser {
 
 	public void setPwd(String pwd) {
 		this.pwd = pwd;
+	}
+
+	public Integer getId() {
+		return id;
 	}
 
 	public String getName() {
