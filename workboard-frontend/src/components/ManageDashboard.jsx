@@ -9,10 +9,14 @@ import BoardCardHeader from "./BoardCardHeader";
 import BoardHeader from "./BoardHeader";
 import Modal from "./Modal";
 import AddBoardModal from "./AddBoardModal";
+import useAuthCheck from "../token/useAuthCheck";
 
 import "../style/ManageDashboard.css";
 
 const ManageDashboard = () => {
+  // to do auth-check -> check whether user needs to login again or not
+  useAuthCheck();
+
   const navigate = useNavigate();
 
   const [toggleModal, setModal] = useState(false);
