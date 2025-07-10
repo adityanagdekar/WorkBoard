@@ -109,6 +109,8 @@ const ManageDashboard = () => {
     setAddBoardModal((prevState) => prevState && false);
   };
 
+  const saveBoardModelData = () => {};
+
   const boardCardHeaderOnClick = () => {
     console.log("boardCardHeaderOnClick");
     navigate("/board");
@@ -118,10 +120,6 @@ const ManageDashboard = () => {
     console.log("headerCloseBtnOnClick");
     setProjectToRemoveIdx(idx);
     setModal(true);
-  };
-
-  const closeModal = () => {
-    setModal(false);
   };
 
   const removeProjectOnClick = (index) => {
@@ -180,7 +178,8 @@ const ManageDashboard = () => {
 
         {toggleAddBoardModal && (
           <AddBoardModal
-            doneBtnOnClick={closeAddBoardModal}
+            saveBtnOnClick={saveBoardModelData}
+            closeBtnOnClick={closeAddBoardModal}
             onBackDropClick={closeAddBoardModal}
           />
         )}

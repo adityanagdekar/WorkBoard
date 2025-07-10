@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import axios from "axios";
 
 import "../style/Modal.css";
-import "../style/AddProjectModal.css";
+import "../style/AddBoardModal.css";
 
 import BoardBtn from "./BoardBtn";
 
@@ -33,9 +33,11 @@ const selectDropdownStyles = {
   }),
 };
 
-const AddProjectModal = ({ doneBtnOnClick, onBackDropClick }) => {
-  const [selectedMembers, setSelectedMembers] = useState([]);
-  const [selectedRoles, setSelectedRoles] = useState([]);
+const AddBoardModal = ({ closeBtnOnClick, onBackDropClick }) => {
+  const [boardName, setBoardName] = useState("");
+  const [description, setDescription] = useState("");
+
+  const [boardMembers, setBoardMembers] = useState([]);
   const [users, setUsers] = useState([]);
 
   useEffect(() => {
@@ -45,7 +47,20 @@ const AddProjectModal = ({ doneBtnOnClick, onBackDropClick }) => {
         const configObj = { withCredentials: true };
         const response = await axios.get(url, configObj);
 
+        const initialBoardMembers = response.data.map((user) => ({
+          id: user.id,
+          name: user.name,
+          added: false, // later we need to change the "added" property &
+          // check in db whether user
+          // is associated with this board or not
+          role: "",
+        }));
+
+        console.log("initialBoardMembers: ");
+        console.log(initialBoardMembers);
+
         setUsers(response.data);
+        setBoardMembers(initialBoardMembers);
       } catch (err) {
         console.log("Failed to get users: ", err);
       }
@@ -67,8 +82,76 @@ const AddProjectModal = ({ doneBtnOnClick, onBackDropClick }) => {
 
   // const users = [{ id: "1", name: "John" }];
 
-  const handleAssignRole = (id, role) => {
-    console.log(`user with id:${id} has been assigned this role: ${role}`);
+  const handleAssignRole = (e, user) => {
+    console.log("Role dropdown altered");
+    const selectedRole = e.target.value;
+    // console.log("boardMembers: ", boardMembers);
+    setBoardMembers((prevMembers) =>
+      prevMembers.map((member) =>
+        member.id === user.id ? { ...member, role: selectedRole } : member
+      )
+    );
+  };
+
+  const handleAddMemberChkBox = (e, user) => {
+    console.log("add member chkbox clicked");
+    const isChecked = e.target.checked;
+    // console.log("boardMembers: ", boardMembers);
+    setBoardMembers((prevMembers) =>
+      prevMembers.map((member) =>
+        member.id === user.id ? { ...member, added: isChecked } : member
+      )
+    );
+  };
+
+  const checkIsMember = (user) => {
+    console.log("boardMembers: ", boardMembers);
+    const member = boardMembers.find((member) => member.id === user.id);
+    if (member && member.hasOwnProperty("added")) return member.added;
+    return false;
+  };
+
+  const checkRole = (user) => {
+    console.log("boardMembers: ", boardMembers);
+    const member = boardMembers.find((member) => member.id === user.id);
+    if (member && member.hasOwnProperty("role")) return member.role;
+    return false;
+  };
+
+  const saveBoardData = async (boardData) => {
+    try {
+      const data = boardData;
+      // const configObj = {
+      //   withCredentials: true,
+      //   headers: {
+      //     "Content-Type": "application/json",
+      //   },
+      // };
+      // const response = await axios.post(
+      //   "http://localhost:8080//api/board/save",
+      //   data,
+      //   configObj
+      // );
+      // console.log("board saved successfully: ", response.data);
+    } catch (error) {
+      console.error(
+        "Saving Board failed:",
+        error.response?.data || error.message
+      );
+    }
+  };
+
+  const saveBtnOnClick = () => {
+    const selectedMembers = boardMembers.filter(
+      (member) => member.added && member.role
+    );
+    const boardData = {
+      name: boardName,
+      description: description,
+      members: selectedMembers,
+    };
+    console.log("Final board data:", boardData);
+    saveBoardData(boardData);
   };
 
   const addMemberBtnStyle = { width: "20%", height: "30%" };
@@ -80,9 +163,23 @@ const AddProjectModal = ({ doneBtnOnClick, onBackDropClick }) => {
           {/* Project info section */}
           <div className="InfoSection">
             <label>Name</label>
-            <input type="text" required />
+            <input
+              type="text"
+              required
+              value={boardName}
+              onChange={(e) => {
+                setBoardName(e.target.value);
+              }}
+            />
             <label>Description</label>
-            <input type="text" required />
+            <input
+              type="text"
+              required
+              value={description}
+              onChange={(e) => {
+                setDescription(e.target.value);
+              }}
+            />
           </div>
 
           {/* Project members table section */}
@@ -101,18 +198,18 @@ const AddProjectModal = ({ doneBtnOnClick, onBackDropClick }) => {
                   <tr key={user.id}>
                     <td>{user.name}</td>
                     <td>
-                      <input type="checkbox" />
+                      <input
+                        type="checkbox"
+                        checked={checkIsMember(user)}
+                        onChange={(e) => handleAddMemberChkBox(e, user)}
+                      />
                     </td>
                     <td>
                       <select
-                        onChange={(e) =>
-                          handleAssignRole(user.id, e.target.value)
-                        }
-                        defaultValue=""
+                        value={checkRole(user)}
+                        onChange={(e) => handleAssignRole(e, user)}
                       >
-                        <option disabled value="">
-                          -- select --
-                        </option>
+                        <option value="">-- select --</option>
                         <option value="Manager">Manager</option>
                         <option value="Member">Member</option>
                       </select>
@@ -130,15 +227,12 @@ const AddProjectModal = ({ doneBtnOnClick, onBackDropClick }) => {
             <BoardBtn
               label="Save"
               variant="modal-yes"
-              onClick={() => {
-                console.log("Selected members:", selectedMembers);
-                doneBtnOnClick();
-              }}
+              onClick={saveBtnOnClick}
             />
             <BoardBtn
               label="Close"
               variant="modal-no"
-              onClick={doneBtnOnClick}
+              onClick={closeBtnOnClick}
             />
           </div>
         </div>
@@ -146,7 +240,7 @@ const AddProjectModal = ({ doneBtnOnClick, onBackDropClick }) => {
     </div>
   );
 };
-export default AddProjectModal;
+export default AddBoardModal;
 
 {
   /* <div className="DropdownContainer">

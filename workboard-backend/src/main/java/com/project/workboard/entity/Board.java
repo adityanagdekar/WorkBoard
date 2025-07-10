@@ -33,4 +33,8 @@ public class Board {
 		this.boardName = name;
 	}
 
+	@Override
+	public String toString() {
+		return "Board [board_id=" + board_id + ", user_id=" + user_id + ", boardName=" + boardName + "]";
+	}
 }

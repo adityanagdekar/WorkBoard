@@ -26,18 +26,20 @@ const Login = () => {
     console.log("clicked loginBtnOnClick");
 
     try {
+      const data = {
+        email,
+        password,
+      };
+      const configObj = {
+        withCredentials: true,
+        headers: {
+          "Content-Type": "application/json",
+        },
+      };
       const response = await axios.post(
         "http://localhost:8080/api/user/login",
-        {
-          email,
-          password,
-        },
-        {
-          withCredentials: true,
-          headers: {
-            "Content-Type": "application/json",
-          },
-        }
+        data,
+        configObj
       );
       // JWT token recieved from backend
       const token = response.data.token;
