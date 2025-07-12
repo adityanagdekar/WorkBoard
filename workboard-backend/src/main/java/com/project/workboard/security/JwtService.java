@@ -27,21 +27,29 @@ public class JwtService {
 		String email = authentication.getName();
 		Date currentDate = new Date();
 		Date expireDate = new Date(currentDate.getTime() + SecurityConstants.JWT_EXPIRATION);
+		String tokenString = "";
+		try {
 
-		String tokenString = Jwts.builder()
-				.setSubject(email)
-				.setIssuedAt(currentDate)
-				.setExpiration(expireDate)
-				.signWith(KEY, SignatureAlgorithm.HS512)
-				.compact();
+			tokenString = Jwts.builder()
+					.setSubject(email)
+					.setIssuedAt(currentDate)
+					.setExpiration(expireDate)
+					.signWith(KEY, SignatureAlgorithm.HS512)
+					.compact();
 
-		System.out.println("New JWT :");
-		System.out.println(tokenString);
+			System.out.println("New JWT :");
+			System.out.println(tokenString);
+		}
+		catch (Exception e) {
+			// TODO: handle exception
+			System.out.println("Exception while generating JWT token: "+e.getMessage());
+		}
 		return tokenString;
 	}
 
 	public String getEmailFromJWT(String token) {
 		Claims claims = getClaims(token);
+		// System.out.println("claims: "+claims.toString());
 		String email = claims.getSubject();
 		return email;
 	}

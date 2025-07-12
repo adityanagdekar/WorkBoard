@@ -105,14 +105,14 @@ const AddBoardModal = ({ closeBtnOnClick, onBackDropClick }) => {
   };
 
   const checkIsMember = (user) => {
-    console.log("boardMembers: ", boardMembers);
+    // console.log("boardMembers: ", boardMembers);
     const member = boardMembers.find((member) => member.id === user.id);
     if (member && member.hasOwnProperty("added")) return member.added;
     return false;
   };
 
   const checkRole = (user) => {
-    console.log("boardMembers: ", boardMembers);
+    // console.log("boardMembers: ", boardMembers);
     const member = boardMembers.find((member) => member.id === user.id);
     if (member && member.hasOwnProperty("role")) return member.role;
     return false;
@@ -145,6 +145,7 @@ const AddBoardModal = ({ closeBtnOnClick, onBackDropClick }) => {
     const selectedMembers = boardMembers.filter(
       (member) => member.added && member.role
     );
+    console.log(localStorage);
     const boardData = {
       name: boardName,
       description: description,

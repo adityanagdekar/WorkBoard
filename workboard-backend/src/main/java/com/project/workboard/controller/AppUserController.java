@@ -20,9 +20,11 @@ import com.project.workboard.dto.AppUserDTO;
 import com.project.workboard.dto.JwtResponseDTO;
 import com.project.workboard.dto.LoginRequestDTO;
 import com.project.workboard.dto.RegisterRequestDTO;
+import com.project.workboard.dto.UserLoginSuccessDTO;
 import com.project.workboard.entity.AppUser;
 import com.project.workboard.repository.AppUserRepository;
 import com.project.workboard.security.JwtService;
+import com.project.workboard.service.CustomUserDetailsService;
 
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
@@ -93,11 +95,28 @@ public class AppUserController {
 		jwtCookie.setSecure(!isLocal);
 		
 		jwtCookie.setPath("/");
-		jwtCookie.setMaxAge(2*60);
+		jwtCookie.setMaxAge(5*60);
 		response.addCookie(jwtCookie);
+
+		UserLoginSuccessDTO loginSuccessObj = new 
+				UserLoginSuccessDTO("Logged in successfully" , null);
 		
-//		JwtResponseDTO jwtResponse = new JwtResponseDTO(tokenString);
-		return ResponseEntity.ok("Logged in successfully");
+		// get the logged-in user info
+		Object principal =  authentication.getPrincipal();
+		
+		// check if principal is instanceOf AppUser
+		if (principal instanceof AppUser) {
+			
+			// get the AppUser obj.
+		    AppUser user = (AppUser) principal;
+		    
+		    // Get logged-in user's info using AppUserDTO
+			AppUserDTO appUserData = new AppUserDTO(user);
+			
+			loginSuccessObj.setAppUserData(appUserData);
+		}
+		
+		return ResponseEntity.ok(loginSuccessObj);
 	}
 	
 	@PostMapping("/logout")

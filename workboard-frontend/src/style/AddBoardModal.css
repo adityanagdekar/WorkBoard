@@ -22,7 +22,7 @@
   height: 100%;
   padding: 1%;
   /* border: 1px solid black; */
-  font-weight: 400;
+  /* font-weight: 400; */
   font-size: 1rem;
   color: #2d3748;
   margin-bottom: 1.5rem;
@@ -43,6 +43,7 @@
   padding: 0.5rem;
   border-width: 0.05rem;
   border-radius: 0.25rem;
+  font-size: 1rem;
 }
 
 .InfoSection {
@@ -83,5 +84,5 @@
 .UserTable select,
 .UserTable button {
   padding: 4px 8px;
-  font-size: 14px;
+  font-size: 1rem;
 }

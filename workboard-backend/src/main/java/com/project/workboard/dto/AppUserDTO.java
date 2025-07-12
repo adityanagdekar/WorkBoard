@@ -7,10 +7,10 @@ public class AppUserDTO {
 	private String name;
 	private String email;
 
-	public AppUserDTO(AppUser appUser) {
-		this.id = appUser.getId();
-		this.name = appUser.getName();
-		this.email = appUser.getEmail();
+	public AppUserDTO(AppUser user) {
+		this.id = user.getId();
+		this.name = user.getName();
+		this.email = user.getEmail();
 	}
 	
 

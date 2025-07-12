@@ -1,7 +1,5 @@
 package com.project.workboard.service;
 
-import java.util.ArrayList;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
@@ -21,9 +19,10 @@ public class CustomUserDetailsService implements UserDetailsService {
 	@Override
 	public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
 		AppUser appUser = appUserRepository.findByEmail(email)
-                .orElseThrow(() -> new UsernameNotFoundException("User not found"));
+                .orElseThrow(() -> new UsernameNotFoundException("User not found with email: " + email));
 
-		return new User(appUser.getEmail(), appUser.getPwd(), new ArrayList<>());
+		// return new User(appUser.getEmail(), appUser.getPwd(), new ArrayList<>());
+		return appUser;
 	}
 
 }
