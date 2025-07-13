@@ -47,14 +47,21 @@ const AddBoardModal = ({ closeBtnOnClick, onBackDropClick }) => {
         const configObj = { withCredentials: true };
         const response = await axios.get(url, configObj);
 
-        const initialBoardMembers = response.data.map((user) => ({
-          id: user.id,
-          name: user.name,
-          added: false, // later we need to change the "added" property &
-          // check in db whether user
-          // is associated with this board or not
-          role: "",
-        }));
+        const initialBoardMembers = response.data.map((user) => {
+          const userObj = {
+            id: user.id,
+            name: user.name,
+            isAdded: false, // this tells us whether user is added to the board or not
+            role: "", // this tels us the role of the user
+          };
+
+          // checking if the user is board-creator based on id
+          const loggedIn_userId = JSON.parse(localStorage.getItem("user")).id;
+
+          userObj.role = user.id === loggedIn_userId ? 1 : 0; // role set as MANAGER i.e. 1
+          userObj.isAdded = user.id === loggedIn_userId ? true : false; // isAdded attr. set as true
+          return userObj;
+        });
 
         console.log("initialBoardMembers: ");
         console.log(initialBoardMembers);
@@ -99,7 +106,7 @@ const AddBoardModal = ({ closeBtnOnClick, onBackDropClick }) => {
     // console.log("boardMembers: ", boardMembers);
     setBoardMembers((prevMembers) =>
       prevMembers.map((member) =>
-        member.id === user.id ? { ...member, added: isChecked } : member
+        member.id === user.id ? { ...member, isAdded: isChecked } : member
       )
     );
   };
@@ -107,7 +114,7 @@ const AddBoardModal = ({ closeBtnOnClick, onBackDropClick }) => {
   const checkIsMember = (user) => {
     // console.log("boardMembers: ", boardMembers);
     const member = boardMembers.find((member) => member.id === user.id);
-    if (member && member.hasOwnProperty("added")) return member.added;
+    if (member && member.hasOwnProperty("isAdded")) return member.isAdded;
     return false;
   };
 
@@ -121,18 +128,18 @@ const AddBoardModal = ({ closeBtnOnClick, onBackDropClick }) => {
   const saveBoardData = async (boardData) => {
     try {
       const data = boardData;
-      // const configObj = {
-      //   withCredentials: true,
-      //   headers: {
-      //     "Content-Type": "application/json",
-      //   },
-      // };
-      // const response = await axios.post(
-      //   "http://localhost:8080//api/board/save",
-      //   data,
-      //   configObj
-      // );
-      // console.log("board saved successfully: ", response.data);
+      const configObj = {
+        withCredentials: true,
+        headers: {
+          "Content-Type": "application/json",
+        },
+      };
+      const response = await axios.post(
+        "http://localhost:8080/api/board/save",
+        data,
+        configObj
+      );
+      console.log("board saved successfully: ", response.data);
     } catch (error) {
       console.error(
         "Saving Board failed:",
@@ -145,11 +152,22 @@ const AddBoardModal = ({ closeBtnOnClick, onBackDropClick }) => {
     const selectedMembers = boardMembers.filter(
       (member) => member.added && member.role
     );
-    console.log(localStorage);
+
+    // loggedIn_user -> means board-creator or manager
+    const loggedIn_user = JSON.parse(localStorage.getItem("user"));
     const boardData = {
       name: boardName,
       description: description,
-      members: selectedMembers,
+      members: [
+        ...selectedMembers, // selectedMembers -> All members which r selected other than board-creator
+        {
+          id: loggedIn_user.id,
+          name: loggedIn_user.name,
+          isAdded: true, // this tells us that user is added to the board
+          role: 1, // this tels us the role of the user -> Manager
+        },
+      ],
+      userId: loggedIn_user.id,
     };
     console.log("Final board data:", boardData);
     saveBoardData(boardData);
@@ -195,28 +213,43 @@ const AddBoardModal = ({ closeBtnOnClick, onBackDropClick }) => {
                 </tr>
               </thead>
               <tbody>
-                {users.map((user) => (
-                  <tr key={user.id}>
-                    <td>{user.name}</td>
-                    <td>
-                      <input
-                        type="checkbox"
-                        checked={checkIsMember(user)}
-                        onChange={(e) => handleAddMemberChkBox(e, user)}
-                      />
-                    </td>
-                    <td>
-                      <select
-                        value={checkRole(user)}
-                        onChange={(e) => handleAssignRole(e, user)}
-                      >
-                        <option value="">-- select --</option>
-                        <option value="Manager">Manager</option>
-                        <option value="Member">Member</option>
-                      </select>
-                    </td>
-                  </tr>
-                ))}
+                {users.map((user) => {
+                  const loggedIn_userId = JSON.parse(
+                    localStorage.getItem("user")
+                  ).id;
+                  return (
+                    <tr key={user.id}>
+                      <td>{user.name}</td>
+                      <td>
+                        <input
+                          type="checkbox"
+                          checked={checkIsMember(user)}
+                          onChange={(e) => handleAddMemberChkBox(e, user)}
+                          /* If the user is board-creator/logged-in user then by-default 
+                            mark this checkbox & disable it */
+                          disabled={user.id === loggedIn_userId ? true : false}
+                        />
+                      </td>
+                      <td>
+                        <select
+                          value={checkRole(user)}
+                          onChange={(e) => handleAssignRole(e, user)}
+                          /* If the user is board-creator/logged-in user then by-default 
+                            set the role as Manager & disable it*/
+                          disabled={user.id === loggedIn_userId ? true : false}
+                        >
+                          <option value="">-- select --</option>
+                          {/* 
+                          if role is Manager it means 1 at the backend
+                          and if it Member then it means 0
+                        */}
+                          <option value="1">Manager</option>
+                          <option value="0">Member</option>
+                        </select>
+                      </td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
           </div>

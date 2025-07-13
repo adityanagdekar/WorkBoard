@@ -28,14 +28,21 @@ public class Board {
     @Column(name = "name") 
     private String name;
 
+	@Column(name = "board_desc")
+    private String description;
+
     @Column(name = "created_date", updatable = false, insertable = false)
     private LocalDateTime createdDate;
 
 	public Integer getId() {
 		return id;
 	}
+    
+    public void setUser(AppUser user) {
+		this.user = user;
+	}
 
-	public Integer getCreatorId() {
+	public Integer getUser() {
 		return (user != null ? user.getId() : -1);
 	}
 	
@@ -46,7 +53,15 @@ public class Board {
 	public void setName(String name) {
 		this.name = name;
 	}
-
+	
+	public void setDescription(String description) {
+		this.description = description;
+	}
+	
+	public String getDescription() {
+		return this.description;
+	}
+	
 	public LocalDateTime getCreatedDate() {
 		return createdDate;
 	}

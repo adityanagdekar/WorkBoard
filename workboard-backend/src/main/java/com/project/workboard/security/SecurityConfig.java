@@ -38,7 +38,7 @@ public class SecurityConfig {
                 .exceptionHandling(handling -> handling.authenticationEntryPoint(jwtAuthEntryPoint))
                 .sessionManagement(management -> management.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
-                                .requestMatchers("/api/user/**")
+                                .requestMatchers("/api/user/**", "/api/board/**")
                                 .permitAll()
                                 .anyRequest()
                                 .authenticated()

@@ -10,8 +10,8 @@ const useAuthCheck = () => {
         const url = "http://localhost:8080/api/user/session";
         const configObj = { withCredentials: true };
         const response = await axios.get(url, configObj);
-
-        localStorage.setItem("email", response.data);
+        console.log("checking session: ", response.data);
+        localStorage.setItem("email", response.data.email);
       } catch (err) {
         console.log("JWT expired or invalid. Redirecting to login...", err);
         localStorage.clear();

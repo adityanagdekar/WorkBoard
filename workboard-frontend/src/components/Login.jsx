@@ -42,12 +42,10 @@ const Login = () => {
         configObj
       );
       // JWT token recieved from backend
-      const token = response.data.token;
       console.log("response.data: ", response.data);
-      console.log("JWT token:", token);
-
-      // storing token in localStorage
-      localStorage.setItem("jwt", token);
+      const userData = response.data.appUserData;
+      console.log("userData: ", userData);
+      localStorage.setItem("user", JSON.stringify(userData));
 
       setEmail("");
       setPassword("");
