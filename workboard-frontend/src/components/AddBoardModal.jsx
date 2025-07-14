@@ -155,7 +155,13 @@ const AddBoardModal = ({ closeBtnOnClick, onBackDropClick }) => {
 
     // loggedIn_user -> means board-creator or manager
     const loggedIn_user = JSON.parse(localStorage.getItem("user"));
+    const rawBoardId = localStorage.getItem("boardId");
+    const parsedBoardId = rawBoardId ? parseInt(rawBoardId, 10) : NaN;
+
+    const savedBoardId = Number.isNaN(parsedBoardId) ? -1 : parsedBoardId;
+
     const boardData = {
+      boardId: savedBoardId,
       name: boardName,
       description: description,
       members: [

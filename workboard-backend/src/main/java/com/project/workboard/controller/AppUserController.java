@@ -16,6 +16,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.project.workboard.dto.ApiResponseDTO;
 import com.project.workboard.dto.AppUserDTO;
 import com.project.workboard.dto.JwtResponseDTO;
 import com.project.workboard.dto.LoginRequestDTO;
@@ -56,7 +57,7 @@ public class AppUserController {
 	}
 
 	@PostMapping("/register")
-	public ResponseEntity<AppUser> registerUser(@RequestBody RegisterRequestDTO registerReq) {
+	public ResponseEntity<?> registerUser(@RequestBody RegisterRequestDTO registerReq) {
 		
 		System.out.println("register req: "+registerReq.toString());
 		
@@ -69,8 +70,12 @@ public class AppUserController {
 		user.setEmail(registerReq.getEmail());
 		user.setPwd(passwordEncoder.encode(registerReq.getPassword()));
 
-		AppUser saved = userRepo.save(user);
-		return ResponseEntity.ok(saved);
+		AppUser savedUser = userRepo.save(user);
+		ApiResponseDTO<Integer> apiResponse = new 
+				ApiResponseDTO<Integer>(true, 
+						savedUser.getId(), 
+						"User registered successfully!!");
+		return ResponseEntity.ok(apiResponse);
 	}
 
 	@PostMapping("/login")

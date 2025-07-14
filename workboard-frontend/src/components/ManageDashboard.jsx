@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
 
@@ -51,6 +51,40 @@ const ManageDashboard = () => {
   ]);
 
   const [projectToRemoveIdx, setProjectToRemoveIdx] = useState(null);
+
+  useEffect(() => {
+    const getBoards = async () => {
+      try {
+        const url = "http://localhost:8080/api/board/all";
+        const configObj = { withCredentials: true };
+        const response = await axios.get(url, configObj);
+
+        const initialBoardMembers = response.data.map((user) => {
+          const userObj = {
+            id: user.id,
+            name: user.name,
+            isAdded: false, // this tells us whether user is added to the board or not
+            role: "", // this tels us the role of the user
+          };
+
+          // checking if the user is board-creator based on id
+          const loggedIn_userId = JSON.parse(localStorage.getItem("user")).id;
+
+          userObj.role = user.id === loggedIn_userId ? 1 : 0; // role set as MANAGER i.e. 1
+          userObj.isAdded = user.id === loggedIn_userId ? true : false; // isAdded attr. set as true
+          return userObj;
+        });
+
+        console.log("initialBoardMembers: ");
+        console.log(initialBoardMembers);
+
+        setUsers(response.data);
+        setBoardMembers(initialBoardMembers);
+      } catch (error) {
+        console.log("Failed to get boards: ", err);
+      }
+    };
+  }, []);
 
   const headerBtnLabels = [
     "Add Board",

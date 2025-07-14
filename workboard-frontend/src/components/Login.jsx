@@ -14,7 +14,7 @@ const Login = () => {
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [username, setUsername] = useState("");
+  const [name, setName] = useState("");
   const [message, setMessage] = useState("");
 
   const gotoBoardOnClick = () => {
@@ -36,6 +36,9 @@ const Login = () => {
           "Content-Type": "application/json",
         },
       };
+
+      console.log("data: ", data);
+
       const response = await axios.post(
         "http://localhost:8080/api/user/login",
         data,
@@ -60,22 +63,27 @@ const Login = () => {
     e.preventDefault();
     console.log("clicked registerBtnOnClick");
     try {
-      const response = await axios.post(
-        "http://localhost:8080/api/user/register",
-        {
-          username,
-          email,
-          password,
+      const url = "http://localhost:8080/api/user/register";
+      const data = {
+        name,
+        email,
+        password,
+      };
+      const configObj = {
+        withCredentials: true,
+        headers: {
+          "Content-Type": "application/json",
         },
-        {
-          withCredentials: true,
-          headers: {
-            "Content-Type": "application/json",
-          },
-        }
-      );
+      };
+      console.log("data: ", data);
+      const response = await axios.post(url, data, configObj);
+
       console.log(response.data);
-      setMessage(response.data);
+      setMessage(response.data.message);
+
+      setName("");
+      setEmail("");
+      setPassword("");
       setIsRegisterMode(false);
     } catch (error) {
       console.error(error);
@@ -97,7 +105,8 @@ const Login = () => {
               <input
                 type="text"
                 required
-                onChange={(e) => setUsername(e.target.value)}
+                value={name} // <--- Recently, this was missing previously
+                onChange={(e) => setName(e.target.value)}
               />
             </>
           )}
@@ -105,20 +114,30 @@ const Login = () => {
           <input
             type="text"
             required
+            value={email}
             onChange={(e) => setEmail(e.target.value)}
           />
           <label>Password</label>
           <input
             type="password"
             required
+            value={password}
             onChange={(e) => setPassword(e.target.value)}
           />
-          <BoardBtn type="button" label="Login" onClick={loginBtnOnClick} />
+          <BoardBtn
+            type="button"
+            label={isRegisterMode ? "Register" : "Login"}
+            onClick={isRegisterMode ? registerBtnOnClick : loginBtnOnClick}
+          />
           <BoardBtn
             type="button"
             variant="register"
-            label="Register"
-            onClick={registerBtnOnClick}
+            label={
+              isRegisterMode
+                ? "Already registered? Login"
+                : "New user? Register"
+            }
+            onClick={() => setIsRegisterMode(!isRegisterMode)}
           />
           <div className="Login-Message">{message}</div>
         </form>

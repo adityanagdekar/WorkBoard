@@ -6,13 +6,9 @@ public class RegisterRequestDTO {
 	private String password;
 
 	// Getters and Setters
+
 	public String getName() {
 		return name;
-	}
-
-	@Override
-	public String toString() {
-		return "RegisterRequestDTO [name=" + name + ", email=" + email + ", password=" + password + "]";
 	}
 
 	public void setName(String name) {
@@ -33,5 +29,10 @@ public class RegisterRequestDTO {
 
 	public void setPassword(String password) {
 		this.password = password;
+	}
+	
+	@Override
+	public String toString() {
+		return "RegisterRequestDTO [name=" + name + ", email=" + email + ", password=" + password + "]";
 	}
 }

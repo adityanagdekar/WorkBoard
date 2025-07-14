@@ -9,7 +9,8 @@ public class BoardDataDTO {
 	private String name, description;
 	private Member[] members;
 	private int userId;
-
+	private int boardId;
+	
 	public static class Member {
 		private int id;
 		private boolean isAdded;
@@ -55,12 +56,21 @@ public class BoardDataDTO {
 
 	}
 
-	public BoardDataDTO(String name, String description, Member[] members, int userId) {
+	public BoardDataDTO(String name, String description, Member[] members, int userId, int boardId) {
 		super();
 		this.name = name;
 		this.description = description;
 		this.members = members;
 		this.userId = userId;
+		this.boardId = boardId;
+	}
+
+	public int getBoardId() {
+		return boardId;
+	}
+
+	public void setBoardId(int boardId) {
+		this.boardId = boardId;
 	}
 
 	public String getName() {
@@ -97,7 +107,11 @@ public class BoardDataDTO {
 }
 
 /*
- * { "name": "Neo school LMS", "description":
- * ": Neo School Learning Management System", "members": [ { "id": 1, "name":
- * "John Doe", "added": true, "role": 1 } ], "userId": 1 }
+ * { "name": "Neo school LMS", 
+ * "description": "Neo School Learning Management System", 
+ * "members": [ 
+ * 		{ "id": 1, "name": "John Doe", 
+ * 			"isAdded": true, "role": 1 
+ * 		} ], 
+ * "userId": 1 }
  */
