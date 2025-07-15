@@ -45,17 +45,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 			String token = authHeader.substring(7);
 		*/
 
-		String jwtTokenString = ""; 
-	    if (request.getCookies() != null) {
-			// traversing thru all the Cookies to get the JWT token
-	        for (Cookie cookie : request.getCookies()) {
-	            if (cookie.getName().equals("jwt")) {
-	                jwtTokenString = cookie.getValue();
-	                break;
-	            }
-	        }
-	    }
-		System.out.println("jwt token: "+jwtTokenString);
+		String jwtTokenString = jwtService.getTokenFromRequest(request);
 		
 		if (jwtTokenString.length()==0){
 			// JWT token has not yet been assigned

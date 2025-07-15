@@ -22,68 +22,50 @@ const ManageDashboard = () => {
   const [toggleModal, setModal] = useState(false);
   const [toggleAddBoardModal, setAddBoardModal] = useState(false);
 
-  const [projectList, setProjectList] = useState([
-    {
-      name: "Project 1",
-      description: "Neo School Learning Management System",
-      Tasks: [
-        { task: "To-Do", count: "2" },
-        { task: "WIP", count: "3" },
-      ],
-    },
-    {
-      name: "Project 2",
-      description: "CAT exam dashboard",
-      Tasks: [
-        { task: "To-Do", count: "2" },
-        { task: "WIP", count: "3" },
-      ],
-    },
+  const [boardList, setBoardList] = useState(
+    //   [
+    //   {
+    //     name: "Project 1",
+    //     description: "Neo School Learning Management System",
+    //   },
+    //   {
+    //     name: "Project 2",
+    //     description: "CAT exam dashboard",
+    //   },
 
-    {
-      name: "Project 3",
-      description: "Sunshine Healthcare",
-      Tasks: [
-        { task: "To-Do", count: "2" },
-        { task: "WIP", count: "3" },
-      ],
-    },
-  ]);
+    //   {
+    //     name: "Project 3",
+    //     description: "Sunshine Healthcare",
+    //   },
+    // ]
+    []
+  );
 
   const [projectToRemoveIdx, setProjectToRemoveIdx] = useState(null);
 
   useEffect(() => {
     const getBoards = async () => {
+      const loggedIn_userId = JSON.parse(localStorage.getItem("user")).id;
       try {
-        const url = "http://localhost:8080/api/board/all";
-        const configObj = { withCredentials: true };
+        const url = "http://localhost:8080/api/board/boards";
+        // const paramsObj = {
+        //   userId: loggedIn_userId,
+        // };
+        const configObj = {
+          // params: paramsObj,
+          withCredentials: true,
+        };
         const response = await axios.get(url, configObj);
 
-        const initialBoardMembers = response.data.map((user) => {
-          const userObj = {
-            id: user.id,
-            name: user.name,
-            isAdded: false, // this tells us whether user is added to the board or not
-            role: "", // this tels us the role of the user
-          };
+        const boardsData = response.data.data;
+        console.log("fetched board-data: ", boardsData);
 
-          // checking if the user is board-creator based on id
-          const loggedIn_userId = JSON.parse(localStorage.getItem("user")).id;
-
-          userObj.role = user.id === loggedIn_userId ? 1 : 0; // role set as MANAGER i.e. 1
-          userObj.isAdded = user.id === loggedIn_userId ? true : false; // isAdded attr. set as true
-          return userObj;
-        });
-
-        console.log("initialBoardMembers: ");
-        console.log(initialBoardMembers);
-
-        setUsers(response.data);
-        setBoardMembers(initialBoardMembers);
+        setBoardList(boardsData);
       } catch (error) {
-        console.log("Failed to get boards: ", err);
+        console.log("Failed to get boards: ", error);
       }
     };
+    getBoards();
   }, []);
 
   const headerBtnLabels = [
@@ -143,6 +125,10 @@ const ManageDashboard = () => {
     setAddBoardModal((prevState) => prevState && false);
   };
 
+  const closeModal = () => {
+    setModal((prevState) => prevState && false);
+  };
+
   const saveBoardModelData = () => {};
 
   const boardCardHeaderOnClick = () => {
@@ -159,11 +145,11 @@ const ManageDashboard = () => {
   const removeProjectOnClick = (index) => {
     console.log("removeProjectOnClick index: ", index);
     if (index != null) {
-      setProjectList((prev) => {
-        const updatedProjectList = [...prev];
+      setBoardList((prev) => {
+        const updatedboardList = [...prev];
         // Remove from source
-        updatedProjectList.splice(index, 1);
-        return updatedProjectList;
+        updatedboardList.splice(index, 1);
+        return updatedboardList;
       });
     }
   };
@@ -180,20 +166,24 @@ const ManageDashboard = () => {
         />
 
         <div className="BoardCardContainer">
-          {projectList.map((project, idx) => {
-            return (
-              <BoardCard key={idx}>
-                <BoardCardHeader
-                  project={project.name}
-                  headerOnClick={boardCardHeaderOnClick}
-                  closeBtnOnClick={headerCloseBtnOnClick}
-                />
-                <div className="BoardCardContent">
-                  <p>Description: {project.description}</p>
-                </div>
-              </BoardCard>
-            );
-          })}
+          {boardList.length > 0 ? (
+            boardList.map((board) => {
+              return (
+                <BoardCard key={board.boardId}>
+                  <BoardCardHeader
+                    board={board.boardName}
+                    headerOnClick={boardCardHeaderOnClick}
+                    closeBtnOnClick={headerCloseBtnOnClick}
+                  />
+                  <div className="BoardCardContent">
+                    <p>Description: {board.boardDesc}</p>
+                  </div>
+                </BoardCard>
+              );
+            })
+          ) : (
+            <p> Currently, there are no boards but you can create yours !!</p>
+          )}
         </div>
 
         {toggleModal && (

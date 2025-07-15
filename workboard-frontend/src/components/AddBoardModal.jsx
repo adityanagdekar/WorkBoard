@@ -43,7 +43,7 @@ const AddBoardModal = ({ closeBtnOnClick, onBackDropClick }) => {
   useEffect(() => {
     const getUsers = async () => {
       try {
-        const url = "http://localhost:8080/api/user/all";
+        const url = "http://localhost:8080/api/user/users";
         const configObj = { withCredentials: true };
         const response = await axios.get(url, configObj);
 

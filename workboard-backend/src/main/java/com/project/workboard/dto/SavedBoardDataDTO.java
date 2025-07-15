@@ -1,5 +1,7 @@
 package com.project.workboard.dto;
 
+import java.util.Arrays;
+
 public class SavedBoardDataDTO {
 	private int boardId;
 	private int[] memberIds;
@@ -16,6 +18,12 @@ public class SavedBoardDataDTO {
 		this.boardDesc = boardDesc;
 	}
 	
+	@Override
+	public String toString() {
+		return "SavedBoardDataDTO [boardId=" + boardId + ", memberIds=" + Arrays.toString(memberIds) + ", boardName="
+				+ boardName + ", boardDesc=" + boardDesc + "]";
+	}
+
 	public int getBoardId() {
 		return boardId;
 	}

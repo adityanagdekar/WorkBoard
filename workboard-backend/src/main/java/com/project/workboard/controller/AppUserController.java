@@ -48,7 +48,7 @@ public class AppUserController {
 	@Autowired
 	private AuthenticationManager authenticationManager;
 
-	@GetMapping("/all")
+	@GetMapping("/users")
 	public ResponseEntity<List<AppUserDTO>> getAllUsers() {
 		List<AppUserDTO> users = userRepo.findAll()
 				.stream()
@@ -90,7 +90,7 @@ public class AppUserController {
 								loginReq.getPassword()
 								));
 		String tokenString = jwtService.generateToken(authentication);
-		System.out.println("tokenString in AppUserController: "+tokenString);
+		System.out.println("token in AppUserController: "+tokenString);
 		
 		Cookie jwtCookie = new Cookie("jwt", tokenString);
 		jwtCookie.setHttpOnly(true);

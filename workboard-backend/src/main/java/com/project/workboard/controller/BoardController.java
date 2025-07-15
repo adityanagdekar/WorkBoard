@@ -1,6 +1,5 @@
 package com.project.workboard.controller;
 
-import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -11,8 +10,9 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.project.workboard.dto.BoardDataDTO;
-import com.project.workboard.dto.SavedBoardDataDTO;
 import com.project.workboard.service.BoardService;
+
+import jakarta.servlet.http.HttpServletRequest;
 
 @RestController
 @RequestMapping("/api/board")
@@ -21,9 +21,10 @@ public class BoardController {
 	@Autowired
 	private BoardService boardService;
 	
-	@GetMapping("/getAll")
-	public List<SavedBoardDataDTO> getAllBoards() {
-		return boardService.getBoardsWithMembersIds();
+	@GetMapping("/boards")
+	public ResponseEntity<?>getAllBoards(HttpServletRequest request) {
+		int id = boardService.getBoardUserId(request);
+		return boardService.getBoardsWithMembersIds(id);
 	}
 
 	@PostMapping("/save")

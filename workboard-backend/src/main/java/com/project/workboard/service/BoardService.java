@@ -21,6 +21,9 @@ import com.project.workboard.entity.BoardMember;
 import com.project.workboard.repository.AppUserRepository;
 import com.project.workboard.repository.BoardMemberRepository;
 import com.project.workboard.repository.BoardRepository;
+import com.project.workboard.security.JwtService;
+
+import jakarta.servlet.http.HttpServletRequest;
 
 @Component
 public class BoardService {
@@ -33,6 +36,9 @@ public class BoardService {
 
 	@Autowired
 	private BoardMemberRepository boardMemberRepository;
+
+	@Autowired
+	private JwtService jwtService;
 
 	public ResponseEntity<?> createBoard(BoardDataDTO boardData) {
 		System.out.println("inside BoardService's createBoard, boardData: " + boardData.toString());
@@ -136,8 +142,7 @@ public class BoardService {
 		}
 
 		// Data is saved successfully, let's send Api-Response for the same
-		ApiResponseDTO<SavedBoardDataDTO> apiResponse = 
-				new ApiResponseDTO<SavedBoardDataDTO>(true, savedBoardData,
+		ApiResponseDTO<SavedBoardDataDTO> apiResponse = new ApiResponseDTO<SavedBoardDataDTO>(true, savedBoardData,
 				"Board data & members saved successfully");
 
 		return ResponseEntity.ok(apiResponse);
@@ -147,10 +152,14 @@ public class BoardService {
 		return ResponseEntity.ok("Board data & members saved successfully");
 	}
 
-	public ResponseEntity<?> getBoardsWithMembersIds() {
+	public ResponseEntity<?> getBoardsWithMembersIds(int loggedIn_userId) {
 		try {
+			if (loggedIn_userId <= 0) {
+				throw new IllegalArgumentException("Invalid user ID received");
+			}
+
 			// getting data from the db
-			List<BoardWithMembersProjection> rawData = boardRepository.findBoardsWithMembers();
+			List<BoardWithMembersProjection> rawData = boardRepository.findBoardsWithMembers(loggedIn_userId);
 
 			// forming memeber-ids-map -> {boardId: [memberIds....]}
 			// forming map to hold board-info -> {boardId: {name, desc, board-id, user-id,
@@ -177,6 +186,10 @@ public class BoardService {
 
 			return ResponseEntity.ok(apiResponse);
 
+		} catch (IllegalArgumentException e) {
+			System.out.println("Exception while getting user-id from JWT token: " + e.getMessage());
+			return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+					.body("Can't get user-id so can't fetch boards, login again");
 		} catch (Exception e) {
 			System.out.println("Exception while fetching board-data with member ids: " + e.getMessage());
 			return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
@@ -205,10 +218,18 @@ public class BoardService {
 			boardData.setBoardName(projection.getBoardName());
 			boardData.setBoardDesc(projection.getBoardDesc());
 
+//			System.out.println("\n boardData: "+boardData.toString()+"\n");
+
 			resultBoardDataDTOs.add(boardData);
 		}
 
 		return resultBoardDataDTOs;
+	}
+
+	public int getBoardUserId(HttpServletRequest request) {
+		String jwtTokenString = jwtService.getTokenFromRequest(request);
+		int userId = jwtService.getUserIdFromJWT(jwtTokenString);
+		return userId;
 	}
 
 }

@@ -6,6 +6,8 @@ public class AppUserDTO {
 	private Integer id;
 	private String name;
 	private String email;
+	
+	public AppUserDTO() {}
 
 	public AppUserDTO(AppUser user) {
 		this.id = user.getId();
