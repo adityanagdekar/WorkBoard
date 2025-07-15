@@ -1,5 +1,9 @@
 package com.project.workboard.service;
 
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -9,6 +13,7 @@ import org.springframework.stereotype.Component;
 
 import com.project.workboard.dto.ApiResponseDTO;
 import com.project.workboard.dto.BoardDataDTO;
+import com.project.workboard.dto.BoardWithMembersProjection;
 import com.project.workboard.dto.SavedBoardDataDTO;
 import com.project.workboard.entity.AppUser;
 import com.project.workboard.entity.Board;
@@ -44,8 +49,7 @@ public class BoardService {
 				return ResponseEntity.status(HttpStatus.NOT_FOUND).body("User not found");
 			}
 			AppUser user = (AppUser) userOpt.get();
-			System.out.println("Board-creator-id: " + user.getId() 
-			+ " board-creator-name: " + user.getName());
+			System.out.println("Board-creator-id: " + user.getId() + " board-creator-name: " + user.getName());
 
 			// Setting board
 			Board board = new Board();
@@ -58,8 +62,10 @@ public class BoardService {
 			boardId = savedBoard.getId();
 			System.out.println("successfully saved board with id: " + boardId);
 
-			// Saving board-id in savedBoardData obj.
+			// Saving board-info in savedBoardData obj.
 			savedBoardData.setBoardId(boardId);
+			savedBoardData.setBoardName(boardData.getName());
+			savedBoardData.setBoardDesc(boardData.getDescription());
 
 			int numBoardMembers = boardData.getMembers().length;
 			int[] memberIds = new int[numBoardMembers];
@@ -107,14 +113,12 @@ public class BoardService {
 				} catch (Exception e) {
 					System.out.println("Exception while saving board-member: " + e.getMessage());
 					System.out.println(
-							"Need to delete the board, if saved. " + 
-					"Can't save board without it 's board-memebrs");
+							"Need to delete the board, if saved. " + "Can't save board without it 's board-memebrs");
 
 					// delete the board, if not able to save board-members
 					boardRepository.deleteById(boardId);
 
-					return ResponseEntity
-							.status(HttpStatus.UNAUTHORIZED)
+					return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
 							.body("Error while saving board-member with id: " + boardMemberId);
 				}
 
@@ -123,29 +127,88 @@ public class BoardService {
 
 			} else if (boardId < 0) {
 				// board not saved successfully
-				return ResponseEntity
-						.status(HttpStatus.UNAUTHORIZED)
-						.body("Error while saving board");
+				return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Error while saving board");
 			}
 
 		} catch (Exception e) {
 			System.out.println("Exception while saving board-data: " + e.getMessage());
-			return ResponseEntity
-					.status(HttpStatus.UNAUTHORIZED)
-					.body("Error while saving board-data");
+			return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Error while saving board-data");
 		}
 
 		// Data is saved successfully, let's send Api-Response for the same
-		ApiResponseDTO<SavedBoardDataDTO> apiResponse = new 
-				ApiResponseDTO<SavedBoardDataDTO>(true, 
-						savedBoardData,
+		ApiResponseDTO<SavedBoardDataDTO> apiResponse = 
+				new ApiResponseDTO<SavedBoardDataDTO>(true, savedBoardData,
 				"Board data & members saved successfully");
-		
+
 		return ResponseEntity.ok(apiResponse);
 	}
 
 	public ResponseEntity<?> updateBoard(BoardDataDTO boardData) {
 		return ResponseEntity.ok("Board data & members saved successfully");
+	}
+
+	public ResponseEntity<?> getBoardsWithMembersIds() {
+		try {
+			// getting data from the db
+			List<BoardWithMembersProjection> rawData = boardRepository.findBoardsWithMembers();
+
+			// forming memeber-ids-map -> {boardId: [memberIds....]}
+			// forming map to hold board-info -> {boardId: {name, desc, board-id, user-id,
+			// role}, ....}
+			Map<Integer, List<Integer>> memberIdsMap = new HashMap<>();
+			Map<Integer, BoardWithMembersProjection> boardProjectionMap = new HashMap<>();
+
+			for (BoardWithMembersProjection row : rawData) {
+				int boardId = row.getBoardId();
+				int userId = row.getUserId();
+				memberIdsMap.computeIfAbsent(boardId, k -> new ArrayList<Integer>()).add(userId);
+
+				boardProjectionMap.putIfAbsent(boardId, row);
+			}
+
+			// getting results
+			List<SavedBoardDataDTO> boardsWithMemberIds = getSavedBoardDataMappings(memberIdsMap, boardProjectionMap);
+
+			// Data is fetched successfully, let's send Api-Response for the same
+			boolean successFlag = true;
+			String responseMsg = "Board fetched saved successfully";
+			ApiResponseDTO<List<SavedBoardDataDTO>> apiResponse = new ApiResponseDTO<List<SavedBoardDataDTO>>(
+					successFlag, boardsWithMemberIds, responseMsg);
+
+			return ResponseEntity.ok(apiResponse);
+
+		} catch (Exception e) {
+			System.out.println("Exception while fetching board-data with member ids: " + e.getMessage());
+			return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+					.body("Exception while fetching board-data with member ids");
+		}
+
+	}
+
+	private List<SavedBoardDataDTO> getSavedBoardDataMappings(Map<Integer, List<Integer>> memberIdsMap,
+			Map<Integer, BoardWithMembersProjection> boardProjectionMap) {
+
+		List<SavedBoardDataDTO> resultBoardDataDTOs = new ArrayList<SavedBoardDataDTO>();
+		for (Map.Entry<Integer, List<Integer>> entry : memberIdsMap.entrySet()) {
+			int boardId = entry.getKey();
+			List<Integer> memberIdsList = entry.getValue();
+			// getting memberIds arr. from List of member-ids.
+			int[] memberIdsArr = memberIdsList.stream().mapToInt(i -> i).toArray();
+
+			// this obj. contains board-info -> {name, desc, board-id, user-id, role}
+			BoardWithMembersProjection projection = boardProjectionMap.get(boardId);
+
+			// setting SavedBoardDataDTO obj.
+			SavedBoardDataDTO boardData = new SavedBoardDataDTO();
+			boardData.setBoardId(boardId);
+			boardData.setMemberIds(memberIdsArr);
+			boardData.setBoardName(projection.getBoardName());
+			boardData.setBoardDesc(projection.getBoardDesc());
+
+			resultBoardDataDTOs.add(boardData);
+		}
+
+		return resultBoardDataDTOs;
 	}
 
 }

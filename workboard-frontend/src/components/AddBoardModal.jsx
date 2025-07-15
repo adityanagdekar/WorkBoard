@@ -179,7 +179,12 @@ const AddBoardModal = ({ closeBtnOnClick, onBackDropClick }) => {
     saveBoardData(boardData);
   };
 
-  const addMemberBtnStyle = { width: "20%", height: "30%" };
+  const capitaliseName = (name) => {
+    if (typeof name !== "string" || name.length === 0) {
+      return name; // Handle non-string input or empty strings
+    }
+    return name.charAt(0).toUpperCase() + name.slice(1);
+  };
 
   return (
     <div className="ModalOverlay" onClick={onBackDropClick}>
@@ -225,7 +230,7 @@ const AddBoardModal = ({ closeBtnOnClick, onBackDropClick }) => {
                   ).id;
                   return (
                     <tr key={user.id}>
-                      <td>{user.name}</td>
+                      <td>{capitaliseName(user.name)}</td>
                       <td>
                         <input
                           type="checkbox"
