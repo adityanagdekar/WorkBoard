@@ -7,31 +7,7 @@ import "../style/AddBoardModal.css";
 
 import BoardBtn from "./BoardBtn";
 
-const selectDropdownStyles = {
-  control: (provided) => ({
-    ...provided,
-    minHeight: "10%", // height of the input box
-    height: "2rem",
-    width: "100%", // width of the input box
-  }),
-  menu: (provided) => ({
-    ...provided,
-    width: "100%", // width of dropdown menu
-  }),
-  valueContainer: (provided) => ({
-    ...provided,
-    height: "100%",
-    padding: "0 6px",
-  }),
-  input: (provided) => ({
-    ...provided,
-    margin: "0px",
-  }),
-  indicatorsContainer: (provided) => ({
-    ...provided,
-    height: "100%",
-  }),
-};
+import capitaliseName from "../utility/capitaliseName";
 
 const AddBoardModal = ({ closeBtnOnClick, onBackDropClick }) => {
   const [boardName, setBoardName] = useState("");
@@ -102,13 +78,16 @@ const AddBoardModal = ({ closeBtnOnClick, onBackDropClick }) => {
 
   const handleAddMemberChkBox = (e, user) => {
     console.log("add member chkbox clicked");
+    console.log("user: ", user);
     const isChecked = e.target.checked;
     // console.log("boardMembers: ", boardMembers);
-    setBoardMembers((prevMembers) =>
-      prevMembers.map((member) =>
+    setBoardMembers((prevMembers) => {
+      const updatedMembers = prevMembers.map((member) =>
         member.id === user.id ? { ...member, isAdded: isChecked } : member
-      )
-    );
+      );
+      console.log(updatedMembers);
+      return updatedMembers;
+    });
   };
 
   const checkIsMember = (user) => {
@@ -150,7 +129,7 @@ const AddBoardModal = ({ closeBtnOnClick, onBackDropClick }) => {
 
   const saveBtnOnClick = () => {
     const selectedMembers = boardMembers.filter(
-      (member) => member.added && member.role
+      (member) => member.isAdded && member.role >= 0
     );
 
     // loggedIn_user -> means board-creator or manager
@@ -159,31 +138,16 @@ const AddBoardModal = ({ closeBtnOnClick, onBackDropClick }) => {
     const parsedBoardId = rawBoardId ? parseInt(rawBoardId, 10) : NaN;
 
     const savedBoardId = Number.isNaN(parsedBoardId) ? -1 : parsedBoardId;
-
+    console.log("selectMembers: ", selectedMembers);
     const boardData = {
       boardId: savedBoardId,
       name: boardName,
       description: description,
-      members: [
-        ...selectedMembers, // selectedMembers -> All members which r selected other than board-creator
-        {
-          id: loggedIn_user.id,
-          name: loggedIn_user.name,
-          isAdded: true, // this tells us that user is added to the board
-          role: 1, // this tels us the role of the user -> Manager
-        },
-      ],
+      members: selectedMembers,
       userId: loggedIn_user.id,
     };
     console.log("Final board data:", boardData);
     saveBoardData(boardData);
-  };
-
-  const capitaliseName = (name) => {
-    if (typeof name !== "string" || name.length === 0) {
-      return name; // Handle non-string input or empty strings
-    }
-    return name.charAt(0).toUpperCase() + name.slice(1);
   };
 
   return (

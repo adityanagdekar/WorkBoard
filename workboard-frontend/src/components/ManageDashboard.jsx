@@ -10,6 +10,7 @@ import BoardHeader from "./BoardHeader";
 import Modal from "./Modal";
 import AddBoardModal from "./AddBoardModal";
 import useAuthCheck from "../token/useAuthCheck";
+import capitaliseName from "../utility/capitaliseName";
 
 import "../style/ManageDashboard.css";
 
@@ -154,13 +155,18 @@ const ManageDashboard = () => {
     }
   };
 
+  const getHeaderMsg = () => {
+    const name = JSON.parse(localStorage.getItem("user")).name;
+    return "Hello, " + capitaliseName(name);
+  };
+
   return (
     <BoardContainer>
       <div className="Dashboard-Container">
         <WorkBoardHeader message="Workboard" />
 
         <BoardHeader
-          headerName={"Your Boards"}
+          headerMsg={getHeaderMsg()}
           btnLabels={headerBtnLabels}
           headerBtnOnClick={handleHeaderBtnClick}
         />

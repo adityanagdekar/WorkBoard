@@ -1,11 +1,11 @@
 import "../style/BoardHeader.css";
 import BoardBtn from "./BoardBtn";
 
-const BoardHeader = ({ headerName, btnLabels, headerBtnOnClick }) => {
+const BoardHeader = ({ headerMsg, btnLabels, headerBtnOnClick }) => {
   return (
     <div className="BoardHeader">
       <div className="BoardHeaderTitle">
-        <h2>{headerName}</h2>
+        <h2>{headerMsg}</h2>
       </div>
       <div className="BoardHeaderBtnContainer">
         {btnLabels.map((headerBtnLabel, index) => {
