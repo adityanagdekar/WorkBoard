@@ -175,7 +175,14 @@ const ManageDashboard = () => {
           {boardList.length > 0 ? (
             boardList.map((board) => {
               return (
-                <BoardCard key={board.boardId}>
+                <BoardCard
+                  key={board.boardId}
+                  style={
+                    board.members[0].memberRole === 1 // highlighting border based on memberRole
+                      ? { border: "1px solid #4caf50" }
+                      : { border: "1px solid #667eea" }
+                  }
+                >
                   <BoardCardHeader
                     board={board.boardName}
                     headerOnClick={boardCardHeaderOnClick}

@@ -1,5 +1,9 @@
 import "../style/BoardCard.css";
-const BoardCard = ({ children }) => {
-  return <div className="BoardCard">{children}</div>;
+const BoardCard = ({ children, style }) => {
+  return (
+    <div className="BoardCard" style={style}>
+      {children}
+    </div>
+  );
 };
 export default BoardCard;

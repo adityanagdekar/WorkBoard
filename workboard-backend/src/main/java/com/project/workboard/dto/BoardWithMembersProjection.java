@@ -8,4 +8,5 @@ public interface BoardWithMembersProjection {
 	Integer getUserId();
 	String getBoardName();
 	String getBoardDesc();
+	Integer getRole();
 }

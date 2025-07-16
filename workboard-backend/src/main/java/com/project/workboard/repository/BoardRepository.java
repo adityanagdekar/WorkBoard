@@ -18,7 +18,8 @@ public interface BoardRepository extends JpaRepository<Board, Integer> {
 		        b.id AS boardId,
 		        bm.user_id AS userId,
 		        b.name AS boardName,
-		        b.board_desc AS boardDesc
+		        b.board_desc AS boardDesc,
+		        bm.role AS role
 		    FROM board b
 		    JOIN board_member bm ON b.id = bm.board_id
 		    WHERE b.user_id = :userId OR bm.user_id = :userId 

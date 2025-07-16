@@ -15,6 +15,7 @@ import com.project.workboard.dto.ApiResponseDTO;
 import com.project.workboard.dto.BoardDataDTO;
 import com.project.workboard.dto.BoardWithMembersProjection;
 import com.project.workboard.dto.SavedBoardDataDTO;
+import com.project.workboard.dto.SavedBoardDataDTO.MemberDataDTO;
 import com.project.workboard.entity.AppUser;
 import com.project.workboard.entity.Board;
 import com.project.workboard.entity.BoardMember;
@@ -74,7 +75,7 @@ public class BoardService {
 			savedBoardData.setBoardDesc(boardData.getDescription());
 
 			int numBoardMembers = boardData.getMembers().length;
-			int[] memberIds = new int[numBoardMembers];
+			MemberDataDTO[] membersDataDTOs = new MemberDataDTO[numBoardMembers];
 			int boardMemberId = -1;
 
 			if (boardId > 0) {
@@ -111,8 +112,8 @@ public class BoardService {
 						boardMemberId = boardMember.getUser().getId();
 						System.out.println("successfully saved board-member with id: " + boardMemberId);
 
-						// Saving board-member in memberIds arr.
-						memberIds[i] = boardMemberId;
+						// Saving member-data-dto in memberIds arr.
+						membersDataDTOs[i] = new MemberDataDTO(boardMemberId, member.getRole());
 
 					}
 
@@ -128,8 +129,8 @@ public class BoardService {
 							.body("Error while saving board-member with id: " + boardMemberId);
 				}
 
-				// Saving board-members-ids arr. in savedBoardData obj.
-				savedBoardData.setMemberIds(memberIds);
+				// Saving members-data-dto arr. in savedBoardData obj.
+				savedBoardData.setMembers(membersDataDTOs);
 
 			} else if (boardId < 0) {
 				// board not saved successfully
@@ -164,13 +165,14 @@ public class BoardService {
 			// forming memeber-ids-map -> {boardId: [memberIds....]}
 			// forming map to hold board-info -> {boardId: {name, desc, board-id, user-id,
 			// role}, ....}
-			Map<Integer, List<Integer>> memberIdsMap = new HashMap<>();
+			Map<Integer, List<MemberDataDTO>> memberIdsMap = new HashMap<>();
 			Map<Integer, BoardWithMembersProjection> boardProjectionMap = new HashMap<>();
 
 			for (BoardWithMembersProjection row : rawData) {
 				int boardId = row.getBoardId();
 				int userId = row.getUserId();
-				memberIdsMap.computeIfAbsent(boardId, k -> new ArrayList<Integer>()).add(userId);
+				int userRole = row.getRole();
+				memberIdsMap.computeIfAbsent(boardId, k -> new ArrayList<MemberDataDTO>()).add(new MemberDataDTO(userId, userRole));
 
 				boardProjectionMap.putIfAbsent(boardId, row);
 			}
@@ -198,15 +200,21 @@ public class BoardService {
 
 	}
 
-	private List<SavedBoardDataDTO> getSavedBoardDataMappings(Map<Integer, List<Integer>> memberIdsMap,
+	private List<SavedBoardDataDTO> getSavedBoardDataMappings(Map<Integer, List<MemberDataDTO>> memberIdsMap,
 			Map<Integer, BoardWithMembersProjection> boardProjectionMap) {
 
 		List<SavedBoardDataDTO> resultBoardDataDTOs = new ArrayList<SavedBoardDataDTO>();
-		for (Map.Entry<Integer, List<Integer>> entry : memberIdsMap.entrySet()) {
+		for (Map.Entry<Integer, List<MemberDataDTO>> entry : memberIdsMap.entrySet()) {
 			int boardId = entry.getKey();
-			List<Integer> memberIdsList = entry.getValue();
+			List<MemberDataDTO> memberDataDTOList = entry.getValue();
+			
 			// getting memberIds arr. from List of member-ids.
-			int[] memberIdsArr = memberIdsList.stream().mapToInt(i -> i).toArray();
+			int numOfMembers = memberDataDTOList.size();
+			MemberDataDTO[] members = new MemberDataDTO[numOfMembers];
+			
+			for(int i=0; i<numOfMembers; i++) {
+				members[i] = memberDataDTOList.get(i);
+			}
 
 			// this obj. contains board-info -> {name, desc, board-id, user-id, role}
 			BoardWithMembersProjection projection = boardProjectionMap.get(boardId);
@@ -214,7 +222,7 @@ public class BoardService {
 			// setting SavedBoardDataDTO obj.
 			SavedBoardDataDTO boardData = new SavedBoardDataDTO();
 			boardData.setBoardId(boardId);
-			boardData.setMemberIds(memberIdsArr);
+			boardData.setMembers(members);
 			boardData.setBoardName(projection.getBoardName());
 			boardData.setBoardDesc(projection.getBoardDesc());
 
