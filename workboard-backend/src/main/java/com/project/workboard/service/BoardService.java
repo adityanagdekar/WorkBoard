@@ -149,7 +149,13 @@ public class BoardService {
 		return ResponseEntity.ok(apiResponse);
 	}
 
+	// PENDING
 	public ResponseEntity<?> updateBoard(BoardDataDTO boardData) {
+		return ResponseEntity.ok("Board data & members saved successfully");
+	}
+
+	// PENDING
+	public ResponseEntity<?> deleteBoard(BoardDataDTO boardData) {
 		return ResponseEntity.ok("Board data & members saved successfully");
 	}
 
@@ -172,7 +178,8 @@ public class BoardService {
 				int boardId = row.getBoardId();
 				int userId = row.getUserId();
 				int userRole = row.getRole();
-				memberIdsMap.computeIfAbsent(boardId, k -> new ArrayList<MemberDataDTO>()).add(new MemberDataDTO(userId, userRole));
+				memberIdsMap.computeIfAbsent(boardId, k -> new ArrayList<MemberDataDTO>())
+						.add(new MemberDataDTO(userId, userRole));
 
 				boardProjectionMap.putIfAbsent(boardId, row);
 			}
@@ -207,12 +214,12 @@ public class BoardService {
 		for (Map.Entry<Integer, List<MemberDataDTO>> entry : memberIdsMap.entrySet()) {
 			int boardId = entry.getKey();
 			List<MemberDataDTO> memberDataDTOList = entry.getValue();
-			
+
 			// getting memberIds arr. from List of member-ids.
 			int numOfMembers = memberDataDTOList.size();
 			MemberDataDTO[] members = new MemberDataDTO[numOfMembers];
-			
-			for(int i=0; i<numOfMembers; i++) {
+
+			for (int i = 0; i < numOfMembers; i++) {
 				members[i] = memberDataDTOList.get(i);
 			}
 
@@ -234,10 +241,15 @@ public class BoardService {
 		return resultBoardDataDTOs;
 	}
 
-	public int getBoardUserId(HttpServletRequest request) {
+	public int getLoggedInUserId(HttpServletRequest request) {
 		String jwtTokenString = jwtService.getTokenFromRequest(request);
 		int userId = jwtService.getUserIdFromJWT(jwtTokenString);
 		return userId;
+	}
+
+	public ResponseEntity<?> getBoardData(int boardId, int userId) {
+		System.out.println("inside getBoardData, boardId: " + boardId + " userId: " + userId);
+		return ResponseEntity.ok("Board-id: "+boardId+" & user-id: "+userId+" received successfully");
 	}
 
 }

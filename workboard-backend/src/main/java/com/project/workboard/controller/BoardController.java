@@ -4,9 +4,11 @@ package com.project.workboard.controller;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.project.workboard.dto.BoardDataDTO;
@@ -23,8 +25,16 @@ public class BoardController {
 	
 	@GetMapping("/boards")
 	public ResponseEntity<?>getAllBoards(HttpServletRequest request) {
-		int id = boardService.getBoardUserId(request);
-		return boardService.getBoardsWithMembersIds(id);
+		// getting logged-in user's Id from the JWT token
+		int loggedIn_userId = boardService.getLoggedInUserId(request);
+		return boardService.getBoardsWithMembersIds(loggedIn_userId);
+	}
+	
+	@GetMapping("/{boardId}")
+	public ResponseEntity<?> getBoard(HttpServletRequest request, @PathVariable int boardId) {
+		// getting logged-in user's Id from the JWT token
+	    int loggedIn_userId = boardService.getLoggedInUserId(request);
+	    return boardService.getBoardData(boardId, loggedIn_userId);
 	}
 
 	@PostMapping("/save")
@@ -41,6 +51,7 @@ public class BoardController {
 //				.body("Error while saving board-data");
 	}
 	
+	// PENDING
 	@PostMapping("/delete")
 	public boolean deleteBoard(@RequestBody Long boardId) {
 		return false;

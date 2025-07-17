@@ -11,6 +11,7 @@ import Modal from "./Modal";
 import AddBoardModal from "./AddBoardModal";
 import useAuthCheck from "../token/useAuthCheck";
 import capitaliseName from "../utility/capitaliseName";
+import handleLogout from "../utility/handleLogout";
 
 import "../style/ManageDashboard.css";
 
@@ -23,24 +24,7 @@ const ManageDashboard = () => {
   const [toggleModal, setModal] = useState(false);
   const [toggleAddBoardModal, setAddBoardModal] = useState(false);
 
-  const [boardList, setBoardList] = useState(
-    //   [
-    //   {
-    //     name: "Project 1",
-    //     description: "Neo School Learning Management System",
-    //   },
-    //   {
-    //     name: "Project 2",
-    //     description: "CAT exam dashboard",
-    //   },
-
-    //   {
-    //     name: "Project 3",
-    //     description: "Sunshine Healthcare",
-    //   },
-    // ]
-    []
-  );
+  const [boardList, setBoardList] = useState([]);
 
   const [projectToRemoveIdx, setProjectToRemoveIdx] = useState(null);
 
@@ -91,28 +75,10 @@ const ManageDashboard = () => {
         break;
       case "Logout":
         console.log("Logout btn clicked");
-        handleLogout();
+        handleLogout(navigate);
         break;
       default:
         console.warn("Unknown header button clicked");
-    }
-  };
-
-  const handleLogout = async () => {
-    try {
-      await axios.post(
-        "http://localhost:8080/api/user/logout",
-        {},
-        {
-          withCredentials: true,
-          headers: {
-            "Content-Type": "application/json",
-          },
-        }
-      );
-      navigate("/");
-    } catch (error) {
-      console.error("Logout failed", error);
     }
   };
 
@@ -132,9 +98,13 @@ const ManageDashboard = () => {
 
   const saveBoardModelData = () => {};
 
-  const boardCardHeaderOnClick = () => {
+  const boardCardHeaderOnClick = (board) => {
     console.log("boardCardHeaderOnClick");
-    navigate("/board");
+    navigate(`/board/${board.boardId}`, {
+      state: {
+        userId: board.members[0].memberId,
+      },
+    });
   };
 
   const headerCloseBtnOnClick = (idx) => {
@@ -179,13 +149,15 @@ const ManageDashboard = () => {
                   key={board.boardId}
                   style={
                     board.members[0].memberRole === 1 // highlighting border based on memberRole
-                      ? { border: "1px solid #4caf50" }
-                      : { border: "1px solid #667eea" }
+                      ? { border: "2px solid #4caf50" }
+                      : { border: "2px solid #667eea" }
                   }
                 >
                   <BoardCardHeader
                     board={board.boardName}
-                    headerOnClick={boardCardHeaderOnClick}
+                    headerOnClick={() => {
+                      boardCardHeaderOnClick(board);
+                    }}
                     closeBtnOnClick={headerCloseBtnOnClick}
                   />
                   <div className="BoardCardContent">
