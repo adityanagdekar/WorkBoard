@@ -247,9 +247,4 @@ public class BoardService {
 		return userId;
 	}
 
-	public ResponseEntity<?> getBoardData(int boardId, int userId) {
-		System.out.println("inside getBoardData, boardId: " + boardId + " userId: " + userId);
-		return ResponseEntity.ok("Board-id: "+boardId+" & user-id: "+userId+" received successfully");
-	}
-
 }

@@ -27,6 +27,14 @@ public class AppUser implements UserDetails{
 	private String name;
 	private String email;
 	private String pwd;
+
+
+	/*----------------@OneToMany relationships----------------*/
+
+	// mappedBy refers to the field name in the child entity (Board) 
+	// that owns the relationship
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Board> boards = new ArrayList<>();
 	
 	public String getPwd() {
 		return pwd;
@@ -55,15 +63,6 @@ public class AppUser implements UserDetails{
 	public void setEmail(String email) {
 		this.email = email;
 	}
-
-
-	// Add @ManyToOne or @OneToMany relationships here if needed
-
-	// mappedBy refers to the field name in the child entity (Board) 
-	// that owns the relationship
-    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<Board> boards = new ArrayList<>();
-
     
     /*----------------User-Details-methods----------------*/
 	@Override

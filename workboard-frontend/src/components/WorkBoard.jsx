@@ -8,11 +8,14 @@ import Modal from "./Modal";
 import BoardContainer from "./BoardContainer";
 import BoardHeader from "./BoardHeader";
 import MainHeader from "./MainHeader";
+import useAuthCheck from "../token/useAuthCheck";
 import handleLogout from "../utility/handleLogout";
 
 import "../style/WorkBoard.css";
 
 const WorkBoard = () => {
+  // to do auth-check -> check whether user needs to login again or not
+  useAuthCheck();
   const navigate = useNavigate();
 
   const priorities = ["P1", "P2"];
@@ -55,11 +58,10 @@ const WorkBoard = () => {
     if (boardId && userId) {
       const getBoardData = async (boardId) => {
         try {
-          const url = `http://localhost:8080/api/board/${boardId}`;
+          const url = `http://localhost:8080/api/list/lists/${boardId}`;
           const configObj = {
             withCredentials: true,
           };
-
           const response = await axios.get(url, configObj);
 
           console.log(response.data);

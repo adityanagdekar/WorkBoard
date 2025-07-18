@@ -21,10 +21,6 @@ public class Board {
 	@Column(name = "id") // refers to PK column in board table
     private Integer id;
 	
-	@ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "user_id") // refers to FK column in board table
-    private AppUser user;
-	
     @Column(name = "name") 
     private String name;
 
@@ -33,6 +29,13 @@ public class Board {
 
     @Column(name = "created_date", updatable = false, insertable = false)
     private LocalDateTime createdDate;
+    
+
+	/*----------------@ManyToOne relationships----------------*/
+    
+	@ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "user_id", nullable = false) // refers to FK column in board table
+    private AppUser user;
 
 	public Integer getId() {
 		return id;
