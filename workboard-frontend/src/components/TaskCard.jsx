@@ -16,11 +16,43 @@ const TaskCard = ({
       onDragEnd={handleTaskCardDragEnd}
     >
       <div className="TaskCardHeader">
-        <h4>{cardName}</h4>
+        {/* <h4>{cardName}</h4> */}
+
+        <input
+          type="text"
+          defaultValue={cardName}
+          /*onBlur={(e) => {
+            const updatedName = e.target.value;
+            setDataList((prev) => {
+              const newList = [...prev];
+              newList[listIdx].cards[cardIdx].name = updatedName;
+              return newList;
+            });
+            updateCard(cardIdx , { name: updatedName });
+          }}*/
+          // className="card-title-input"
+        />
+
         <EllipsisVertical cursor="pointer" onClick={taskMenuOnClick} />
       </div>
       <div className="TaskCardContent">
-        <p>{cardDescription}</p>
+        {/* <p>{cardDescription}</p> */}
+
+        <textarea
+          defaultValue={cardDescription}
+          /*onBlur={(e) => {
+            const updatedDesc = e.target.value;
+            setDataList((prev) => {
+              const newList = [...prev];
+              newList[listIdx].cards[cardIdx].description = updatedDesc;
+              return newList;
+            });
+            updateCard(cardIdx , {
+              description: updatedDesc,
+            });
+          }}*/
+          // className="card-desc-input"
+        />
       </div>
     </div>
   );

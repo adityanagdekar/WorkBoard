@@ -1,4 +1,47 @@
-/* Individual task card */
+.TaskCardHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  margin-bottom: 0.5rem;
+}
+
+.TaskCardHeader input {
+  flex-grow: 1;
+  font-size: 1rem;
+  font-weight: 600;
+  color: #2d3748;
+  border: 1px solid #cbd5e0;
+  border-radius: 0.375rem;
+  padding: 0.25rem 0.5rem;
+  margin-right: 0.5rem;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.TaskCardContent {
+  width: 100%;
+}
+
+.TaskCardContent textarea {
+  width: 100%;
+  padding: 0.5rem;
+  font-size: 0.875rem;
+  color: #4a5568;
+  border: 1px solid #cbd5e0;
+  border-radius: 0.375rem;
+  resize: vertical;
+  box-sizing: border-box;
+}
+
+.TaskCardHeader input:focus,
+.TaskCardContent textarea:focus {
+  outline: none;
+  border-color: #3182ce;
+  box-shadow: 0 0 0 1px #3182ce;
+}
+
+/* Individual task card
 .TaskCard {
   background-color: #fdfdfe;
   border: 1px solid #edf2f7;
@@ -6,6 +49,7 @@
   border-radius: 0.75rem;
   box-shadow: 0 0.063rem 0.188rem rgba(44, 62, 80, 0.05);
   transition: box-shadow 0.2s ease;
+  width: 100%;
 }
 
 .TaskCard:hover {
@@ -20,19 +64,30 @@
   width: 100%;
 }
 
-.TaskCardHeader h4 {
+.TaskCardHeader h4,
+input {
   flex-grow: 1;
-}
-
-.TaskCard h4 {
   margin: 0;
-  font-size: 1rem; /* 16px */
+  font-size: 1rem;
   font-weight: 600;
   color: #2d3748;
 }
 
-.TaskCard p {
+/*.TaskCard h4 {
+  margin: 0;
+  font-size: 1rem; 
+  font-weight: 600;
+  color: #2d3748;
+}*/
+
+/*
+.TaskCardContent {
+  width: 100%;
+}
+
+.TaskCardContent p,
+textarea {
   margin: 0.25rem 0 0;
   font-size: 0.875rem;
   color: #4a5568;
-}
+} */

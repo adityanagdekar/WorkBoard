@@ -22,7 +22,7 @@ const WorkBoard = () => {
   const phases = ["To-Do", "WIP", "Test", "Review", "Deploy"];
   const headerBtnLabels = [
     "Projects",
-    "Add Phase",
+    "Add List",
     "Add Members",
     "Assign Roles",
     "Logout",
@@ -35,11 +35,11 @@ const WorkBoard = () => {
 
   const [dataList, setDataList] = useState([
     {
-      phase_name: "To-Do",
+      listName: "To-Do",
       cards: [{ name: "card 1", description: "This is the card 1" }],
     },
     {
-      phase_name: "WIP",
+      listName: "WIP",
       cards: [{ name: "card 2", description: "This is the card 2" }],
     },
   ]);
@@ -114,7 +114,7 @@ const WorkBoard = () => {
       case "Projects":
         backToDashboard();
         break;
-      case "Add Phase":
+      case "Add List":
         addPhaseOnClick();
         break;
       case "Add Members":
@@ -241,32 +241,55 @@ const WorkBoard = () => {
         btnLabels={headerBtnLabels}
         headerBtnOnClick={handleHeaderBtnClick}
       />
-      <div className="PhaseContainer">
+      <div className="ListContainer">
         {dataList.length > 0 ? (
-          dataList.map((phase, phaseIdx) => {
+          dataList.map((list, listIdx) => {
             return (
-              <div className="BoardPhase" key={phaseIdx}>
-                <div className="BoardPhaseHeader">
-                  <p>{phase.phase_name}</p>
+              <div className="BoardList" key={listIdx}>
+                <div className="BoardListHeader">
+                  {/* <p>{list.listName}</p> */}
+
+                  <input
+                    type="text"
+                    defaultValue={list.listName}
+                    onBlur={(e) => {
+                      const updatedName = e.target.value;
+                      console.log(`list name changed to ${updatedName}`);
+                      // Update local state
+                      /*setDataList((prev) =>
+                        prev.map((item, idx) =>
+                          idx === listIdx
+                            ? { ...item, listName: updatedName }
+                            : item
+                        )
+                      );*/
+                      // Save to backend
+                      /*updateListName(
+                        listIdx ,
+                        updatedName
+                      );*/
+                    }}
+                  />
+
                   <BoardBtn
-                    onClick={() => openModalForPhase(phaseIdx)}
+                    onClick={() => openModalForPhase(listIdx)}
                     label="X"
                     variant="close"
                   />
                 </div>
                 <div
                   className="TaskContainer"
-                  onDrop={(e) => handleTaskContainerOnDrop(e, phaseIdx)}
+                  onDrop={(e) => handleTaskContainerOnDrop(e, listIdx)}
                   onDragOver={handleTaskContainerDragOver}
                 >
                   {/* <p>These are the cards in {data.phase_name}</p> */}
-                  {phase.cards.length > 0 ? (
-                    phase.cards.map((card, cardIdx) => {
+                  {list.cards.length > 0 ? (
+                    list.cards.map((card, cardIdx) => {
                       return card != undefined ? (
                         <TaskCard
                           key={cardIdx}
                           handleTaskCardDragStart={(e) =>
-                            handleTaskCardDragStart(e, phaseIdx, cardIdx)
+                            handleTaskCardDragStart(e, listIdx, cardIdx)
                           }
                           handleTaskCardDragEnd={handleTaskCardDragEnd}
                           cardName={card.name}
@@ -278,11 +301,13 @@ const WorkBoard = () => {
                   ) : (
                     <p>Click on Add Task Button to add more tasks</p>
                   )}
+
+                  <BoardBtn
+                    onClick={() => addTaskOnClick(listIdx)}
+                    label="Add Task"
+                    style={{ marginBottom: "1%" }}
+                  />
                 </div>
-                <BoardBtn
-                  onClick={() => addTaskOnClick(phaseIdx)}
-                  label="Add Task"
-                />
               </div>
             );
           })
