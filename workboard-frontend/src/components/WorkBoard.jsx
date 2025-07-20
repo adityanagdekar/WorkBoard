@@ -10,6 +10,7 @@ import BoardHeader from "./BoardHeader";
 import MainHeader from "./MainHeader";
 import useAuthCheck from "../token/useAuthCheck";
 import handleLogout from "../utility/handleLogout";
+import useDebounce from "../hooks/usDebounce";
 
 import "../style/WorkBoard.css";
 
@@ -33,20 +34,30 @@ const WorkBoard = () => {
     return false;
   };
 
-  const [dataList, setDataList] = useState([
-    {
-      listName: "To-Do",
-      cards: [{ name: "card 1", description: "This is the card 1" }],
-    },
-    {
-      listName: "WIP",
-      cards: [{ name: "card 2", description: "This is the card 2" }],
-    },
-  ]);
-
+  const [dataLists, setDataLists] = useState([]);
+  //   [
+  //   {
+  //     listName: "To-Do",
+  //     cards: [{ name: "card 1", description: "This is the card 1" }],
+  //   },
+  //   {
+  //     listName: "WIP",
+  //     cards: [{ name: "card 2", description: "This is the card 2" }],
+  //   },
+  // ]
   const [toggleModal, setModal] = useState(false);
 
-  const [phaseToRemoveIdx, setPhaseToRemoveIdx] = useState(null);
+  const [listToRemoveIdx, setListToRemoveIdx] = useState(null);
+
+  const [listName, setListName] = useState({});
+
+  const [taskName, setTaskName] = useState("");
+
+  const [taskDesc, setTaskDesc] = useState("");
+
+  const debouncedListName = useDebounce(listName, 1000);
+  const debouncedTaskName = useDebounce(taskName, 1000);
+  const debouncedTaskDesc = useDebounce(taskDesc, 1000);
 
   // getting state-params passed
   // from ManageBoard.jsx to BoardGrid.jsx
@@ -54,6 +65,7 @@ const WorkBoard = () => {
   const location = useLocation();
   const userId = location.state?.userId;
 
+  // to get board-data --> (lists -> tasks)
   useEffect(() => {
     if (boardId && userId) {
       const getBoardData = async (boardId) => {
@@ -64,7 +76,9 @@ const WorkBoard = () => {
           };
           const response = await axios.get(url, configObj);
 
-          console.log(response.data);
+          setDataLists(response.data.data);
+
+          console.log("board-lists fetched: ", response.data.data);
         } catch (error) {
           console.log("Failed to get board-data: ", error);
         }
@@ -73,9 +87,34 @@ const WorkBoard = () => {
     }
   }, [boardId, userId]);
 
-  const openModalForPhase = (index) => {
-    console.log("openModalForPhase with index: ", index);
-    setPhaseToRemoveIdx(index);
+  // to update list-name
+  useEffect(() => {
+    if (debouncedListName) {
+      // Call backend updateList API here
+      console.log("Saving list name: ", debouncedListName);
+      saveListName(debouncedListName);
+    }
+  }, [debouncedListName]);
+
+  // to update task-name
+  useEffect(() => {
+    if (debouncedTaskName) {
+      console.log("Saving task name: ", debouncedTaskName);
+      updateTaskAPI({ name: debouncedTaskName });
+    }
+  }, [debouncedTaskName]);
+
+  // to udate task-desc.
+  useEffect(() => {
+    if (debouncedTaskDesc) {
+      console.log("Saving task desc: ", debouncedTaskDesc);
+      updateTaskAPI({ description: debouncedTaskDesc });
+    }
+  }, [debouncedTaskDesc]);
+
+  const openModalForList = (index) => {
+    console.log("openModalForList with index: ", index);
+    setListToRemoveIdx(index);
     setModal(true);
   };
 
@@ -91,31 +130,13 @@ const WorkBoard = () => {
       .replace(/-+/g, "_"); // Replace dashes with underscore
   };
 
-  const addTaskOnClick = (index) => {
-    console.log("Add Task btn clicked");
-    const newCard = {
-      name: `New Card ${dataList[index].cards.length + 1}`,
-      description: "Added dynamically",
-    };
-
-    setDataList((prev) => {
-      const updatedPhases = prev.map((list) => ({
-        ...list,
-        cards: list.cards.map((card) => ({ ...card })), // deep copy of cards
-      }));
-
-      updatedPhases[index].cards.push(newCard);
-      return updatedPhases;
-    });
-  };
-
   const handleHeaderBtnClick = (label) => {
     switch (label) {
       case "Projects":
         backToDashboard();
         break;
       case "Add List":
-        addPhaseOnClick();
+        addListOnClick();
         break;
       case "Add Members":
         console.log("Add Members clicked");
@@ -138,34 +159,122 @@ const WorkBoard = () => {
     navigate("/dashboard");
   };
 
-  const addPhaseOnClick = () => {
-    console.log("addPhaseOnClick clicked");
-
-    const newPhase = {
-      phase_name: `New Phase`,
-      cards: [],
-    };
-
-    setDataList((prev) => {
-      const updatedPhases = prev.map((list) => ({
-        ...list,
-        cards: list.cards.map((card) => ({ ...card })), // deep copy of cards
-      }));
-      updatedPhases.push(newPhase);
-      return updatedPhases;
+  const handleListNameChange = (updatedName, id) => {
+    console.log("updated list name: ", updatedName, "list id: ", id);
+    setListName({
+      id: id,
+      name: updatedName,
     });
   };
 
-  const removePhaseOnClick = (index) => {
-    console.log("removePhaseOnClick index: ", index);
-    if (index != null) {
-      setDataList((prev) => {
+  const saveListName = async (listNameObj) => {
+    console.log("listname obj.: ", listNameObj);
+
+    if (
+      listNameObj.hasOwnProperty("id") &&
+      listNameObj.hasOwnProperty("name")
+    ) {
+      // adding boardId to listName obj.
+      listNameObj.boardId = boardId;
+
+      // making api call
+      try {
+        const data = listName;
+        const configObj = {
+          withCredentials: true,
+          headers: {
+            "Content-Type": "application/json",
+          },
+        };
+        const response = await axios.post(
+          "http://localhost:8080/api/list/save",
+          data,
+          configObj
+        );
+        console.log("list saved successfully: ", response.data);
+      } catch (error) {
+        console.error(
+          "Saving List failed:",
+          error.response?.data || error.message
+        );
+      }
+    } else {
+      console.log("list-name not yet updated");
+    }
+  };
+
+  const addListOnClick = () => {
+    console.log("addListOnClick clicked");
+
+    const newList = {
+      name: `New List`,
+      cards: [],
+    };
+    console.log("newList: ", newList);
+
+    /*setDataLists((prev) => {
+      const updatedLists = prev.map((list) => ({
+        ...list,
+        cards: list.cards.map((card) => ({ ...card })), // deep copy of cards
+      }));
+      updatedLists.push(newList);
+      return updatedLists;
+    });*/
+
+    setDataLists((prev) => {
+      const updatedLists = prev.map((list) => {
+        const updatedList = {
+          ...list,
+          cards: list.cards ? [...list.cards] : [],
+        };
+        return updatedList;
+      });
+
+      updatedLists.push(newList);
+      return updatedLists;
+    });
+  };
+
+  const addTaskOnClick = (index) => {
+    console.log("Add Task btn clicked");
+    const numOfCards =
+      dataLists[index].cards == undefined ? 0 : dataLists[index].cards.length;
+
+    const newCard = {
+      name: `New Card ${numOfCards + 1}`,
+      description: "Added dynamically",
+    };
+    console.log("newCard: ", newCard);
+
+    setDataLists((prev) => {
+      const updatedLists = prev.map((list, idx) => {
+        let updatedList = {};
+        if (idx === index) {
+          const existingCards = list.cards ? [...list.cards] : [];
+          updatedList = {
+            ...list,
+            cards: [...existingCards, newCard],
+          };
+        } else {
+          updatedList = { ...list };
+        }
+        return updatedList;
+      });
+      console.log("updatedLists: ", updatedLists);
+      return updatedLists;
+    });
+  };
+
+  const removeListOnClick = (index) => {
+    console.log("removeListOnClick index: ", index);
+    /*if (index != null) {
+      setDataLists((prev) => {
         const updatedPhases = [...prev];
         // Remove from source
         updatedPhases.splice(index, 1);
         return updatedPhases;
       });
-    }
+    }*/
   };
 
   const taskMenuOnClick = () => {
@@ -193,14 +302,14 @@ const WorkBoard = () => {
   const handleTaskContainerOnDrop = (e, targetPhaseIdx) => {
     console.log("on drop for task container");
 
-    const { fromPhaseIdx, fromCardIdx } = JSON.parse(
+    /*const { fromPhaseIdx, fromCardIdx } = JSON.parse(
       e.dataTransfer.getData("application/json")
     );
 
     // Prevent dropping into same list without movement
     if (fromPhaseIdx === targetPhaseIdx) return;
 
-    setDataList((prev) => {
+    setDataLists((prev) => {
       const updatedPhases = prev.map((list) => ({
         ...list,
         cards: list.cards.map((card) => ({ ...card })), // deep copy of cards
@@ -225,11 +334,28 @@ const WorkBoard = () => {
       // console.log(updatedPhases);
       return updatedPhases;
     });
+    */
   };
 
   const handleTaskContainerDragOver = (e) => {
     console.log("on drag over for task container");
     e.preventDefault();
+  };
+
+  const handleTaskNameChange = (updatedName, taskIdx) => {
+    console.log("updated task name: ", updatedName);
+    setTaskName((prev) => ({
+      ...prev,
+      taskIdx: updatedName,
+    }));
+  };
+
+  const handleTaskDescChange = (updatedDesc, taskIdx) => {
+    console.log("updated task desc: ", updatedDesc);
+    setTaskDesc((prev) => ({
+      ...prev,
+      taskIdx: updatedDesc,
+    }));
   };
 
   return (
@@ -242,8 +368,8 @@ const WorkBoard = () => {
         headerBtnOnClick={handleHeaderBtnClick}
       />
       <div className="ListContainer">
-        {dataList.length > 0 ? (
-          dataList.map((list, listIdx) => {
+        {dataLists.length > 0 ? (
+          dataLists.map((list, listIdx) => {
             return (
               <div className="BoardList" key={listIdx}>
                 <div className="BoardListHeader">
@@ -251,28 +377,14 @@ const WorkBoard = () => {
 
                   <input
                     type="text"
-                    defaultValue={list.listName}
-                    onBlur={(e) => {
-                      const updatedName = e.target.value;
-                      console.log(`list name changed to ${updatedName}`);
-                      // Update local state
-                      /*setDataList((prev) =>
-                        prev.map((item, idx) =>
-                          idx === listIdx
-                            ? { ...item, listName: updatedName }
-                            : item
-                        )
-                      );*/
-                      // Save to backend
-                      /*updateListName(
-                        listIdx ,
-                        updatedName
-                      );*/
+                    defaultValue={list.name}
+                    onChange={(e) => {
+                      handleListNameChange(e.target.value, list.id);
                     }}
                   />
 
                   <BoardBtn
-                    onClick={() => openModalForPhase(listIdx)}
+                    onClick={() => openModalForList(listIdx)}
                     label="X"
                     variant="close"
                   />
@@ -283,7 +395,7 @@ const WorkBoard = () => {
                   onDragOver={handleTaskContainerDragOver}
                 >
                   {/* <p>These are the cards in {data.phase_name}</p> */}
-                  {list.cards.length > 0 ? (
+                  {(list.cards?.length ?? 0) > 0 ? (
                     list.cards.map((card, cardIdx) => {
                       return card != undefined ? (
                         <TaskCard
@@ -295,6 +407,12 @@ const WorkBoard = () => {
                           cardName={card.name}
                           cardDescription={card.description}
                           taskMenuOnClick={taskMenuOnClick}
+                          onNameChange={(e) => {
+                            handleTaskNameChange(e.target.value, cardIdx);
+                          }}
+                          onDescChange={(e) => {
+                            handleTaskDescChange(e.target.value, cardIdx);
+                          }}
                         />
                       ) : null;
                     })
@@ -319,7 +437,7 @@ const WorkBoard = () => {
         <Modal
           modalMsg={"Do you want to remove this Phase ?"}
           modalYesOnClick={() => {
-            removePhaseOnClick(phaseToRemoveIdx);
+            removeListOnClick(listToRemoveIdx);
             closeModal();
           }}
           modalNoOnClick={() => {

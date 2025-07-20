@@ -7,6 +7,8 @@ import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.AuthenticationCredentialsNotFoundException;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Component;
@@ -64,7 +66,6 @@ public class JwtService {
 
 			System.out.println("New JWT : "+tokenString);
 		} catch (Exception e) {
-			// TODO: handle exception
 			System.out.println("Exception while generating JWT token: " + e.getMessage());
 		}
 		return tokenString;
@@ -89,13 +90,13 @@ public class JwtService {
 	    if (request.getCookies() != null) {
 			// traversing thru all the Cookies to get the JWT token
 	        for (Cookie cookie : request.getCookies()) {
-	            if (cookie.getName().equals("jwt")) {
+	            if ("jwt".equals(cookie.getName())) {
 	                jwtTokenString = cookie.getValue();
 	                break;
 	            }
 	        }
 	    }
-		System.out.println("jwt token: "+jwtTokenString);
+		System.out.println("JWT token: "+jwtTokenString);
 		return jwtTokenString;
 	}
 
@@ -120,5 +121,22 @@ public class JwtService {
 					ex.fillInStackTrace());
 		}
 		return claims;
+	}
+
+	public Cookie getJWTCookie(Authentication authentication) {
+		
+		String tokenString = generateToken(authentication);
+
+		Cookie jwtCookie = new Cookie("jwt", tokenString);
+		jwtCookie.setHttpOnly(true);
+
+		// isLocal = true -> which means we'r currently in dev env.: localhost
+		boolean isLocal = true;
+		jwtCookie.setSecure(!isLocal);
+
+		jwtCookie.setPath("/");
+		jwtCookie.setMaxAge(5 * 60);
+		
+		return jwtCookie;
 	}
 }

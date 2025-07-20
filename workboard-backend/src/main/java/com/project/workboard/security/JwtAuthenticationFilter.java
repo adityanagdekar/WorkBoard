@@ -49,6 +49,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 		
 		if (jwtTokenString.length()==0){
 			// JWT token has not yet been assigned
+			System.out.println("JWT token is empty");
 			filterChain.doFilter(request, response);
 			return;
 		}
