@@ -104,7 +104,9 @@ public class AppUserService {
 			Authentication authentication = authenticationManager
 					.authenticate(new UsernamePasswordAuthenticationToken(email, pwd));
 
-			Cookie jwtCookie = jwtService.getJWTCookie(authentication);
+			String tokenString = jwtService.generateTokenBasedOnAuth(authentication);
+			
+			Cookie jwtCookie = jwtService.getJWTCookie(tokenString);
 
 			response.addCookie(jwtCookie);
 
@@ -151,26 +153,33 @@ public class AppUserService {
 		return ResponseEntity.ok("Logged out successfully");
 	}
 
-	public ResponseEntity<?> checkSession(HttpServletRequest request) {
+	public ResponseEntity<?> checkSession(HttpServletRequest request, HttpServletResponse response) {
 		try {
-
-			String jwtString = null;
+			String jwtToken = null;
 			if (request.getCookies() != null) {
 				for (Cookie cookie : request.getCookies()) {
 
 					if ("jwt".equals(cookie.getName())) {
-						jwtString = cookie.getValue();
+						jwtToken = cookie.getValue();
 					}
 				}
 			}
 
-			if (jwtString == null || jwtString.isEmpty()) {
+			if (jwtToken == null || jwtToken.isEmpty()) {
 				return ResponseEntity
 						.status(HttpStatus.UNAUTHORIZED)
 						.body("JWT not found");
 			}
 			// To Extract email
-			String email = jwtService.getEmailFromJWT(jwtString);
+			String email = jwtService.getEmailFromJWT(jwtToken);
+			
+			if (jwtService.shouldRefreshToken(jwtToken)) {
+				String newJwtToken = jwtService.refreshToken(jwtToken);
+				Cookie newJwtCookie = jwtService.getJWTCookie(newJwtToken);
+				response.addCookie(newJwtCookie);
+				System.out.println("Token refresh, new jwt token: "+newJwtToken);
+			}
+			
 			return ResponseEntity.ok(Map.of("email", email));
 		} catch (Exception e) {
 			return ResponseEntity

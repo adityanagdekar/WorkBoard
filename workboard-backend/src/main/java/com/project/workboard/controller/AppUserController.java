@@ -63,7 +63,7 @@ public class AppUserController {
 	}
 
 	@GetMapping("/session")
-	public ResponseEntity<?> checkSession(HttpServletRequest request) {
-		return appUserService.checkSession(request);
+	public ResponseEntity<?> checkSession(HttpServletRequest request, HttpServletResponse response) {
+		return appUserService.checkSession(request, response);
 	}
 }

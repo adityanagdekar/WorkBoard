@@ -29,27 +29,11 @@ public class JwtService {
 
 //	private static final Key KEY = Keys.secretKeyFor(SignatureAlgorithm.HS512);
 
-	@Autowired
-	private AppUserRepository userRepository;
-
 	private static final String SECRET = SecurityConstants.SECRET;
 	private static final Key KEY = Keys.hmacShaKeyFor(SECRET.getBytes(StandardCharsets.UTF_8));
 
-	public String generateToken(Authentication authentication) {
-		String email = authentication.getName();
-
-		// get the logged-in user info
-		Object principal = authentication.getPrincipal();
+	public String generateToken(String email, int userId) {
 		
-		int userId = -1;
-
-		// check if principal is instanceOf AppUser
-		if (principal instanceof AppUser) {
-			// get the AppUser obj.
-			AppUser user = (AppUser) principal;
-			userId = user.getId();
-		}
-
 		Date currentDate = new Date();
 		Date expireDate = new Date(currentDate.getTime() + SecurityConstants.JWT_EXPIRATION);
 		String tokenString = "";
@@ -68,6 +52,25 @@ public class JwtService {
 		} catch (Exception e) {
 			System.out.println("Exception while generating JWT token: " + e.getMessage());
 		}
+		return tokenString;
+	}
+	
+	public String generateTokenBasedOnAuth(Authentication authentication) {
+		String email = authentication.getName();
+
+		// get the logged-in user info
+		Object principal = authentication.getPrincipal();
+		
+		int userId = -1;
+
+		// check if principal is instanceOf AppUser
+		if (principal instanceof AppUser) {
+			// get the AppUser obj.
+			AppUser user = (AppUser) principal;
+			userId = user.getId();
+		}
+		
+		String tokenString = generateToken(email, userId);
 		return tokenString;
 	}
 
@@ -115,7 +118,12 @@ public class JwtService {
 	private Claims getClaims(String token) {
 		Claims claims;
 		try {
-			claims = Jwts.parserBuilder().setSigningKey(KEY).build().parseClaimsJws(token).getBody();
+			claims = Jwts
+					.parserBuilder()
+					.setSigningKey(KEY)
+					.build()
+					.parseClaimsJws(token)
+					.getBody();
 		} catch (Exception ex) {
 			throw new AuthenticationCredentialsNotFoundException("JWT was exprired or incorrect",
 					ex.fillInStackTrace());
@@ -123,10 +131,7 @@ public class JwtService {
 		return claims;
 	}
 
-	public Cookie getJWTCookie(Authentication authentication) {
-		
-		String tokenString = generateToken(authentication);
-
+	public Cookie getJWTCookie(String tokenString) {
 		Cookie jwtCookie = new Cookie("jwt", tokenString);
 		jwtCookie.setHttpOnly(true);
 
@@ -139,4 +144,29 @@ public class JwtService {
 		
 		return jwtCookie;
 	}
+	
+	public boolean shouldRefreshToken(String token) {
+	    try {
+	        Claims claims = Jwts.parserBuilder()
+	                .setSigningKey(KEY)
+	                .build()
+	                .parseClaimsJws(token)
+	                .getBody();
+
+	        Date expiration = claims.getExpiration();
+	        long timeLeft = expiration.getTime() - System.currentTimeMillis();
+
+	        // if less than 2 minutes remaining
+	        return timeLeft < (2 * 60 * 1000); 
+	    } catch (Exception e) {
+	        return false; // invalid or expired token
+	    }
+	}
+
+	public String refreshToken(String jwtToken) {
+		String email = getEmailFromJWT(jwtToken);
+		int userId = getUserIdFromJWT(jwtToken);
+		return generateToken(email, userId);
+	}
+
 }

@@ -435,7 +435,7 @@ const WorkBoard = () => {
       </div>
       {toggleModal && (
         <Modal
-          modalMsg={"Do you want to remove this Phase ?"}
+          modalMsg={"Do you want to remove this List ?"}
           modalYesOnClick={() => {
             removeListOnClick(listToRemoveIdx);
             closeModal();
