@@ -54,6 +54,8 @@ const WorkBoard = () => {
 
   const [toggleAddTaskModal, setAddTaskModal] = useState(false);
 
+  const [selectedListId, setSelectedListId] = useState(-1);
+
   const debouncedListName = useDebounce(listName, 1000);
   const debouncedTaskName = useDebounce(taskName, 1000);
   const debouncedTaskDesc = useDebounce(taskDesc, 1000);
@@ -310,8 +312,9 @@ const WorkBoard = () => {
     }
   };
 
-  const taskMenuOnClick = () => {
+  const taskMenuOnClick = (listId) => {
     console.log("task menu onclick invoked");
+    setSelectedListId(listId);
     showAddTaskModal();
   };
 
@@ -532,6 +535,7 @@ const WorkBoard = () => {
           closeBtnOnClick={closeAddTaskModal}
           onBackDropClick={closeAddTaskModal}
           boardId={boardId}
+          lisId={selectedListId}
         />
       )}
     </BoardContainer>

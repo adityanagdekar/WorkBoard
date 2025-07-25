@@ -258,7 +258,7 @@ public class BoardService {
 			}
 
 			List<SavedBoardMemberProjection> rawData = boardMemberRepository.getAllBoardMembers(boardId);
-			System.out.println("rawData.len: "+rawData.size());
+//			System.out.println("rawData.len: "+rawData.size());
 			
 			List<SavedBoardMemberDTO> boardMembers = new ArrayList<>();
 
@@ -269,6 +269,7 @@ public class BoardService {
 								projection.getRole(), 
 								projection.getName());
 				boardMembers.add(savedBoardMember);
+				System.out.println(savedBoardMember.toString());
 
 			}
 			

@@ -9,6 +9,7 @@ const TaskCard = ({
   taskMenuOnClick,
   onNameChange,
   onDescChange,
+  listId,
 }) => {
   return (
     <div
@@ -22,7 +23,10 @@ const TaskCard = ({
 
         <input type="text" defaultValue={cardName} onChange={onNameChange} />
 
-        <EllipsisVertical cursor="pointer" onClick={taskMenuOnClick} />
+        <EllipsisVertical
+          cursor="pointer"
+          onClick={() => taskMenuOnClick(listId)}
+        />
       </div>
       <div className="TaskCardContent">
         {/* <p>{cardDescription}</p> */}

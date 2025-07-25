@@ -7,40 +7,14 @@ import "../style/AddBoardModal.css";
 import BoardBtn from "./BoardBtn";
 import capitaliseName from "../utility/capitaliseName";
 
-const AddTaskModal = ({ closeBtnOnClick, onBackDropClick, boardId }) => {
-  const [boardMembers, setBoardMembers] = useState([
-    {
-      id: 1,
-      name: "John Doe",
-      isAdded: true,
-      role: 1,
-    },
-    {
-      id: 8,
-      name: "zack jones",
-      isAdded: false,
-      role: 0,
-    },
-    {
-      id: 9,
-      name: "tim brooks",
-      isAdded: false,
-      role: 0,
-    },
-    {
-      id: 10,
-      name: "Shree",
-      isAdded: false,
-      role: 0,
-    },
-    {
-      id: 11,
-      name: "Niel",
-      isAdded: false,
-      role: 0,
-    },
-  ]);
-
+const AddTaskModal = ({
+  closeBtnOnClick,
+  onBackDropClick,
+  boardId,
+  listId,
+}) => {
+  const [boardMembers, setBoardMembers] = useState([]);
+  const [taskMembers, setTaskMembers] = useState([]);
   const [taskName, setTaskName] = useState("");
   const [taskDesc, setTaskDesc] = useState("");
   const [isCompleted, setIsCompleted] = useState(false);
@@ -57,12 +31,32 @@ const AddTaskModal = ({ closeBtnOnClick, onBackDropClick, boardId }) => {
             withCredentials: true,
           };
           const response = await axios.get(url, configObj);
-
-          // setDataLists(response.data.data);
-
           console.log("board-members fetched data: ", response.data);
+
+          const members = response.data.data;
+
+          const initialTaskMembers = members.map((member) => {
+            const userObj = {
+              id: member.id,
+              name: member.name,
+              isAdded: false, // this tells us whether member is added to the task or not
+              role: "", // this tels us the role of the member
+            };
+
+            // checking if the member is board-creator based on id
+            const loggedIn_userId = JSON.parse(localStorage.getItem("user")).id;
+
+            userObj.role = member.id === loggedIn_userId ? 1 : 0; // role set as MANAGER i.e. 1
+            userObj.isAdded = member.id === loggedIn_userId ? true : false; // isAdded attr. set as true
+            return userObj;
+          });
+
+          console.log("initialTaskMembers: ", initialTaskMembers);
+
+          setBoardMembers(members);
+          setTaskMembers(initialTaskMembers);
         } catch (error) {
-          console.log("Failed to get board-data: ", error);
+          console.log("Failed to get board-members: ", error);
         }
       };
       getBoardMembers(boardId);
@@ -73,7 +67,7 @@ const AddTaskModal = ({ closeBtnOnClick, onBackDropClick, boardId }) => {
     console.log("Role dropdown altered");
     const selectedRole = e.target.value;
     // console.log("boardMembers: ", boardMembers);
-    setBoardMembers((prevMembers) =>
+    setTaskMembers((prevMembers) =>
       prevMembers.map((member) =>
         member.id === user.id ? { ...member, role: selectedRole } : member
       )
@@ -85,7 +79,7 @@ const AddTaskModal = ({ closeBtnOnClick, onBackDropClick, boardId }) => {
     console.log("user: ", user);
     const isChecked = e.target.checked;
     // console.log("boardMembers: ", boardMembers);
-    setBoardMembers((prevMembers) => {
+    setTaskMembers((prevMembers) => {
       const updatedMembers = prevMembers.map((member) =>
         member.id === user.id ? { ...member, isAdded: isChecked } : member
       );
@@ -96,14 +90,14 @@ const AddTaskModal = ({ closeBtnOnClick, onBackDropClick, boardId }) => {
 
   const checkIsMember = (user) => {
     // console.log("boardMembers: ", boardMembers);
-    const member = boardMembers.find((member) => member.id === user.id);
+    const member = taskMembers.find((member) => member.id === user.id);
     if (member && member.hasOwnProperty("isAdded")) return member.isAdded;
     return false;
   };
 
   const checkRole = (user) => {
     // console.log("boardMembers: ", boardMembers);
-    const member = boardMembers.find((member) => member.id === user.id);
+    const member = taskMembers.find((member) => member.id === user.id);
     if (member && member.hasOwnProperty("role")) return member.role;
     return false;
   };
@@ -119,13 +113,23 @@ const AddTaskModal = ({ closeBtnOnClick, onBackDropClick, boardId }) => {
   };
 
   const saveTaskBtn = () => {
+    console.log("save btn clicked");
+    const loggedIn_userId = JSON.parse(localStorage.getItem("user")).id;
+
+    const selectedMembers = taskMembers.filter(
+      (member) => member.isAdded && member.role >= 0
+    );
     const taskData = {
       name: taskName,
       description: taskDesc,
       is_active: isActive,
       is_completed: isCompleted,
+      members: selectedMembers,
+      userId: loggedIn_userId,
+      listId: listId,
     };
-    console.log("save btn clicked");
+
+    console.log("data to be saved: ", taskData);
   };
 
   return (
@@ -138,7 +142,7 @@ const AddTaskModal = ({ closeBtnOnClick, onBackDropClick, boardId }) => {
             <input
               type="text"
               required
-              value={""}
+              value={taskName}
               onChange={(e) => {
                 handleTaskNameChange(e.target.value);
               }}
@@ -147,7 +151,7 @@ const AddTaskModal = ({ closeBtnOnClick, onBackDropClick, boardId }) => {
             <textarea
               type="text"
               required
-              value={""}
+              value={taskDesc}
               onChange={(e) => {
                 handleTaskDescChange(e.target.value);
               }}
@@ -216,35 +220,33 @@ const AddTaskModal = ({ closeBtnOnClick, onBackDropClick, boardId }) => {
                 </tr>
               </thead>
               <tbody>
-                {boardMembers.map((boardMember, idx) => {
+                {taskMembers.map((taskMember, idx) => {
                   const loggedIn_userId = JSON.parse(
                     localStorage.getItem("user")
                   ).id;
                   return (
                     <tr key={idx}>
-                      <td>{capitaliseName(boardMember.name)}</td>
+                      <td>{capitaliseName(taskMember.name)}</td>
                       <td>
                         <input
                           type="checkbox"
-                          checked={checkIsMember(boardMember)}
-                          onChange={(e) =>
-                            handleAddMemberChkBox(e, boardMember)
-                          }
+                          checked={checkIsMember(taskMember)}
+                          onChange={(e) => handleAddMemberChkBox(e, taskMember)}
                           /* If the user is board-creator/logged-in user then by-default 
                             mark this checkbox & disable it */
                           disabled={
-                            boardMember.id === loggedIn_userId ? true : false
+                            taskMember.id === loggedIn_userId ? true : false
                           }
                         />
                       </td>
                       <td>
                         <select
-                          value={checkRole(boardMember)}
-                          onChange={(e) => handleAssignRole(e, boardMember)}
+                          value={checkRole(taskMember)}
+                          onChange={(e) => handleAssignRole(e, taskMember)}
                           /* If the user is board-creator/logged-in user then by-default 
                             set the role as Manager & disable it*/
                           disabled={
-                            boardMember.id === loggedIn_userId ? true : false
+                            taskMember.id === loggedIn_userId ? true : false
                           }
                         >
                           <option value="">-- select --</option>

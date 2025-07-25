@@ -1,34 +1,34 @@
 package com.project.workboard.dto;
 
 public class SavedBoardMemberDTO {
-	private int userId;
+	private int id;
 	private int role;
 	private String name;
 
 	public SavedBoardMemberDTO() {
 	}
 
-	public SavedBoardMemberDTO(int userId, int role, String name) {
+	public SavedBoardMemberDTO(int id, int role, String name) {
 		super();
-		this.userId = userId;
+		this.id = id;
 		this.role = role;
 		this.name = name;
 	}
 
-	public String getUserName() {
+	public String getName() {
 		return name;
 	}
 
-	public void setUserName(String name) {
+	public void setName(String name) {
 		this.name = name;
 	}
 
-	public int getUserId() {
-		return userId;
+	public int getId() {
+		return id;
 	}
 
-	public void setUserId(int userId) {
-		this.userId = userId;
+	public void setId(int id) {
+		this.id = id;
 	}
 
 	public int getRole() {
@@ -41,7 +41,7 @@ public class SavedBoardMemberDTO {
 
 	@Override
 	public String toString() {
-		return "SavedBoardMemberDTO userId=" + userId + ", role=" + role + ", name=" + name
+		return "SavedBoardMemberDTO id=" + id + ", role=" + role + ", name=" + name
 				+ "]";
 	}
 
