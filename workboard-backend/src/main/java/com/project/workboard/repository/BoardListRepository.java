@@ -16,7 +16,8 @@ public interface BoardListRepository extends JpaRepository<BoardList, Integer>{
 		    SELECT 
 		        id AS id,
 		        board_id AS boardId,
-		        name AS name
+		        name AS name,
+		        created_by AS createdBy
 		    FROM board_list
 		    WHERE board_id = :boardId
 		""", nativeQuery = true)

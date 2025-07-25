@@ -4,30 +4,29 @@ public class BoardListDTO {
 	private int id;
 	private int boardId;
 	private String name;
-	
+	private int userId;
+
 	/*
-	private String email; // this is for demo purpose
-	private String pwd; // this is for demo purpose
-	*/
+	 * private String email; // this is for demo purpose private String pwd; // this
+	 * is for demo purpose
+	 */
 
 	public BoardListDTO() {
 	}
-	
-	public BoardListDTO(int id, int boardId, String name) {
+
+	public BoardListDTO(int id, int boardId, String name, int userId) {
 		super();
 		this.id = id;
 		this.boardId = boardId;
+		this.userId = userId;
 		this.name = name;
 	}
 
-	/*public BoardListDTO(int id, int boardId, String name, String email, String pwd) {
-		super();
-		this.id = id;
-		this.boardId = boardId;
-		this.name = name;
-		this.email = email;
-		this.pwd = pwd;
-	}*/
+	/*
+	 * public BoardListDTO(int id, int boardId, String name, String email, String
+	 * pwd) { super(); this.id = id; this.boardId = boardId; this.name = name;
+	 * this.email = email; this.pwd = pwd; }
+	 */
 
 	public int getId() {
 		return id;
@@ -45,6 +44,14 @@ public class BoardListDTO {
 		this.boardId = boardId;
 	}
 
+	public int getUserId() {
+		return userId;
+	}
+
+	public void setUserId(int userId) {
+		this.userId = userId;
+	}
+
 	public String getName() {
 		return name;
 	}
@@ -54,21 +61,13 @@ public class BoardListDTO {
 	}
 
 	/*
-	public String getEmail() {
-		return email;
-	}
-
-	public void setEmail(String email) {
-		this.email = email;
-	}
-
-	public String getPwd() {
-		return pwd;
-	}
-
-	public void setPwd(String pwd) {
-		this.pwd = pwd;
-	}
-	*/
+	 * public String getEmail() { return email; }
+	 * 
+	 * public void setEmail(String email) { this.email = email; }
+	 * 
+	 * public String getPwd() { return pwd; }
+	 * 
+	 * public void setPwd(String pwd) { this.pwd = pwd; }
+	 */
 
 }

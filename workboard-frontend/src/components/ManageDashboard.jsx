@@ -101,6 +101,7 @@ const ManageDashboard = () => {
     navigate(`/board/${board.boardId}`, {
       state: {
         userId: board.members[0].memberId,
+        boardName: board.boardName,
       },
     });
   };

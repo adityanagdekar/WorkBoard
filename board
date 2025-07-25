@@ -1,0 +1,182 @@
+CREATE DATABASE blockcertdb;
+CREATE USER blockcert_user WITH PASSWORD 'password123';
+GRANT ALL PRIVILEGES ON DATABASE blockcertdb TO blockcert_user;
+select * from app_user
+plsql -U blockcert_user -d blockcertdb
+select * from app_user
+select * from role
+exit
+\q
+plsql -U blockcert_user -d blockcertdb
+select * from role
+select * from app_user
+\c blockcertdb blockcert_user
+select * from app_user
+select * from role
+;
+\q
+\c blockcertdb blockcert_user
+SELECT * FROM role;
+SELECT * FROM app_user;
+delete from role;
+delete from app_user;
+delete from role;
+SELECT * FROM app_user;
+delete from role;
+SELECT * FROM role;
+SELECT * FROM role;
+SELECT * FROM app_user;
+\q
+\c blockcertdb blockcert_user
+SELECT * FROM app_user;
+delete from app_user
+delete from role
+select * from app_user
+/q
+\q
+/c blockcertdb blocert_user
+\c blockcertdb blockcert_user
+select * from app_user
+SELECT * FROM app_user;
+\q
+\c blockcertdb blockcert_user
+select * from app_user;
+delete from app_user;
+select * from role;
+delete from role;
+select * from certificate;
+select * from certificate;
+select * from certificate;
+select * from certificate;
+select * from certificate;
+\q
+\c blockcertdb blockcert_user
+select * from certificate;
+select * from certificate;
+select * from certificate;
+/q
+\q
+\c blockcertdb blockcert_user
+select * from certificate;
+select * from certificate;
+\q
+\c blockcertdb blockcert_user
+select * from user;
+select * from appuser;
+select * from appusers;
+select * from roles;
+select * from role;
+select * from appuser;
+select * from app_user;
+delete from app_user;
+delete from role;
+select * from app_user;
+delete from role;
+select * from role;
+select * from app_user;
+delete from app_user
+delete from app_user;
+select * from app_user;
+delete from app_user;
+delete from role;
+select * from app_user;
+select * from role;
+\q
+\c blockcertdb blockcert_user
+select * from files;
+select * from file;
+select * from certificate;
+select * from certificate where student_id = "student_1"
+select * from certificate where student_id = "student_1";
+select * from certificate where student_id = "student_1"
+select * from certificate where student_id = "student_1";
+;
+select * from certificate where student_id = "student_1";
+select * from certificate where certificate.student_id = "student_1";
+\q
+\c blockcertdb blockcert_user
+select * from certificate where student_id = "student_1";
+select * from certificate where certificate.student_id = "student_1";
+select * from certificate where certificate.student_id = "student_1";
+select * from certificate;
+select * from app_user;
+delete from certificate;
+select * from certificate;
+\q
+\c blockcertdb blockcert_user
+select * from app_user;
+select * from role;
+select * from app_user;
+select * from app_user;
+select * from role;
+\q
+\c blockcertdb blockcert_user
+select * from app_user;
+select * from role;
+select * from certificate;
+\q
+\q
+\c blockcertdb blockcert_user
+select * from certificate;
+select * from certificate;
+\q
+\q
+\q
+CREATE USER workboard_user WITH PASSWORD 'workboard_2025';
+\q
+CREATE ROLE adityanagdekar WITH LOGIN SUPERUSER CREATEDB CREATEROLE PASSWORD 'password123';
+\q
+\q
+CREATE ROLE workboard_user WITH LOGIN PASSWORD 'workboard_123';
+\du
+CREATE DATABASE workboarddb WITH OWNER workboard_user;
+\l
+GRANT ALL PRIVILEGES ON DATABASE workboarddb TO workboard_user;
+\q
+\h
+\i /Users/adityanagdekar/Desktop/NYU/Academics/Projects/WorkBoard/workboard-sql/1_app_user.sql
+\dt
+\dt public.*
+\i /Users/adityanagdekar/Desktop/NYU/Academics/Projects/WorkBoard/workboard-sql/2_board.sql
+\i /Users/adityanagdekar/Desktop/NYU/Academics/Projects/WorkBoard/workboard-sql/3_board_list.sql
+\i /Users/adityanagdekar/Desktop/NYU/Academics/Projects/WorkBoard/workboard-sql/4_task_card.sql
+\i /Users/adityanagdekar/Desktop/NYU/Academics/Projects/WorkBoard/workboard-sql/5_board_member.sql
+\dt public.*
+\d public.*
+\d users
+\d app_user
+\?
+\q
+\dt 
+\d board
+clear
+clear;
+\d board
+\d board_list
+\dt
+\d task_card
+\q
+\q
+\dt
+\d app_user
+clear
+\q
+\d app_user
+\q
+\clear
+select * app_user;
+select * from app_user;
+select * from board;
+select * from board_member;
+ select * from board inner join board_member on board.id = board_member.board_id where board.board_id = 6;
+ select * from board inner join board_member on board.id = board_member.board_id where board.id = 6;
+ select * from board inner join board_member on board.id = board_member.board_id;
+\q
+ select * from board inner join board_member on board.id = board_member.board_id where board.id = 6;
+select * from app_user;
+select * from board;
+select * from board_member;
+select * from board_member as bm inner join app_user as au where bm.board_id = 10; 
+select * from board_member as bm inner join app_user as au on bm.user_id=au.id  where bm.board_id = 10; 
+\d baord;
+\s board;

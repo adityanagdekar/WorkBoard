@@ -16,6 +16,8 @@ import com.project.workboard.dto.BoardDataDTO;
 import com.project.workboard.dto.BoardWithMembersProjection;
 import com.project.workboard.dto.SavedBoardDataDTO;
 import com.project.workboard.dto.SavedBoardDataDTO.MemberDataDTO;
+import com.project.workboard.dto.SavedBoardMemberDTO;
+import com.project.workboard.dto.SavedBoardMemberProjection;
 import com.project.workboard.entity.AppUser;
 import com.project.workboard.entity.Board;
 import com.project.workboard.entity.BoardMember;
@@ -245,6 +247,47 @@ public class BoardService {
 		String jwtTokenString = jwtService.getTokenFromRequest(request);
 		int userId = jwtService.getUserIdFromJWT(jwtTokenString);
 		return userId;
+	}
+
+	public ResponseEntity<?> getAllBoardMembers(int boardId) {
+		System.out.println("Inside BoardService :: getAllBoardMembers, boardId: " + boardId);
+		try {
+
+			if (boardId <= 0) {
+				throw new IllegalArgumentException("Invalid user ID received");
+			}
+
+			List<SavedBoardMemberProjection> rawData = boardMemberRepository.getAllBoardMembers(boardId);
+			System.out.println("rawData.len: "+rawData.size());
+			
+			List<SavedBoardMemberDTO> boardMembers = new ArrayList<>();
+
+			for (SavedBoardMemberProjection projection : rawData) {
+				SavedBoardMemberDTO savedBoardMember = new 
+						SavedBoardMemberDTO(
+								projection.getUserId(), 
+								projection.getRole(), 
+								projection.getName());
+				boardMembers.add(savedBoardMember);
+
+			}
+			
+
+			// Data is fetched successfully, let's send Api-Response for the same
+			boolean successFlag = true;
+			String responseMsg = "Board-Members fetched successfully";
+
+			ApiResponseDTO<List<SavedBoardMemberDTO>> apiResponse = new ApiResponseDTO<List<SavedBoardMemberDTO>>(
+					successFlag, boardMembers, responseMsg);
+
+			return ResponseEntity.ok(apiResponse);
+		} catch (IllegalArgumentException e) {
+			System.out.println("Exception while getting all board-members: " + e.getMessage());
+			return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Invalid board-id, so can't get board-members");
+		} catch (Exception e) {
+			System.out.println("Exception while fetching board-members: " + e.getMessage());
+			return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Error while fetching board-members");
+		}
 	}
 
 }

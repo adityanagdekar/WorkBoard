@@ -7,7 +7,7 @@ import "../style/AddBoardModal.css";
 import BoardBtn from "./BoardBtn";
 import capitaliseName from "../utility/capitaliseName";
 
-const AddTaskModal = ({ closeBtnOnClick, onBackDropClick }) => {
+const AddTaskModal = ({ closeBtnOnClick, onBackDropClick, boardId }) => {
   const [boardMembers, setBoardMembers] = useState([
     {
       id: 1,
@@ -45,6 +45,29 @@ const AddTaskModal = ({ closeBtnOnClick, onBackDropClick }) => {
   const [taskDesc, setTaskDesc] = useState("");
   const [isCompleted, setIsCompleted] = useState(false);
   const [isActive, setIsActive] = useState(true);
+
+  // To fetch all the board-members
+
+  useEffect(() => {
+    if (boardId) {
+      const getBoardMembers = async (boardId) => {
+        try {
+          const url = `http://localhost:8080/api/board/members/${boardId}`;
+          const configObj = {
+            withCredentials: true,
+          };
+          const response = await axios.get(url, configObj);
+
+          // setDataLists(response.data.data);
+
+          console.log("board-members fetched data: ", response.data);
+        } catch (error) {
+          console.log("Failed to get board-data: ", error);
+        }
+      };
+      getBoardMembers(boardId);
+    }
+  }, [boardId]);
 
   const handleAssignRole = (e, user) => {
     console.log("Role dropdown altered");
@@ -189,15 +212,16 @@ const AddTaskModal = ({ closeBtnOnClick, onBackDropClick }) => {
                 <tr>
                   <th>Name</th>
                   <th>Add to Task ?</th>
+                  <th>Assign Role</th>
                 </tr>
               </thead>
               <tbody>
-                {boardMembers.map((boardMember) => {
+                {boardMembers.map((boardMember, idx) => {
                   const loggedIn_userId = JSON.parse(
                     localStorage.getItem("user")
                   ).id;
                   return (
-                    <tr key={boardMember.id}>
+                    <tr key={idx}>
                       <td>{capitaliseName(boardMember.name)}</td>
                       <td>
                         <input
@@ -212,6 +236,25 @@ const AddTaskModal = ({ closeBtnOnClick, onBackDropClick }) => {
                             boardMember.id === loggedIn_userId ? true : false
                           }
                         />
+                      </td>
+                      <td>
+                        <select
+                          value={checkRole(boardMember)}
+                          onChange={(e) => handleAssignRole(e, boardMember)}
+                          /* If the user is board-creator/logged-in user then by-default 
+                            set the role as Manager & disable it*/
+                          disabled={
+                            boardMember.id === loggedIn_userId ? true : false
+                          }
+                        >
+                          <option value="">-- select --</option>
+                          {/* 
+                          if role is Manager it means 1 at the backend
+                          and if it Member then it means 0
+                        */}
+                          <option value="1">Manager</option>
+                          <option value="0">Member</option>
+                        </select>
                       </td>
                     </tr>
                   );

@@ -82,7 +82,10 @@ public class BoardListService {
 				boardList = new BoardList();
 			}
 
+			// setting list-name
 			boardList.setName(boardListData.getName());
+			// setting list-createdBy
+			boardList.setCreatedBy(boardListData.getUserId());
 
 			// Getting board obj.
 			Optional<Board> boardOpt = boardRepository.findById(boardListData.getBoardId());

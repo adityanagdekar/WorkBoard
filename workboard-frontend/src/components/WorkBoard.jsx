@@ -63,6 +63,7 @@ const WorkBoard = () => {
   const { boardId } = useParams();
   const location = useLocation();
   const userId = location.state?.userId;
+  const boardName = location.state?.boardName;
 
   // to get board-data --> (lists -> tasks)
   useEffect(() => {
@@ -99,7 +100,7 @@ const WorkBoard = () => {
   useEffect(() => {
     if (debouncedTaskName) {
       console.log("Saving task name: ", debouncedTaskName);
-      updateTaskAPI({ name: debouncedTaskName });
+      saveTaskName({ name: debouncedTaskName });
     }
   }, [debouncedTaskName]);
 
@@ -107,7 +108,7 @@ const WorkBoard = () => {
   useEffect(() => {
     if (debouncedTaskDesc) {
       console.log("Saving task desc: ", debouncedTaskDesc);
-      updateTaskAPI({ description: debouncedTaskDesc });
+      saveTaskDesc({ description: debouncedTaskDesc });
     }
   }, [debouncedTaskDesc]);
 
@@ -165,6 +166,10 @@ const WorkBoard = () => {
     console.log("taskName obj.: ", taskNameObj);
   };
 
+  const saveTaskDesc = async (taskNameObj) => {
+    console.log("taskName obj.: ", taskNameObj);
+  };
+
   const saveListName = async (listNameObj) => {
     console.log("listname obj.: ", listNameObj);
 
@@ -174,10 +179,12 @@ const WorkBoard = () => {
     ) {
       // adding boardId to listName obj.
       listNameObj.boardId = boardId;
+      listNameObj.userId = userId;
 
       // making api call
       try {
-        const data = listName;
+        const data = listNameObj;
+        // listName;
         const configObj = {
           withCredentials: true,
           headers: {
@@ -430,7 +437,7 @@ const WorkBoard = () => {
       <MainHeader message="Workboard" />
 
       <BoardHeader
-        projectName={"Project Demo"}
+        headerMsg={boardName}
         btnLabels={headerBtnLabels}
         headerBtnOnClick={handleHeaderBtnClick}
       />
@@ -524,6 +531,7 @@ const WorkBoard = () => {
         <AddTaskModal
           closeBtnOnClick={closeAddTaskModal}
           onBackDropClick={closeAddTaskModal}
+          boardId={boardId}
         />
       )}
     </BoardContainer>
