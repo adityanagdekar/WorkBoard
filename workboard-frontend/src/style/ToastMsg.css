@@ -1,0 +1,81 @@
+.ToastContainer {
+  display: flex;
+  flex-direction: column;
+  position: fixed;
+  top: 15%;
+  right: 2%;
+  z-index: 9999;
+}
+
+.ToastContent {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem; /* adds space between text and icon */
+}
+
+.ToastContent span {
+  flex: 1;
+  word-break: break-word;
+}
+
+.Toast {
+  background-color: #f0f0f0;
+  border-left: 5px solid green;
+  border-radius: 5px;
+  padding: 0.8rem 1.2rem;
+  margin-bottom: 1rem;
+  min-width: 300px;
+  max-width: 400px;
+  font-size: 0.95rem;
+  animation: slideIn 0.4s ease forwards;
+  position: relative;
+  box-shadow: 0 0 8px rgba(0, 0, 0, 0.1);
+}
+
+/* Types */
+.Toast.success {
+  border-left-color: #4caf50;
+}
+.Toast.error {
+  border-left-color: #f44336;
+}
+
+.ToastClose {
+  position: absolute;
+  right: 10px;
+  top: 10px;
+  cursor: pointer;
+  width: 14px;
+  height: 14px;
+  color: #333;
+}
+
+.ToastClose:hover {
+  color: #000;
+  transform: scale(1.1);
+}
+
+/* Slide-in Animation */
+@keyframes slideIn {
+  from {
+    transform: translateX(120%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0%);
+    opacity: 1;
+  }
+}
+
+/* Optional: Slide-out (if you want animation on remove) */
+@keyframes slideOut {
+  from {
+    transform: translateX(0%);
+    opacity: 1;
+  }
+  to {
+    transform: translateX(120%);
+    opacity: 0;
+  }
+}

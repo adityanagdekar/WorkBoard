@@ -36,14 +36,13 @@
   margin: 0.5rem 0rem;
 }
 
-/* .ModalContent-Project input, */
-.MemberSection input,
-.InfoSection input {
-  width: 100%;
-  padding: 0.5rem;
-  border-width: 0.05rem;
-  border-radius: 0.25rem;
-  font-size: 1rem;
+.MemberSection {
+  flex: 2; /* 2 parts of available width */
+  border-radius: 6px;
+  border: 1px solid #ccc;
+  padding: 2% 3%;
+  overflow-y: auto;
+  max-height: 100%;
 }
 
 .InfoSection {
@@ -53,15 +52,37 @@
   flex-direction: column;
   gap: 10px;
   margin: 5%;
+  width: 100%;
 }
 
-.MemberSection {
-  flex: 2; /* 2 parts of available width */
-  border-radius: 6px;
-  border: 1px solid #ccc;
-  padding: 2% 3%;
-  overflow-y: auto;
-  max-height: 100%;
+.MemberSection label {
+  margin-bottom: 5%;
+  width: 100%;
+  padding: 0.5rem 0;
+  border-width: 0.05rem;
+  border-radius: 0.25rem;
+  font-size: 1.2rem;
+}
+
+.MemberSection input,
+.InfoSection input {
+  width: 100%;
+  padding: 0.5rem;
+  border-width: 0.05rem;
+  border-radius: 0.25rem;
+  font-size: 1rem;
+  margin-top: 2%;
+}
+
+.InfoSection textarea {
+  width: 100%;
+  padding: 0.5rem;
+  font-size: 0.875rem;
+  color: #4a5568;
+  border: 1px solid #cbd5e0;
+  border-radius: 0.375rem;
+  resize: vertical;
+  box-sizing: border-box;
 }
 
 .UserTable {
@@ -85,4 +106,8 @@
 .UserTable button {
   padding: 4px 8px;
   font-size: 1rem;
+}
+
+.ModalBtnContainer {
+  /* margin-bottom: 1%; */
 }

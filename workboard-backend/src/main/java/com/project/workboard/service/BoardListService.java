@@ -39,8 +39,10 @@ public class BoardListService {
 			return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
 					.body("Can't get board-lists, got invalid board-id. Login again");
 		} catch (Exception e) {
-			System.out.println("Exception while fetching board-lists for boardId: "+boardId + "\n Exception: "+e.getMessage());
-			return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Error while fetching board-lists for boardId: "+boardId);
+			System.out.println(
+					"Exception while fetching board-lists for boardId: " + boardId + "\n Exception: " + e.getMessage());
+			return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+					.body("Error while fetching board-lists for boardId: " + boardId);
 		}
 
 		// getting board-lists based on boardId
@@ -48,13 +50,11 @@ public class BoardListService {
 
 		// Data is fetched successfully, let's send Api-Response for the same
 		boolean successFlag = true;
-		
-		String responseMsg = (boardLists.size() > 0) 
-				? "Board-lists fetched successfully"
+
+		String responseMsg = (boardLists.size() > 0) ? "Board-lists fetched successfully"
 				: "There are no board-lists present";
-		
-		ApiResponseDTO<List<BoardListDTO>> apiResponse = new 
-				ApiResponseDTO<List<BoardListDTO>>(successFlag, boardLists,
+
+		ApiResponseDTO<List<BoardListDTO>> apiResponse = new ApiResponseDTO<List<BoardListDTO>>(successFlag, boardLists,
 				responseMsg);
 
 		return ResponseEntity.ok(apiResponse);
@@ -63,9 +63,10 @@ public class BoardListService {
 	public ResponseEntity<?> saveBoardList(BoardListDTO boardListData, HttpServletResponse response) {
 		System.out.println("Inside BoardListService: saveBoardList()");
 
-		// Saving board-list
-		SavedBoardListDTO savedBoardListData = new SavedBoardListDTO();
 		try {
+			// Saving board-list
+			SavedBoardListDTO savedBoardListData = new SavedBoardListDTO();
+
 			// Setting boardList
 			BoardList boardList;
 
@@ -100,16 +101,35 @@ public class BoardListService {
 			savedBoardListData.setBoardId(savedBoardList.getBoard().getId());
 			savedBoardListData.setName(savedBoardList.getName());
 
+			// Data is saved successfully, let's send Api-Response for the same
+			ApiResponseDTO<SavedBoardListDTO> apiResponse = new ApiResponseDTO<SavedBoardListDTO>(true,
+					savedBoardListData, "Board-list saved successfully");
+
+			return ResponseEntity.ok(apiResponse);
+
 		} catch (Exception e) {
 			System.out.println("Exception while saving board-list: " + e.getMessage());
 			return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Error while saving board-list");
 		}
 
-		// Data is saved successfully, let's send Api-Response for the same
-		ApiResponseDTO<SavedBoardListDTO> apiResponse = new ApiResponseDTO<SavedBoardListDTO>(true, savedBoardListData,
-				"Board-list saved successfully");
+	}
 
-		return ResponseEntity.ok(apiResponse);
+	public ResponseEntity<?> deleteBoardList(Integer id) {
+		System.out.println("Inside BoardListService:: deleteBoardList, id: "+id);
+		try {
+			boardListRepository.deleteById(id);
+			
+			System.out.println("Board-list deleted successfully with id: "+id);
+			
+			// Data is saved successfully, let's send Api-Response for the same
+			ApiResponseDTO<Integer> apiResponse = new ApiResponseDTO<Integer>(true,
+					id, "Board-list deleted successfully");
+
+			return ResponseEntity.ok(apiResponse);
+		} catch (Exception e) {
+			System.out.println("Exception while deleting board-list: " + e.getMessage());
+			return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Error while deleting board-list");
+		}
 	}
 
 }

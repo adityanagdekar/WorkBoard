@@ -1,26 +1,31 @@
+/***********---external libs---***********/
 import { useEffect, useState } from "react";
 import { useNavigate, useParams, useLocation } from "react-router-dom";
 import axios from "axios";
 
+/***********---components---***********/
 import BoardBtn from "./BoardBtn";
 import TaskCard from "./TaskCard";
 import Modal from "./Modal";
 import BoardContainer from "./BoardContainer";
 import BoardHeader from "./BoardHeader";
 import MainHeader from "./MainHeader";
+import AddTaskModal from "./AddTaskModal";
+import ToastMsg from "./ToastMsg";
+
+/***********---custom styling---***********/
+import "../style/WorkBoard.css";
+
+/***********---utility libs.---***********/
 import useAuthCheck from "../token/useAuthCheck";
 import handleLogout from "../utility/handleLogout";
 import useDebounce from "../hooks/usDebounce";
-
-import "../style/WorkBoard.css";
 
 const WorkBoard = () => {
   // to do auth-check -> check whether user needs to login again or not
   useAuthCheck();
   const navigate = useNavigate();
 
-  const priorities = ["P1", "P2"];
-  const phases = ["To-Do", "WIP", "Test", "Review", "Deploy"];
   const headerBtnLabels = [
     "Projects",
     "Add List",
@@ -29,31 +34,25 @@ const WorkBoard = () => {
     "Logout",
   ];
 
-  const taskExists = (phase) => {
-    if (["To-Do", "WIP", "Test"].includes(phase)) return true;
-    return false;
-  };
-
   const [dataLists, setDataLists] = useState([]);
-  //   [
-  //   {
-  //     listName: "To-Do",
-  //     cards: [{ name: "card 1", description: "This is the card 1" }],
-  //   },
-  //   {
-  //     listName: "WIP",
-  //     cards: [{ name: "card 2", description: "This is the card 2" }],
-  //   },
-  // ]
+
   const [toggleModal, setModal] = useState(false);
 
+  const [toasts, setToasts] = useState([]);
+
   const [listToRemoveIdx, setListToRemoveIdx] = useState(null);
+
+  const [listIdToDelete, setListIdToDelete] = useState(null);
+
+  const [isDisabled, setIsDisabled] = useState(false);
 
   const [listName, setListName] = useState({});
 
   const [taskName, setTaskName] = useState("");
 
   const [taskDesc, setTaskDesc] = useState("");
+
+  const [toggleAddTaskModal, setAddTaskModal] = useState(false);
 
   const debouncedListName = useDebounce(listName, 1000);
   const debouncedTaskName = useDebounce(taskName, 1000);
@@ -112,22 +111,16 @@ const WorkBoard = () => {
     }
   }, [debouncedTaskDesc]);
 
-  const openModalForList = (index) => {
-    console.log("openModalForList with index: ", index);
-    setListToRemoveIdx(index);
+  const openModalToDelete = (listId, idx) => {
+    console.log("openModalToDelete for list with id: ", listId);
+    setListToRemoveIdx(idx);
+    setListIdToDelete(listId);
     setModal(true);
   };
 
   const closeModal = () => {
     console.log("close the modal");
     setModal(false);
-  };
-
-  const getListName = (text) => {
-    return text
-      .toLowerCase()
-      .replace(/\s+/g, "_") // Replace whitespace with underscore
-      .replace(/-+/g, "_"); // Replace dashes with underscore
   };
 
   const handleHeaderBtnClick = (label) => {
@@ -140,6 +133,7 @@ const WorkBoard = () => {
         break;
       case "Add Members":
         console.log("Add Members clicked");
+        addToast("Member added successfully");
         // addMembersOnClick(); // Implement when ready
         break;
       case "Assign Roles":
@@ -167,6 +161,10 @@ const WorkBoard = () => {
     });
   };
 
+  const saveTaskName = async (taskNameObj) => {
+    console.log("taskName obj.: ", taskNameObj);
+  };
+
   const saveListName = async (listNameObj) => {
     console.log("listname obj.: ", listNameObj);
 
@@ -192,11 +190,15 @@ const WorkBoard = () => {
           configObj
         );
         console.log("list saved successfully: ", response.data);
+
+        addToast("List saved successfully", "sucess");
       } catch (error) {
         console.error(
           "Saving List failed:",
           error.response?.data || error.message
         );
+
+        addToast("Failed to save the List", "error");
       }
     } else {
       console.log("list-name not yet updated");
@@ -211,15 +213,6 @@ const WorkBoard = () => {
       cards: [],
     };
     console.log("newList: ", newList);
-
-    /*setDataLists((prev) => {
-      const updatedLists = prev.map((list) => ({
-        ...list,
-        cards: list.cards.map((card) => ({ ...card })), // deep copy of cards
-      }));
-      updatedLists.push(newList);
-      return updatedLists;
-    });*/
 
     setDataLists((prev) => {
       const updatedLists = prev.map((list) => {
@@ -241,8 +234,8 @@ const WorkBoard = () => {
       dataLists[index].cards == undefined ? 0 : dataLists[index].cards.length;
 
     const newCard = {
-      name: `New Card ${numOfCards + 1}`,
-      description: "Added dynamically",
+      name: `Task Card ${numOfCards + 1}`,
+      description: "Added task description here",
     };
     console.log("newCard: ", newCard);
 
@@ -265,20 +258,64 @@ const WorkBoard = () => {
     });
   };
 
-  const removeListOnClick = (index) => {
-    console.log("removeListOnClick index: ", index);
-    /*if (index != null) {
-      setDataLists((prev) => {
-        const updatedPhases = [...prev];
-        // Remove from source
-        updatedPhases.splice(index, 1);
-        return updatedPhases;
-      });
-    }*/
+  const removeListOnClick = async (index, id) => {
+    console.log("removeListOnClick index: ", index, " id: ", id);
+
+    // diabling yes btn for deletion
+    setIsDisabled(true);
+
+    if (index != null) {
+      const response = await deleteBoardList(id);
+
+      if (response.success === true) {
+        setDataLists((prev) => {
+          const updatedBoardLists = [...prev];
+          updatedBoardLists.splice(index, 1);
+          return updatedBoardLists;
+        });
+        addToast("Board-list deleted successfully", "success");
+      } else {
+        addToast("Failed to delete the Board-list", "error");
+      }
+    }
+    // enabling yes btn for deletion
+    setIsDisabled(false);
+  };
+
+  const deleteBoardList = async (id) => {
+    try {
+      const url = "http://localhost:8080/api/list/delete";
+      const data = { id: id };
+      const headersObj = { "Content-Type": "application/json" };
+      const configObj = {
+        headers: headersObj,
+        withCredentials: true,
+      };
+      const response = await axios.post(url, data, configObj);
+      console.log(
+        "Response after deleting the board-list response.data: ",
+        response.data
+      );
+      return response.data;
+    } catch (error) {
+      console.log("Failed to get boards: ", error);
+      return { success: false };
+    }
   };
 
   const taskMenuOnClick = () => {
     console.log("task menu onclick invoked");
+    showAddTaskModal();
+  };
+
+  const showAddTaskModal = () => {
+    console.log("show Add-Task modal");
+    setAddTaskModal((prevState) => prevState || true);
+  };
+
+  const closeAddTaskModal = () => {
+    console.log("close Add-Task modal");
+    setAddTaskModal((prevState) => prevState && false);
   };
 
   const handleTaskCardDragStart = (e, srcPhaseIdx, srcCardIdx) => {
@@ -358,6 +395,36 @@ const WorkBoard = () => {
     }));
   };
 
+  const addToast = (message, type = "success") => {
+    const currId = Date.now(); // unique key
+
+    // Update the toasts-state
+    setToasts((prev) => {
+      const updatedToasts = [...prev];
+      const toastMsg = {
+        id: currId,
+        message: message,
+        type: type,
+      };
+      updatedToasts.push(toastMsg);
+      return updatedToasts;
+    });
+
+    // Auto-remove after 3 seconds
+    setTimeout(() => {
+      setToasts((prev) => {
+        // return all the toasts except the one which has it's id eq. to the currId
+        const updatedToasts = prev.filter((toast) => toast.id !== currId);
+        return updatedToasts;
+      });
+    }, 3000);
+  };
+
+  const removeToast = (id) => {
+    // return all the toasts except the one which has it's id eq. to the currId
+    setToasts((prev) => prev.filter((toast) => toast.id !== id));
+  };
+
   return (
     <BoardContainer>
       <MainHeader message="Workboard" />
@@ -367,6 +434,9 @@ const WorkBoard = () => {
         btnLabels={headerBtnLabels}
         headerBtnOnClick={handleHeaderBtnClick}
       />
+
+      <ToastMsg toasts={toasts} removeToast={removeToast} />
+
       <div className="ListContainer">
         {dataLists.length > 0 ? (
           dataLists.map((list, listIdx) => {
@@ -384,7 +454,7 @@ const WorkBoard = () => {
                   />
 
                   <BoardBtn
-                    onClick={() => openModalForList(listIdx)}
+                    onClick={() => openModalToDelete(list.id, listIdx)}
                     label="X"
                     variant="close"
                   />
@@ -413,6 +483,7 @@ const WorkBoard = () => {
                           onDescChange={(e) => {
                             handleTaskDescChange(e.target.value, cardIdx);
                           }}
+                          listId={list.id}
                         />
                       ) : null;
                     })
@@ -430,20 +501,29 @@ const WorkBoard = () => {
             );
           })
         ) : (
-          <p>Click on Add Phase button to Add new phases</p>
+          <p>Click on Add List button to Add New Lists</p>
         )}
       </div>
       {toggleModal && (
         <Modal
-          modalMsg={"Do you want to remove this List ?"}
+          modalMsg={
+            isDisabled ? "Please wait..." : "Do you want to remove this List ?"
+          }
           modalYesOnClick={() => {
-            removeListOnClick(listToRemoveIdx);
+            removeListOnClick(listToRemoveIdx, listIdToDelete);
             closeModal();
           }}
           modalNoOnClick={() => {
             closeModal();
           }}
           onBackdropClick={() => closeModal()}
+          disabledChk={isDisabled}
+        />
+      )}
+      {toggleAddTaskModal && (
+        <AddTaskModal
+          closeBtnOnClick={closeAddTaskModal}
+          onBackDropClick={closeAddTaskModal}
         />
       )}
     </BoardContainer>

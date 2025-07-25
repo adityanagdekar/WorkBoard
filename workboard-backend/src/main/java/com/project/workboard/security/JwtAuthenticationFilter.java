@@ -31,19 +31,8 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 			HttpServletResponse response, FilterChain filterChain)
 			throws ServletException, IOException {
 
-		System.out.println("JWT Filter triggered for URI: " + request.getRequestURI());
-		
-		
-		/*
-		    // Read JWT from Authorization header
-			String authHeader = request.getHeader("Authorization");
-	
-			if (authHeader == null || !authHeader.startsWith("Bearer ")) {
-				filterChain.doFilter(request, response);
-				return;
-			}
-			String token = authHeader.substring(7);
-		*/
+		System.out.println("Inside JwtAuthenticationFilter::doFilterInternal, "
+				+ "\n JWT Filter triggered for URI: " + request.getRequestURI());
 
 		String jwtTokenString = jwtService.getTokenFromRequest(request);
 		

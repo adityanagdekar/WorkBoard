@@ -1,4 +1,3 @@
-import Select from "react-select";
 import { useEffect, useState } from "react";
 import axios from "axios";
 
@@ -6,6 +5,7 @@ import "../style/Modal.css";
 import "../style/AddBoardModal.css";
 
 import BoardBtn from "./BoardBtn";
+import ToastMsg from "./ToastMsg";
 
 import capitaliseName from "../utility/capitaliseName";
 
@@ -23,7 +23,9 @@ const AddBoardModal = ({ closeBtnOnClick, onBackDropClick }) => {
         const configObj = { withCredentials: true };
         const response = await axios.get(url, configObj);
 
-        const initialBoardMembers = response.data.map((user) => {
+        const boardMembersData = response.data.data;
+
+        const initialBoardMembers = boardMembersData.map((user) => {
           const userObj = {
             id: user.id,
             name: user.name,
@@ -42,7 +44,7 @@ const AddBoardModal = ({ closeBtnOnClick, onBackDropClick }) => {
         console.log("initialBoardMembers: ");
         console.log(initialBoardMembers);
 
-        setUsers(response.data);
+        setUsers(boardMembersData);
         setBoardMembers(initialBoardMembers);
       } catch (err) {
         console.log("Failed to get users: ", err);

@@ -53,7 +53,7 @@ public class BoardController {
 	
 	// PENDING
 	@PostMapping("/delete")
-	public boolean deleteBoard(@RequestBody Long boardId) {
-		return false;
+	public ResponseEntity<?> deleteBoard(@RequestBody Integer boardId) {
+		return boardService.deleteBoard(boardId);
 	}
 }

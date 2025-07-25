@@ -76,7 +76,7 @@ public class JwtService {
 
 	public String getEmailFromJWT(String token) {
 		Claims claims = getClaims(token);
-		System.out.println("claims: " + claims.toString());
+		System.out.println("inside getEmailFromJWT, claims: " + claims.toString());
 		String email = claims.getSubject();
 		return email;
 	}
@@ -99,7 +99,7 @@ public class JwtService {
 	            }
 	        }
 	    }
-		System.out.println("JWT token: "+jwtTokenString);
+		System.out.println("Inside getTokenFromRequest, JWT token: "+jwtTokenString);
 		return jwtTokenString;
 	}
 
@@ -132,6 +132,7 @@ public class JwtService {
 	}
 
 	public Cookie getJWTCookie(String tokenString) {
+		System.out.println("Inside JwtService: getJWTCookie");
 		Cookie jwtCookie = new Cookie("jwt", tokenString);
 		jwtCookie.setHttpOnly(true);
 
@@ -146,6 +147,7 @@ public class JwtService {
 	}
 	
 	public boolean shouldRefreshToken(String token) {
+		System.out.println("Inside JwtService: shouldRefreshToken");
 	    try {
 	        Claims claims = Jwts.parserBuilder()
 	                .setSigningKey(KEY)
@@ -159,11 +161,13 @@ public class JwtService {
 	        // if less than 2 minutes remaining
 	        return timeLeft < (2 * 60 * 1000); 
 	    } catch (Exception e) {
+	    	System.out.println("Exception while checking session's expiration, "+e.getMessage());
 	        return false; // invalid or expired token
 	    }
 	}
 
 	public String refreshToken(String jwtToken) {
+		System.out.println("Inside JwtService: refreshToken");
 		String email = getEmailFromJWT(jwtToken);
 		int userId = getUserIdFromJWT(jwtToken);
 		return generateToken(email, userId);

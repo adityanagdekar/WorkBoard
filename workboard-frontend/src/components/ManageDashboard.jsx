@@ -96,8 +96,6 @@ const ManageDashboard = () => {
     setModal((prevState) => prevState && false);
   };
 
-  const saveBoardModelData = () => {};
-
   const boardCardHeaderOnClick = (board) => {
     console.log("boardCardHeaderOnClick");
     navigate(`/board/${board.boardId}`, {
@@ -130,6 +128,19 @@ const ManageDashboard = () => {
     return "Hello, " + capitaliseName(name);
   };
 
+  const getColorAsPerRole = (board) => {
+    console.log("inside getColorAsPerRole");
+    const loggedIn_userId = JSON.parse(localStorage.getItem("user")).id;
+
+    const memberObj = board.members.find(
+      (member) => member.memberId === loggedIn_userId
+    );
+
+    return memberObj.memberRole === 1
+      ? { border: "2px solid #4caf50" }
+      : { border: "2px solid #667eea" };
+  };
+
   return (
     <BoardContainer>
       <div className="Dashboard-Container">
@@ -145,14 +156,7 @@ const ManageDashboard = () => {
           {boardList.length > 0 ? (
             boardList.map((board) => {
               return (
-                <BoardCard
-                  key={board.boardId}
-                  style={
-                    board.members[0].memberRole === 1 // highlighting border based on memberRole
-                      ? { border: "2px solid #4caf50" }
-                      : { border: "2px solid #667eea" }
-                  }
-                >
+                <BoardCard key={board.boardId} style={getColorAsPerRole(board)}>
                   <BoardCardHeader
                     board={board.boardName}
                     headerOnClick={() => {
@@ -187,7 +191,6 @@ const ManageDashboard = () => {
 
         {toggleAddBoardModal && (
           <AddBoardModal
-            saveBtnOnClick={saveBoardModelData}
             closeBtnOnClick={closeAddBoardModal}
             onBackDropClick={closeAddBoardModal}
           />

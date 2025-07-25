@@ -6,18 +6,8 @@ const Modal = ({
   modalYesOnClick,
   modalNoOnClick,
   onBackdropClick,
+  disabledChk,
 }) => {
-  //   useEffect(() => {
-  //     const handleKeyDown = (e) => {
-  //       if (e.key === "Escape") {
-  //         onBackdropClick(); // same handler as clicking on the overlay
-  //       }
-  //     };
-
-  //     document.addEventListener("keydown", handleKeyDown);
-  //     return () => document.removeEventListener("keydown", handleKeyDown);
-  //   }, [onBackdropClick]);
-
   return (
     <div className="ModalOverlay" onClick={onBackdropClick}>
       <div className="Modal">
@@ -30,6 +20,7 @@ const Modal = ({
               label="Yes"
               variant="modal-yes"
               onClick={modalYesOnClick}
+              disabled={disabledChk}
             />
             <BoardBtn label="No" variant="modal-no" onClick={modalNoOnClick} />
           </div>

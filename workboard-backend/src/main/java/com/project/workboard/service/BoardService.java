@@ -155,7 +155,7 @@ public class BoardService {
 	}
 
 	// PENDING
-	public ResponseEntity<?> deleteBoard(BoardDataDTO boardData) {
+	public ResponseEntity<?> deleteBoard(Integer boardData) {
 		return ResponseEntity.ok("Board data & members saved successfully");
 	}
 

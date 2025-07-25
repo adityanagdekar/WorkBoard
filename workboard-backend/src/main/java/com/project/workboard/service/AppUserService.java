@@ -86,12 +86,10 @@ public class AppUserService {
 			return ResponseEntity.ok(apiResponse);
 
 		} catch (Exception e) {
-			System.out.println("Exception while registering the user: " + 
-		registerReq.toString()+" \n Exception: "+e.getMessage());
-			
-			return ResponseEntity
-					.status(HttpStatus.UNAUTHORIZED)
-					.body("Error while registering the user");
+			System.out.println("Exception while registering the user: " + registerReq.toString() + " \n Exception: "
+					+ e.getMessage());
+
+			return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Error while registering the user");
 		}
 	}
 
@@ -105,13 +103,12 @@ public class AppUserService {
 					.authenticate(new UsernamePasswordAuthenticationToken(email, pwd));
 
 			String tokenString = jwtService.generateTokenBasedOnAuth(authentication);
-			
+
 			Cookie jwtCookie = jwtService.getJWTCookie(tokenString);
 
 			response.addCookie(jwtCookie);
 
-			UserLoginSuccessDTO loginSuccessObj = 
-					new UserLoginSuccessDTO("Logged in successfully", null);
+			UserLoginSuccessDTO loginSuccessObj = new UserLoginSuccessDTO("Logged in successfully", null);
 
 			// get the logged-in user info
 			Object principal = authentication.getPrincipal();
@@ -131,12 +128,10 @@ public class AppUserService {
 			return ResponseEntity.ok(loginSuccessObj);
 
 		} catch (Exception e) {
-			System.out.println("Exception while logging-in the user: " + 
-		loginReq.toString()+" \n Exception: "+e.getMessage());
-			
-			return ResponseEntity
-					.status(HttpStatus.UNAUTHORIZED)
-					.body("Error while logging-in the user");
+			System.out.println(
+					"Exception while logging-in the user: " + loginReq.toString() + " \n Exception: " + e.getMessage());
+
+			return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Error while logging-in the user");
 		}
 
 	}
@@ -154,6 +149,7 @@ public class AppUserService {
 	}
 
 	public ResponseEntity<?> checkSession(HttpServletRequest request, HttpServletResponse response) {
+		System.out.println("Inside AppUserService: checkSession");
 		try {
 			String jwtToken = null;
 			if (request.getCookies() != null) {
@@ -166,25 +162,31 @@ public class AppUserService {
 			}
 
 			if (jwtToken == null || jwtToken.isEmpty()) {
+				System.out.println("JWT is empty & expried");
 				return ResponseEntity
 						.status(HttpStatus.UNAUTHORIZED)
-						.body("JWT not found");
+						.body("JWT is empty & expried");
+			} else {
+				boolean tokenFlag = jwtService.shouldRefreshToken(jwtToken);
+				System.out.println("is JWT token expired: " + tokenFlag);
+
+				if (tokenFlag) {
+					// get the new token
+					String newJwtToken = jwtService.refreshToken(jwtToken);
+					// get the new cookie
+					Cookie newJwtCookie = jwtService.getJWTCookie(newJwtToken);
+					response.addCookie(newJwtCookie);
+					System.out.println("Token refresh, new jwt token: " + newJwtToken);
+					// update the jwt token
+					jwtToken = newJwtToken;
+				}
 			}
+
 			// To Extract email
 			String email = jwtService.getEmailFromJWT(jwtToken);
-			
-			if (jwtService.shouldRefreshToken(jwtToken)) {
-				String newJwtToken = jwtService.refreshToken(jwtToken);
-				Cookie newJwtCookie = jwtService.getJWTCookie(newJwtToken);
-				response.addCookie(newJwtCookie);
-				System.out.println("Token refresh, new jwt token: "+newJwtToken);
-			}
-			
 			return ResponseEntity.ok(Map.of("email", email));
 		} catch (Exception e) {
-			return ResponseEntity
-					.status(HttpStatus.UNAUTHORIZED)
-					.body("Invalid or expired JWT");
+			return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Invalid or expired JWT");
 		}
 	}
 

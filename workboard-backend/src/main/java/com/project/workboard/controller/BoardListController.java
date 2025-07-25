@@ -1,6 +1,7 @@
 package com.project.workboard.controller;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -32,12 +33,6 @@ public class BoardListController {
 	@Autowired
 	private BoardListService boardListService;
 	
-	@Autowired
-	private AuthenticationManager authenticationManager;
-	
-	@Autowired
-	private JwtService jwtService;
-	
 	@GetMapping("/lists/{boardId}")
 	public ResponseEntity<?> getBoardLists(HttpServletRequest request, @PathVariable int boardId){
 		return boardListService.getLists(boardId);
@@ -47,25 +42,13 @@ public class BoardListController {
     public ResponseEntity<?> saveBoardList(@RequestBody BoardListDTO boardListData,  
 			HttpServletResponse response) {
 		System.out.println("Inside BoardListController: saveBoardList");
-
-		/*
-		// Set JWT token in HttpServletResponse ---> this is for demo purpose
-		String email = boardListData.getEmail();
-		String pwd = boardListData.getPwd();
-		
-		Authentication authentication = authenticationManager
-				.authenticate(new UsernamePasswordAuthenticationToken(email, pwd));
-		
-		Cookie jwtCookie = jwtService.getJWTCookie(authentication);
-		
-		response.addCookie(jwtCookie);
-		*/
-		
 		return boardListService.saveBoardList(boardListData, response);  
 	}
 	
 	@PostMapping("/delete")
-	public boolean deleteBoardList(@RequestBody Long id) {
-		return false;
+	public ResponseEntity<?> deleteBoardList(@RequestBody Map<String, Integer> payload) {
+		Integer id = payload.get("id");
+		System.out.println("Inside BoardListController:: deleteBoardList, id: "+id);
+		return boardListService.deleteBoardList(id);
 	}
 }
