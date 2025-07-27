@@ -108,6 +108,7 @@ const AddBoardModal = ({ closeBtnOnClick, onBackDropClick }) => {
 
   const saveBoardData = async (boardData) => {
     try {
+      const url = "http://localhost:8080/api/board/save";
       const data = boardData;
       const configObj = {
         withCredentials: true,
@@ -115,11 +116,7 @@ const AddBoardModal = ({ closeBtnOnClick, onBackDropClick }) => {
           "Content-Type": "application/json",
         },
       };
-      const response = await axios.post(
-        "http://localhost:8080/api/board/save",
-        data,
-        configObj
-      );
+      const response = await axios.post(url, data, configObj);
       console.log("board saved successfully: ", response.data);
     } catch (error) {
       console.error(

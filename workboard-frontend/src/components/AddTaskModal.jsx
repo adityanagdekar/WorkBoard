@@ -112,7 +112,7 @@ const AddTaskModal = ({
     setTaskDesc((prev) => desc);
   };
 
-  const saveTaskBtn = () => {
+  const saveTaskBtnOnClick = () => {
     console.log("save btn clicked");
     const loggedIn_userId = JSON.parse(localStorage.getItem("user")).id;
 
@@ -130,6 +130,27 @@ const AddTaskModal = ({
     };
 
     console.log("data to be saved: ", taskData);
+    saveTaskData(taskData);
+  };
+
+  const saveTaskData = async (taskData) => {
+    try {
+      const url = "http://localhost:8080/api/task/save";
+      const data = taskData;
+      const configObj = {
+        withCredentials: true,
+        headers: {
+          "Content-Type": "application/json",
+        },
+      };
+      const response = await axios.post(url, data, configObj);
+      console.log("Task-data saved successfully: ", response.data);
+    } catch (error) {
+      console.error(
+        "Saving Task-data failed:",
+        error.response?.data || error.message
+      );
+    }
   };
 
   return (
@@ -269,7 +290,11 @@ const AddTaskModal = ({
         {/* Footer section */}
         <div className="ModalFooter">
           <div className="ModalBtnContainer">
-            <BoardBtn label="Save" variant="modal-yes" onClick={saveTaskBtn} />
+            <BoardBtn
+              label="Save"
+              variant="modal-yes"
+              onClick={saveTaskBtnOnClick}
+            />
             <BoardBtn
               label="Close"
               variant="modal-no"

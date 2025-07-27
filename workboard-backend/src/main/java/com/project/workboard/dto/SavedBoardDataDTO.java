@@ -49,7 +49,7 @@ public class SavedBoardDataDTO {
 	public SavedBoardDataDTO(int boardId, MemberDataDTO[] members, 
 			String boardName, String boardDesc) {
 		
-		// prev. onstructor args. -> int boardId, int[] memberIds, 
+		// prev. constructor args. -> int boardId, int[] memberIds, 
 		// String boardName, String boardDesc
 		super();
 		this.boardId = boardId;

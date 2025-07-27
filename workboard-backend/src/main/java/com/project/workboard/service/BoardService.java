@@ -122,7 +122,7 @@ public class BoardService {
 				} catch (Exception e) {
 					System.out.println("Exception while saving board-member: " + e.getMessage());
 					System.out.println(
-							"Need to delete the board, if saved. " + "Can't save board without it 's board-memebrs");
+							"Need to delete the board, if saved. " + "Can't save board without it's board-members");
 
 					// delete the board, if not able to save board-members
 					boardRepository.deleteById(boardId);
@@ -138,17 +138,20 @@ public class BoardService {
 				// board not saved successfully
 				return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Error while saving board");
 			}
+			
+			// Data is saved successfully, let's send Api-Response for the same
+			boolean successFlag = (boardId > 0 ? true : false);
+			String msg = (boardId > 0 ? "Board data & members saved successfully" : "Error in saving board data & members");
+			
+			ApiResponseDTO<SavedBoardDataDTO> apiResponse = new 
+					ApiResponseDTO<SavedBoardDataDTO>(successFlag, savedBoardData, msg);
+
+			return ResponseEntity.ok(apiResponse);
 
 		} catch (Exception e) {
 			System.out.println("Exception while saving board-data: " + e.getMessage());
 			return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Error while saving board-data");
 		}
-
-		// Data is saved successfully, let's send Api-Response for the same
-		ApiResponseDTO<SavedBoardDataDTO> apiResponse = new ApiResponseDTO<SavedBoardDataDTO>(true, savedBoardData,
-				"Board data & members saved successfully");
-
-		return ResponseEntity.ok(apiResponse);
 	}
 
 	// PENDING

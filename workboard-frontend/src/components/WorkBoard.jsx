@@ -313,7 +313,7 @@ const WorkBoard = () => {
   };
 
   const taskMenuOnClick = (listId) => {
-    console.log("task menu onclick invoked");
+    console.log("task menu onclick invoked, listId: ", listId);
     setSelectedListId(listId);
     showAddTaskModal();
   };
@@ -475,31 +475,30 @@ const WorkBoard = () => {
                   onDragOver={handleTaskContainerDragOver}
                 >
                   {/* <p>These are the cards in {data.phase_name}</p> */}
-                  {(list.cards?.length ?? 0) > 0 ? (
-                    list.cards.map((card, cardIdx) => {
-                      return card != undefined ? (
-                        <TaskCard
-                          key={cardIdx}
-                          handleTaskCardDragStart={(e) =>
-                            handleTaskCardDragStart(e, listIdx, cardIdx)
-                          }
-                          handleTaskCardDragEnd={handleTaskCardDragEnd}
-                          cardName={card.name}
-                          cardDescription={card.description}
-                          taskMenuOnClick={taskMenuOnClick}
-                          onNameChange={(e) => {
-                            handleTaskNameChange(e.target.value, cardIdx);
-                          }}
-                          onDescChange={(e) => {
-                            handleTaskDescChange(e.target.value, cardIdx);
-                          }}
-                          listId={list.id}
-                        />
-                      ) : null;
-                    })
-                  ) : (
-                    <p>Click on Add Task Button to add more tasks</p>
-                  )}
+                  {(list.cards?.length ?? 0) > 0
+                    ? list.cards.map((card, cardIdx) => {
+                        return card != undefined ? (
+                          <TaskCard
+                            key={cardIdx}
+                            handleTaskCardDragStart={(e) =>
+                              handleTaskCardDragStart(e, listIdx, cardIdx)
+                            }
+                            handleTaskCardDragEnd={handleTaskCardDragEnd}
+                            cardName={card.name}
+                            cardDescription={card.description}
+                            taskMenuOnClick={taskMenuOnClick}
+                            onNameChange={(e) => {
+                              handleTaskNameChange(e.target.value, cardIdx);
+                            }}
+                            onDescChange={(e) => {
+                              handleTaskDescChange(e.target.value, cardIdx);
+                            }}
+                            listId={list.id}
+                          />
+                        ) : null;
+                      })
+                    : // <p>Click on Add Task Button to add more tasks</p>
+                      addTaskOnClick(listIdx)}
 
                   <BoardBtn
                     onClick={() => addTaskOnClick(listIdx)}
@@ -535,7 +534,7 @@ const WorkBoard = () => {
           closeBtnOnClick={closeAddTaskModal}
           onBackDropClick={closeAddTaskModal}
           boardId={boardId}
-          lisId={selectedListId}
+          listId={selectedListId}
         />
       )}
     </BoardContainer>

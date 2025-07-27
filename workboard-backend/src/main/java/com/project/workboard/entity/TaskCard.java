@@ -38,6 +38,25 @@ public class TaskCard {
 	
     @Column(name = "created_date", updatable = false, insertable = false)
     private LocalDateTime createdDate;
+    
+    @Column(name = "created_by")
+	private int createdBy;
+
+    public int getId() {
+		return id;
+	}
+
+	public void setId(int id) {
+		this.id = id;
+	}
+    
+    public int getCreatedBy() {
+		return createdBy;
+	}
+
+	public void setCreatedBy(int createdBy) {
+		this.createdBy = createdBy;
+	}
 
 	public String getName() {
 		return name;
