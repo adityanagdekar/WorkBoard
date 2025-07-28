@@ -5,15 +5,11 @@ public class BoardListDTO {
 	private int boardId;
 	private String name;
 	private int userId;
-
-	/*
-	 * private String email; // this is for demo purpose private String pwd; // this
-	 * is for demo purpose
-	 */
+	private TaskCardDTO[] cards = new TaskCardDTO[0];
 
 	public BoardListDTO() {
 	}
-
+	
 	public BoardListDTO(int id, int boardId, String name, int userId) {
 		super();
 		this.id = id;
@@ -22,11 +18,14 @@ public class BoardListDTO {
 		this.name = name;
 	}
 
-	/*
-	 * public BoardListDTO(int id, int boardId, String name, String email, String
-	 * pwd) { super(); this.id = id; this.boardId = boardId; this.name = name;
-	 * this.email = email; this.pwd = pwd; }
-	 */
+	public BoardListDTO(int id, int boardId, String name, int userId, TaskCardDTO[] cards) {
+		super();
+		this.id = id;
+		this.boardId = boardId;
+		this.userId = userId;
+		this.name = name;
+		this.cards = cards;
+	}
 
 	public int getId() {
 		return id;
@@ -58,6 +57,14 @@ public class BoardListDTO {
 
 	public void setName(String name) {
 		this.name = name;
+	}
+	
+	public TaskCardDTO[] getCards() {
+		return cards;
+	}
+
+	public void setCards(TaskCardDTO[] cards) {
+		this.cards = cards;
 	}
 
 	/*

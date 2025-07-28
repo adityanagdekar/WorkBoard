@@ -1,5 +1,6 @@
 package com.project.workboard.service;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -11,10 +12,12 @@ import org.springframework.stereotype.Component;
 import com.project.workboard.dto.ApiResponseDTO;
 import com.project.workboard.dto.BoardListDTO;
 import com.project.workboard.dto.SavedBoardListDTO;
+import com.project.workboard.dto.TaskCardDTO;
 import com.project.workboard.entity.Board;
 import com.project.workboard.entity.BoardList;
 import com.project.workboard.repository.BoardListRepository;
 import com.project.workboard.repository.BoardRepository;
+import com.project.workboard.repository.TaskCardRepository;
 
 import jakarta.servlet.http.HttpServletResponse;
 
@@ -26,6 +29,9 @@ public class BoardListService {
 
 	@Autowired
 	private BoardRepository boardRepository;
+	
+	@Autowired
+	private TaskCardRepository taskCardRepository;
 
 	public ResponseEntity<?> getLists(int boardId) {
 		System.out.println("inside BoardListService -> getLists(int boardId), boardId: " + boardId);
@@ -34,6 +40,37 @@ public class BoardListService {
 			if (boardId <= 0) {
 				throw new IllegalArgumentException("Invalid user ID received");
 			}
+			
+			// getting board-lists based on boardId
+			List<BoardListDTO> boardLists = boardListRepository.getBoardListsByBoardId(boardId);
+			
+			if (boardLists.size()>0) {
+				System.out.println("fetching task-cards");
+				for(BoardListDTO boardListDTO: boardLists) {
+					int listId = boardListDTO.getId();
+					try {
+						List<TaskCardDTO> taskCards = taskCardRepository.getTasksByListId(listId);
+						System.out.println("no. of taskCards: "+taskCards.size());
+						boardListDTO.setCards(taskCards.toArray(new TaskCardDTO[0]));
+					} catch (Exception e) {
+						System.out.println(
+								"Exception while fetching task-cards for listId: " + listId + "\n Exception: " + e.getMessage());
+						return ResponseEntity.status(HttpStatus.CONFLICT)
+								.body("Error while fetching task-cards for listId: " + listId);
+					}
+				}
+			}
+
+			// Data is fetched successfully, let's send Api-Response for the same
+			boolean successFlag = true;
+
+			String responseMsg = (boardLists.size() > 0) ? "Board-lists fetched successfully"
+					: "There are no board-lists present";
+
+			ApiResponseDTO<List<BoardListDTO>> apiResponse = new 
+					ApiResponseDTO<List<BoardListDTO>>(successFlag, boardLists, responseMsg);
+
+			return ResponseEntity.ok(apiResponse);
 		} catch (IllegalArgumentException e) {
 			System.out.println("Exception got invalid boardId: " + e.getMessage());
 			return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
@@ -44,20 +81,6 @@ public class BoardListService {
 			return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
 					.body("Error while fetching board-lists for boardId: " + boardId);
 		}
-
-		// getting board-lists based on boardId
-		List<BoardListDTO> boardLists = boardListRepository.getBoardListsByBoardId(boardId);
-
-		// Data is fetched successfully, let's send Api-Response for the same
-		boolean successFlag = true;
-
-		String responseMsg = (boardLists.size() > 0) ? "Board-lists fetched successfully"
-				: "There are no board-lists present";
-
-		ApiResponseDTO<List<BoardListDTO>> apiResponse = new ApiResponseDTO<List<BoardListDTO>>(successFlag, boardLists,
-				responseMsg);
-
-		return ResponseEntity.ok(apiResponse);
 	}
 
 	public ResponseEntity<?> saveBoardList(BoardListDTO boardListData, HttpServletResponse response) {

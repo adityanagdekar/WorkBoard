@@ -54,7 +54,10 @@ const WorkBoard = () => {
 
   const [toggleAddTaskModal, setAddTaskModal] = useState(false);
 
+  // selected list idx.
   const [selectedListId, setSelectedListId] = useState(-1);
+  // selected card obj.
+  const [selectedTaskCard, setSelectedTaskCard] = useState({});
 
   const debouncedListName = useDebounce(listName, 1000);
   const debouncedTaskName = useDebounce(taskName, 1000);
@@ -312,9 +315,15 @@ const WorkBoard = () => {
     }
   };
 
-  const taskMenuOnClick = (listId) => {
-    console.log("task menu onclick invoked, listId: ", listId);
+  const taskMenuOnClick = (listId, cardObj) => {
+    console.log(
+      "task menu onclick invoked, listId: ",
+      listId,
+      "\n cardObj: ",
+      cardObj
+    );
     setSelectedListId(listId);
+    setSelectedTaskCard(cardObj);
     showAddTaskModal();
   };
 
@@ -485,8 +494,10 @@ const WorkBoard = () => {
                             }
                             handleTaskCardDragEnd={handleTaskCardDragEnd}
                             cardName={card.name}
-                            cardDescription={card.description}
-                            taskMenuOnClick={taskMenuOnClick}
+                            cardDescription={card.desc}
+                            taskMenuOnClick={() =>
+                              taskMenuOnClick(list.id, card)
+                            }
                             onNameChange={(e) => {
                               handleTaskNameChange(e.target.value, cardIdx);
                             }}
@@ -535,6 +546,7 @@ const WorkBoard = () => {
           onBackDropClick={closeAddTaskModal}
           boardId={boardId}
           listId={selectedListId}
+          cardObj={selectedTaskCard}
         />
       )}
     </BoardContainer>

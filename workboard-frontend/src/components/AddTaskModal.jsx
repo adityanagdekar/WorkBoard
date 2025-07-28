@@ -5,6 +5,7 @@ import "../style/Modal.css";
 import "../style/AddBoardModal.css";
 
 import BoardBtn from "./BoardBtn";
+import ToastMsg from "./ToastMsg";
 import capitaliseName from "../utility/capitaliseName";
 
 const AddTaskModal = ({
@@ -12,13 +13,17 @@ const AddTaskModal = ({
   onBackDropClick,
   boardId,
   listId,
+  cardObj,
 }) => {
   const [boardMembers, setBoardMembers] = useState([]);
   const [taskMembers, setTaskMembers] = useState([]);
-  const [taskName, setTaskName] = useState("");
-  const [taskDesc, setTaskDesc] = useState("");
-  const [isCompleted, setIsCompleted] = useState(false);
-  const [isActive, setIsActive] = useState(true);
+  const [taskName, setTaskName] = useState(cardObj ? cardObj.name : "");
+  const [taskDesc, setTaskDesc] = useState(cardObj ? cardObj.desc : "");
+  const [isCompleted, setIsCompleted] = useState(
+    cardObj ? cardObj.isCompleted : false
+  );
+  const [isActive, setIsActive] = useState(cardObj ? cardObj.isActive : false);
+  const [toasts, setToasts] = useState([]);
 
   // To fetch all the board-members
 
@@ -153,11 +158,44 @@ const AddTaskModal = ({
     }
   };
 
+  const addToast = (message, type = "success") => {
+    const currId = Date.now(); // unique key
+
+    // Update the toasts-state
+    setToasts((prev) => {
+      const updatedToasts = [...prev];
+      const toastMsg = {
+        id: currId,
+        message: message,
+        type: type,
+      };
+      updatedToasts.push(toastMsg);
+      return updatedToasts;
+    });
+
+    // Auto-remove after 3 seconds
+    setTimeout(() => {
+      setToasts((prev) => {
+        // return all the toasts except the one which has it's id eq. to the currId
+        const updatedToasts = prev.filter((toast) => toast.id !== currId);
+        return updatedToasts;
+      });
+    }, 3000);
+  };
+
+  const removeToast = (id) => {
+    // return all the toasts except the one which has it's id eq. to the currId
+    setToasts((prev) => prev.filter((toast) => toast.id !== id));
+  };
+
   return (
     <div className="ModalOverlay" onClick={onBackDropClick}>
       <div className="Modal-AddProject" onClick={(e) => e.stopPropagation()}>
         <div className="ModalContent-Project">
           {/* Project info section */}
+
+          <ToastMsg toasts={toasts} removeToast={removeToast} />
+
           <div className="InfoSection">
             <label>Name</label>
             <input
@@ -298,7 +336,10 @@ const AddTaskModal = ({
             <BoardBtn
               label="Close"
               variant="modal-no"
-              onClick={closeBtnOnClick}
+              onClick={() => {
+                // closeBtnOnClick
+                addToast("Task-card saved successfully", "sucess");
+              }}
             />
           </div>
         </div>
