@@ -1,5 +1,5 @@
 import "../style/TaskCard.css";
-import { EllipsisVertical } from "lucide-react";
+import { EllipsisVertical, Trash2 } from "lucide-react";
 
 const TaskCard = ({
   handleTaskCardDragStart,
@@ -9,8 +9,17 @@ const TaskCard = ({
   taskMenuOnClick,
   onNameChange,
   onDescChange,
-  listId,
+  removeCardOnClick,
+  openDeleteModal,
 }) => {
+  const handleTaskCardDelete = () => {
+    openDeleteModal({
+      msg: "Do you want delete this task-card ?",
+      isOpen: true,
+      onYesBtnClick: removeCardOnClick,
+    });
+  };
+
   return (
     <div
       className="TaskCard"
@@ -23,10 +32,9 @@ const TaskCard = ({
 
         <input type="text" defaultValue={cardName} onChange={onNameChange} />
 
-        <EllipsisVertical
-          cursor="pointer"
-          onClick={() => taskMenuOnClick(listId)}
-        />
+        <EllipsisVertical cursor="pointer" onClick={taskMenuOnClick} />
+
+        <Trash2 cursor="pointer" onClick={handleTaskCardDelete} />
       </div>
       <div className="TaskCardContent">
         {/* <p>{cardDescription}</p> */}
@@ -37,26 +45,3 @@ const TaskCard = ({
   );
 };
 export default TaskCard;
-
-/*
-<div
-  className="TaskCard"
-  key={cardIdx}
-  draggable
-  onDragStart={(e) =>
-    handleTaskCardDragStart(e, phaseIdx, cardIdx)
-  }
-  onDragEnd={handleTaskCardDragEnd}
->
-  <div className="TaskCardHeader">
-    <h4>{card.name}</h4>
-    <EllipsisVertical
-      cursor="pointer"
-      onClick={taskMenuOnClick}
-    />
-  </div>
-  <div className="TaskCardContent">
-    <p>{card.description}</p>
-  </div>
-</div>
-*/

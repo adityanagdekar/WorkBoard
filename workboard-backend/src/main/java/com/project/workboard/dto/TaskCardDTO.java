@@ -1,10 +1,14 @@
 package com.project.workboard.dto;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
+
 public class TaskCardDTO {
 	private int id;
 	private String name;
 	private String desc;
+	@JsonProperty("isActive")
 	private boolean isActive;
+	@JsonProperty("isCompleted")
 	private boolean isCompleted;
 	
 	public TaskCardDTO() {}

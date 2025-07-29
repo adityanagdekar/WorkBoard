@@ -6,7 +6,9 @@ public class TaskDataDTO {
 	private int id;
 	private String name;
 	private String description;
+	@JsonProperty("isActive")	
 	private boolean isActive;
+	@JsonProperty("isCompleted")	
 	private boolean isCompleted;
 	private Member[] members;
 	private int userId;

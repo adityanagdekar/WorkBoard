@@ -336,10 +336,7 @@ const AddTaskModal = ({
             <BoardBtn
               label="Close"
               variant="modal-no"
-              onClick={() => {
-                // closeBtnOnClick
-                addToast("Task-card saved successfully", "sucess");
-              }}
+              onClick={closeBtnOnClick}
             />
           </div>
         </div>

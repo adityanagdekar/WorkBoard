@@ -38,6 +38,12 @@ const WorkBoard = () => {
 
   const [toggleModal, setModal] = useState(false);
 
+  const [modalConfig, setModalConfig] = useState({
+    isOpen: false,
+    message: "",
+    onYesBtnClick: () => {},
+  });
+
   const [toasts, setToasts] = useState([]);
 
   const [listToRemoveIdx, setListToRemoveIdx] = useState(null);
@@ -122,11 +128,6 @@ const WorkBoard = () => {
     setListToRemoveIdx(idx);
     setListIdToDelete(listId);
     setModal(true);
-  };
-
-  const closeModal = () => {
-    console.log("close the modal");
-    setModal(false);
   };
 
   const handleHeaderBtnClick = (label) => {
@@ -315,6 +316,76 @@ const WorkBoard = () => {
     }
   };
 
+  const removeCardOnClick = (listIdx, cardIdx, cardId) => {
+    console.log(
+      "removeCardOnClick listIdx: ",
+      listIdx,
+      " cardIdx: ",
+      cardIdx,
+      " cardId: ",
+      cardId
+    );
+
+    // diabling yes btn for deletion
+    setIsDisabled(true);
+
+    if (cardIdx != null) {
+      const response = { success: true };
+      // deleteTaskCard(cardId);
+
+      if (response.success === true) {
+        setDataLists((prev) => {
+          const updatedBoardLists = prev.map((list) => ({
+            ...list,
+            cards: list.cards.map((card) => ({ ...card })), // deep copy of cards
+          }));
+
+          // Remove from source
+          const [removedCard] = updatedBoardLists[listIdx].cards.splice(
+            cardIdx,
+            1
+          );
+
+          console.log("removedCard: ", removedCard);
+
+          // To remove undefined/null
+          updatedBoardLists.forEach((list) => {
+            list.cards = list.cards.filter(Boolean);
+          });
+
+          console.log("updatedBoardLists: ", updatedBoardLists);
+          return updatedBoardLists;
+        });
+        addToast("Task-card deleted successfully", "success");
+      } else {
+        addToast("Failed to delete the Task-card", "error");
+      }
+    }
+    // enabling yes btn for deletion
+    setIsDisabled(false);
+  };
+
+  const deleteTaskCard = async (id) => {
+    /*try {
+      const url = "http://localhost:8080/api/list/delete";
+      const data = { id: id };
+      const headersObj = { "Content-Type": "application/json" };
+      const configObj = {
+        headers: headersObj,
+        withCredentials: true,
+      };
+      const response = await axios.post(url, data, configObj);
+      console.log(
+        "Response after deleting the board-list response.data: ",
+        response.data
+      );
+      return response.data;
+    } catch (error) {
+      console.log("Failed to get boards: ", error);
+      return { success: false };
+    }*/
+  };
+
   const taskMenuOnClick = (listId, cardObj) => {
     console.log(
       "task menu onclick invoked, listId: ",
@@ -444,6 +515,19 @@ const WorkBoard = () => {
     setToasts((prev) => prev.filter((toast) => toast.id !== id));
   };
 
+  const openModal = ({ msg, isOpen, onYesBtnClick }) => {
+    setModalConfig({
+      msg: msg,
+      isOpen: isOpen,
+      onYesBtnClick: onYesBtnClick,
+    });
+  };
+
+  const closeModal = () => {
+    console.log("close the modal");
+    setModalConfig((prev) => ({ ...prev, isOpen: false }));
+  };
+
   return (
     <BoardContainer>
       <MainHeader message="Workboard" />
@@ -473,7 +557,16 @@ const WorkBoard = () => {
                   />
 
                   <BoardBtn
-                    onClick={() => openModalToDelete(list.id, listIdx)}
+                    // onClick={() => openModalToDelete(list.id, listIdx)}
+                    onClick={() => {
+                      openModal({
+                        msg: "Do you want delete this board-list ?",
+                        isOpen: true,
+                        onYesBtnClick: () => {
+                          removeListOnClick(list.id, listIdx);
+                        },
+                      });
+                    }}
                     label="X"
                     variant="close"
                   />
@@ -504,7 +597,10 @@ const WorkBoard = () => {
                             onDescChange={(e) => {
                               handleTaskDescChange(e.target.value, cardIdx);
                             }}
-                            listId={list.id}
+                            removeCardOnClick={() => {
+                              removeCardOnClick(listIdx, cardIdx, card.id);
+                            }}
+                            openDeleteModal={openModal}
                           />
                         ) : null;
                       })
@@ -524,13 +620,12 @@ const WorkBoard = () => {
           <p>Click on Add List button to Add New Lists</p>
         )}
       </div>
-      {toggleModal && (
+      {modalConfig.isOpen && (
         <Modal
-          modalMsg={
-            isDisabled ? "Please wait..." : "Do you want to remove this List ?"
-          }
+          modalMsg={isDisabled ? "Please wait..." : modalConfig.msg}
           modalYesOnClick={() => {
-            removeListOnClick(listToRemoveIdx, listIdToDelete);
+            // removeListOnClick(listToRemoveIdx, listIdToDelete);
+            modalConfig.onYesBtnClick();
             closeModal();
           }}
           modalNoOnClick={() => {
