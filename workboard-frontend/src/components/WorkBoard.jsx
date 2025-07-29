@@ -87,9 +87,27 @@ const WorkBoard = () => {
           };
           const response = await axios.get(url, configObj);
 
-          setDataLists(response.data.data);
+          const boardLists = response.data.data;
 
-          console.log("board-lists fetched: ", response.data.data);
+          const updatedBoardLists = boardLists.map((list) => {
+            const updatedList = {
+              ...list,
+              cards: list.cards?.map((card) => ({ ...card })) || [], // deep copy of cards
+            };
+            if (updatedList.cards.length === 0) {
+              updatedList.cards = [
+                {
+                  name: `Task Card 1`,
+                  desc: "Added task description here",
+                },
+              ];
+            }
+            return updatedList;
+          });
+
+          setDataLists(updatedBoardLists);
+
+          console.log("board-lists fetched: ", updatedBoardLists);
         } catch (error) {
           console.log("Failed to get board-data: ", error);
         }
@@ -248,7 +266,7 @@ const WorkBoard = () => {
 
     const newCard = {
       name: `Task Card ${numOfCards + 1}`,
-      description: "Added task description here",
+      desc: "Added task description here",
     };
     console.log("newCard: ", newCard);
 
@@ -577,35 +595,31 @@ const WorkBoard = () => {
                   onDragOver={handleTaskContainerDragOver}
                 >
                   {/* <p>These are the cards in {data.phase_name}</p> */}
-                  {(list.cards?.length ?? 0) > 0
-                    ? list.cards.map((card, cardIdx) => {
-                        return card != undefined ? (
-                          <TaskCard
-                            key={cardIdx}
-                            handleTaskCardDragStart={(e) =>
-                              handleTaskCardDragStart(e, listIdx, cardIdx)
-                            }
-                            handleTaskCardDragEnd={handleTaskCardDragEnd}
-                            cardName={card.name}
-                            cardDescription={card.desc}
-                            taskMenuOnClick={() =>
-                              taskMenuOnClick(list.id, card)
-                            }
-                            onNameChange={(e) => {
-                              handleTaskNameChange(e.target.value, cardIdx);
-                            }}
-                            onDescChange={(e) => {
-                              handleTaskDescChange(e.target.value, cardIdx);
-                            }}
-                            removeCardOnClick={() => {
-                              removeCardOnClick(listIdx, cardIdx, card.id);
-                            }}
-                            openDeleteModal={openModal}
-                          />
-                        ) : null;
-                      })
-                    : // <p>Click on Add Task Button to add more tasks</p>
-                      addTaskOnClick(listIdx)}
+                  {(list.cards?.length ?? 0) > 0 &&
+                    list.cards.map((card, cardIdx) => {
+                      return card != undefined ? (
+                        <TaskCard
+                          key={cardIdx}
+                          handleTaskCardDragStart={(e) =>
+                            handleTaskCardDragStart(e, listIdx, cardIdx)
+                          }
+                          handleTaskCardDragEnd={handleTaskCardDragEnd}
+                          cardName={card.name}
+                          cardDescription={card.desc}
+                          taskMenuOnClick={() => taskMenuOnClick(list.id, card)}
+                          onNameChange={(e) => {
+                            handleTaskNameChange(e.target.value, cardIdx);
+                          }}
+                          onDescChange={(e) => {
+                            handleTaskDescChange(e.target.value, cardIdx);
+                          }}
+                          removeCardOnClick={() => {
+                            removeCardOnClick(listIdx, cardIdx, card.id);
+                          }}
+                          openDeleteModal={openModal}
+                        />
+                      ) : null;
+                    })}
 
                   <BoardBtn
                     onClick={() => addTaskOnClick(listIdx)}
