@@ -8,6 +8,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.project.workboard.dto.ApiResponseDTO;
 import com.project.workboard.dto.BoardListDTO;
@@ -29,7 +30,7 @@ public class BoardListService {
 
 	@Autowired
 	private BoardRepository boardRepository;
-	
+
 	@Autowired
 	private TaskCardRepository taskCardRepository;
 
@@ -40,21 +41,21 @@ public class BoardListService {
 			if (boardId <= 0) {
 				throw new IllegalArgumentException("Invalid user ID received");
 			}
-			
+
 			// getting board-lists based on boardId
 			List<BoardListDTO> boardLists = boardListRepository.getBoardListsByBoardId(boardId);
-			
-			if (boardLists.size()>0) {
+
+			if (boardLists.size() > 0) {
 				System.out.println("fetching task-cards");
-				for(BoardListDTO boardListDTO: boardLists) {
+				for (BoardListDTO boardListDTO : boardLists) {
 					int listId = boardListDTO.getId();
 					try {
 						List<TaskCardDTO> taskCards = taskCardRepository.getTasksByListId(listId);
-						System.out.println("no. of taskCards: "+taskCards.size());
+						System.out.println("no. of taskCards: " + taskCards.size());
 						boardListDTO.setCards(taskCards.toArray(new TaskCardDTO[0]));
 					} catch (Exception e) {
-						System.out.println(
-								"Exception while fetching task-cards for listId: " + listId + "\n Exception: " + e.getMessage());
+						System.out.println("Exception while fetching task-cards for listId: " + listId
+								+ "\n Exception: " + e.getMessage());
 						return ResponseEntity.status(HttpStatus.CONFLICT)
 								.body("Error while fetching task-cards for listId: " + listId);
 					}
@@ -67,8 +68,8 @@ public class BoardListService {
 			String responseMsg = (boardLists.size() > 0) ? "Board-lists fetched successfully"
 					: "There are no board-lists present";
 
-			ApiResponseDTO<List<BoardListDTO>> apiResponse = new 
-					ApiResponseDTO<List<BoardListDTO>>(successFlag, boardLists, responseMsg);
+			ApiResponseDTO<List<BoardListDTO>> apiResponse = new ApiResponseDTO<List<BoardListDTO>>(successFlag,
+					boardLists, responseMsg);
 
 			return ResponseEntity.ok(apiResponse);
 		} catch (IllegalArgumentException e) {
@@ -140,22 +141,67 @@ public class BoardListService {
 
 	}
 
-	public ResponseEntity<?> deleteBoardList(Integer id) {
-		System.out.println("Inside BoardListService:: deleteBoardList, id: "+id);
+	@Transactional
+	public ResponseEntity<?> deleteBoardList(Integer listId) {
+		System.out.println("Inside BoardListService:: deleteBoardList, listId: " + listId);
 		try {
-			boardListRepository.deleteById(id);
-			
-			System.out.println("Board-list deleted successfully with id: "+id);
-			
+			boardListRepository.deleteById(listId);
+
+			System.out.println("Board-list deleted successfully with id: " + listId);
+
 			// Data is saved successfully, let's send Api-Response for the same
-			ApiResponseDTO<Integer> apiResponse = new ApiResponseDTO<Integer>(true,
-					id, "Board-list deleted successfully");
+			boolean successFlag = true;
+			String msg = "Board-list & task-cards deleted successfully";
+			
+			ApiResponseDTO<Integer> apiResponse = 
+					new ApiResponseDTO<Integer>(successFlag, listId, msg);
 
 			return ResponseEntity.ok(apiResponse);
+			
 		} catch (Exception e) {
 			System.out.println("Exception while deleting board-list: " + e.getMessage());
-			return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Error while deleting board-list");
+			return ResponseEntity
+					.status(HttpStatus.BAD_REQUEST)
+					.body("Error while deleting board-list, invalid list-id");
 		}
+	}
+
+	private BoardListDTO getBoardListData(Integer listId) {
+		System.out.println("inside BoardListService :: getBoardList(), listId: "+listId);
+		
+		BoardListDTO boardList = new BoardListDTO();
+		try {
+			// fetching board-list from Db
+			boardList = boardListRepository.getBoardListData(listId);
+
+			if (boardList != null) {
+				System.out.println("fetching task-cards");
+
+				List<TaskCardDTO> taskCards = new ArrayList<>();
+				
+				try {
+					// fetching task-cards from Db
+					taskCards = taskCardRepository.getTasksByListId(listId);
+					System.out.println("no. of taskCards: " + taskCards.size());
+				} 
+				catch (Exception e) {
+					// issue while fetching task-cards from Db
+					System.out.println("Exception while fetching task-cards for listId: " 
+							+ listId + "\n Exception: "
+							+ e.getMessage());
+				}
+				finally {
+					// setting task-cards in boardList obj.
+					boardList.setCards(taskCards.toArray(new TaskCardDTO[0]));
+				}
+			}
+		} 
+		catch (Exception e) {
+			// issue while fetching board-list from Db
+			System.out.println("Exception while fetching board-list: " + e.getMessage());
+		}
+		
+		return boardList;
 	}
 
 }

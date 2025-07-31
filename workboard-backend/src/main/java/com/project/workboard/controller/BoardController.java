@@ -1,5 +1,7 @@
 package com.project.workboard.controller;
 
+import java.util.Map;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -51,15 +53,14 @@ public class BoardController {
 //				.body("Error while saving board-data");
 	}
 
-	// PENDING
 	@PostMapping("/delete")
-	public ResponseEntity<?> deleteBoard(@RequestBody Integer boardId) {
-		return boardService.deleteBoard(boardId);
+	public ResponseEntity<?> deleteBoard(@RequestBody Map<String, Integer> payload) {
+		Integer id = payload.get("id");
+		return boardService.deleteBoard(id);
 	}
 
 	@GetMapping("/members/{boardId}")
-	public ResponseEntity<?> getAllBoardMembers(HttpServletRequest request, 
-			@PathVariable int boardId) {
+	public ResponseEntity<?> getAllBoardMembers(HttpServletRequest request, @PathVariable int boardId) {
 		return boardService.getAllBoardMembers(boardId);
 	}
 }

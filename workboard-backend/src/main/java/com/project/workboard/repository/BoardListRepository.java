@@ -22,4 +22,15 @@ public interface BoardListRepository extends JpaRepository<BoardList, Integer>{
 		    WHERE board_id = :boardId
 		""", nativeQuery = true)
 	List<BoardListDTO> getBoardListsByBoardId(@Param("boardId") int boardId);
+	
+	@Query(value = """
+		    SELECT 
+		        id AS id,
+		        board_id AS boardId,
+		        name AS name,
+		        created_by AS createdBy
+		    FROM board_list
+		    WHERE id = :listId
+		""", nativeQuery = true)
+	BoardListDTO getBoardListData(@Param("boardId") int listId);
 }

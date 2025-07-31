@@ -12,8 +12,13 @@ const AddTaskModal = ({
   closeBtnOnClick,
   onBackDropClick,
   boardId,
+  listIdx,
   listId,
   cardObj,
+  addToast,
+  closeToast,
+  removeDummyTaskCard,
+  addTaskToState,
 }) => {
   const [boardMembers, setBoardMembers] = useState([]);
   const [taskMembers, setTaskMembers] = useState([]);
@@ -23,10 +28,8 @@ const AddTaskModal = ({
     cardObj ? cardObj.isCompleted : false
   );
   const [isActive, setIsActive] = useState(cardObj ? cardObj.isActive : false);
-  const [toasts, setToasts] = useState([]);
 
   // To fetch all the board-members
-
   useEffect(() => {
     if (boardId) {
       const getBoardMembers = async (boardId) => {
@@ -117,6 +120,28 @@ const AddTaskModal = ({
     setTaskDesc((prev) => desc);
   };
 
+  /*
+    {
+    "success": true,
+    "data": {
+        "taskId": 11,
+        "members": [
+            {
+                "memberId": 1,
+                "memberRole": 0
+            },
+            {
+                "memberId": 10,
+                "memberRole": 1
+            }
+        ],
+        "name": "Create dashboard for reserved items",
+        "desc": "Create dashboard for reserved items"
+    },
+    "message": "Task data & members saved successfully"
+}
+    */
+
   const saveTaskBtnOnClick = () => {
     console.log("save btn clicked");
     const loggedIn_userId = JSON.parse(localStorage.getItem("user")).id;
@@ -134,8 +159,37 @@ const AddTaskModal = ({
       listId: listId,
     };
 
-    console.log("data to be saved: ", taskData);
-    saveTaskData(taskData);
+    console.log("task-data to be saved: ", taskData);
+    saveTaskData(taskData)
+      .then((response) => {
+        console.log("response in saveTaskBtnOnClick(): ", response);
+        console.log("response.success: ", response.success);
+
+        if (response.success === true) {
+          addToast("Task-card added successfully", "success");
+
+          // setting up newCard using data sent from backend
+          const taskDataFetched = response.data;
+          const newCard = {
+            name: taskDataFetched.name,
+            desc: taskDataFetched.desc,
+            isActive: taskDataFetched.isActive,
+            isCompleted: taskDataFetched.isCompleted,
+          };
+          // removing dummyCard from the cards[] from boardList having idx === listIdx
+          removeDummyTaskCard(listIdx);
+
+          // adding newCard to state to render it
+          addTaskToState(listIdx, newCard);
+        } else addToast("Failed to add the Task-card", "error");
+      })
+      .catch((error) => {
+        console.log(
+          "Saving Task-data failed:",
+          error.response?.data || error.message
+        );
+        addToast("Failed to add the Task-card", "error");
+      });
   };
 
   const saveTaskData = async (taskData) => {
@@ -148,44 +202,26 @@ const AddTaskModal = ({
           "Content-Type": "application/json",
         },
       };
-      const response = await axios.post(url, data, configObj);
-      console.log("Task-data saved successfully: ", response.data);
+      return axios
+        .post(url, data, configObj)
+        .then((response) => {
+          console.log("Task-data saved successfully: ", response.data);
+          return response.data;
+        })
+        .catch((error) => {
+          console.log(
+            "Saving Task-data failed:",
+            error.response?.data || error.message
+          );
+          return { success: false };
+        });
     } catch (error) {
-      console.error(
+      console.log(
         "Saving Task-data failed:",
         error.response?.data || error.message
       );
+      return { success: false };
     }
-  };
-
-  const addToast = (message, type = "success") => {
-    const currId = Date.now(); // unique key
-
-    // Update the toasts-state
-    setToasts((prev) => {
-      const updatedToasts = [...prev];
-      const toastMsg = {
-        id: currId,
-        message: message,
-        type: type,
-      };
-      updatedToasts.push(toastMsg);
-      return updatedToasts;
-    });
-
-    // Auto-remove after 3 seconds
-    setTimeout(() => {
-      setToasts((prev) => {
-        // return all the toasts except the one which has it's id eq. to the currId
-        const updatedToasts = prev.filter((toast) => toast.id !== currId);
-        return updatedToasts;
-      });
-    }, 3000);
-  };
-
-  const removeToast = (id) => {
-    // return all the toasts except the one which has it's id eq. to the currId
-    setToasts((prev) => prev.filter((toast) => toast.id !== id));
   };
 
   return (
@@ -193,8 +229,6 @@ const AddTaskModal = ({
       <div className="Modal-AddProject" onClick={(e) => e.stopPropagation()}>
         <div className="ModalContent-Project">
           {/* Project info section */}
-
-          <ToastMsg toasts={toasts} removeToast={removeToast} />
 
           <div className="InfoSection">
             <label>Name</label>
@@ -331,7 +365,10 @@ const AddTaskModal = ({
             <BoardBtn
               label="Save"
               variant="modal-yes"
-              onClick={saveTaskBtnOnClick}
+              onClick={() => {
+                saveTaskBtnOnClick();
+                closeBtnOnClick();
+              }}
             />
             <BoardBtn
               label="Close"

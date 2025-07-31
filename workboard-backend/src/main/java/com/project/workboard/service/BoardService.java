@@ -10,6 +10,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.project.workboard.dto.ApiResponseDTO;
 import com.project.workboard.dto.BoardDataDTO;
@@ -159,9 +160,27 @@ public class BoardService {
 		return ResponseEntity.ok("Board data & members saved successfully");
 	}
 
-	// PENDING
-	public ResponseEntity<?> deleteBoard(Integer boardData) {
-		return ResponseEntity.ok("Board data & members saved successfully");
+	@Transactional
+	public ResponseEntity<?> deleteBoard(Integer boardId) {
+		System.out.println("Inside BoardService :: deleteBoard, boardId: "+boardId);
+		try {
+			boardRepository.deleteById(boardId);
+			
+			// Data is saved successfully, let's send Api-Response for the same
+			boolean successFlag = true;
+			String msg = "Board deleted successfully";
+
+			ApiResponseDTO<Integer> apiResponse = new 
+					ApiResponseDTO<Integer>(successFlag, boardId, msg);
+
+			return ResponseEntity.ok(apiResponse);
+		} 
+		catch (Exception e) {
+			System.out.println("Exception while deleting board : " + e.getMessage());
+			return ResponseEntity
+					.status(HttpStatus.BAD_REQUEST)
+					.body("Error while deleting board , invalid id");
+		}
 	}
 
 	public ResponseEntity<?> getBoardsWithMembersIds(int loggedIn_userId) {

@@ -4,11 +4,11 @@ import { X } from "lucide-react";
 const ToastMsg = ({ toasts, removeToast }) => {
   return (
     <div className="ToastContainer">
-      {toasts.map((toast) => (
-        <div key={toast.id} className={`Toast ${toast.type}`}>
+      {toasts.map((toast, idx) => (
+        <div key={idx} className={`Toast ${toast.type}`}>
           <div className="ToastContent">
             <span>{toast.message}</span>
-            <X className="ToastClose" onClick={() => removeToast(toast.id)} />
+            <X className="ToastClose" onClick={() => removeToast(idx)} />
           </div>
         </div>
       ))}

@@ -1,5 +1,7 @@
 package com.project.workboard.dto;
 
+import java.util.Arrays;
+
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 public class TaskDataDTO {
@@ -137,6 +139,20 @@ public class TaskDataDTO {
 
 	public void setListId(int listId) {
 		this.listId = listId;
+	}
+
+	@Override
+	public String toString() {
+		return "TaskDataDTO [id=" + id + ", name=" + name + ", description=" + description + ", isActive=" + isActive
+				+ ", isCompleted=" + isCompleted + ", members=" + membersToString(members) + ", userId=" + userId
+				+ ", listId=" + listId + "]";
+	}
+	
+	private String membersToString(Member[] members) {
+		StringBuffer sbf= new StringBuffer();
+		for(Member member: members)
+			sbf.append( " "+member.toString() +"\n");
+		return sbf.toString();
 	}
 }
 

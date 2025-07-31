@@ -1,6 +1,7 @@
 package com.project.workboard.controller;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -34,7 +35,8 @@ public class TaskCardController {
 	}
 	
 	@PostMapping("/delete")
-	private boolean deleteTaskCard(@RequestBody Long id) {
-		return false;
+	private ResponseEntity<?> deleteTaskCard(@RequestBody Map<String, Integer> payload) {
+		Integer id = payload.get("id");
+		return taskCardService.deleteTaskCard(id);
 	}
 }

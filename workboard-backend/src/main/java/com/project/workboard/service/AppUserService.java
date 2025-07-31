@@ -131,7 +131,7 @@ public class AppUserService {
 			System.out.println(
 					"Exception while logging-in the user: " + loginReq.toString() + " \n Exception: " + e.getMessage());
 
-			return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Error while logging-in the user");
+			return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Error while logging-in the user, invalid credentials");
 		}
 
 	}

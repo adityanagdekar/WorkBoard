@@ -1,13 +1,11 @@
 package com.project.workboard.dto;
 
-import java.util.Arrays;
 
 public class SavedBoardDataDTO {
 	private int boardId;
 	private MemberDataDTO[] members;
 	private String boardName;
 	private String boardDesc;
-	// private int[] memberIds;
 	
 	public static class MemberDataDTO {
 		private int memberId;

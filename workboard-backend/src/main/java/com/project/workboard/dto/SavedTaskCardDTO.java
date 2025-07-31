@@ -1,10 +1,16 @@
 package com.project.workboard.dto;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
+
 public class SavedTaskCardDTO {
 	private int taskId;
 	private TaskMemberData[] members;
 	private String name;
 	private String desc;
+	@JsonProperty("isActive")	
+	private boolean isActive;
+	@JsonProperty("isCompleted")	
+	private boolean isCompleted;
 	
 	public static class TaskMemberData {
 		private int memberId;
@@ -43,12 +49,15 @@ public class SavedTaskCardDTO {
 	
 	public SavedTaskCardDTO() {}
 	
-	public SavedTaskCardDTO(int taskId, TaskMemberData[] members, String name, String desc) {
+	public SavedTaskCardDTO(int taskId, TaskMemberData[] members, String name, 
+			String desc, boolean isActive, boolean isCompleted) {
 		super();
 		this.taskId = taskId;
 		this.members = members;
 		this.name = name;
 		this.desc = desc;
+		this.isActive = isActive;
+		this.isCompleted = isCompleted;
 	}
 
 	public int getTaskId() {
@@ -82,12 +91,29 @@ public class SavedTaskCardDTO {
 	public void setDesc(String desc) {
 		this.desc = desc;
 	}
+	
+	public boolean isActive() {
+		return isActive;
+	}
+
+	public void setActive(boolean isActive) {
+		this.isActive = isActive;
+	}
+
+	public boolean isCompleted() {
+		return isCompleted;
+	}
+
+	public void setCompleted(boolean isCompleted) {
+		this.isCompleted = isCompleted;
+	}
 
 	@Override
 	public String toString() {
-		return "SavedTaskCardDTO [taskId=" + taskId + 
+		return "SavedTaskCardDTO [ taskId=" + taskId + 
 				", members=" + memberToString(members) + ", name="
-				+ name + ", desc=" + desc + "]";
+				+ name + ", desc=" + desc 
+				+" isActive: "+isActive+" isCompleted: "+isCompleted+" ]";
 	}
 	
 	private String memberToString(TaskMemberData[] members) {

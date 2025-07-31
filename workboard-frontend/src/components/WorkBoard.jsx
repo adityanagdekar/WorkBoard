@@ -60,8 +60,10 @@ const WorkBoard = () => {
 
   const [toggleAddTaskModal, setAddTaskModal] = useState(false);
 
-  // selected list idx.
+  // selected list id.
   const [selectedListId, setSelectedListId] = useState(-1);
+  // select list idx.
+  const [selectedListIdx, setSelectedListIdx] = useState(-1);
   // selected card obj.
   const [selectedTaskCard, setSelectedTaskCard] = useState({});
 
@@ -94,14 +96,6 @@ const WorkBoard = () => {
               ...list,
               cards: list.cards?.map((card) => ({ ...card })) || [], // deep copy of cards
             };
-            if (updatedList.cards.length === 0) {
-              updatedList.cards = [
-                {
-                  name: `Task Card 1`,
-                  desc: "Added task description here",
-                },
-              ];
-            }
             return updatedList;
           });
 
@@ -170,7 +164,7 @@ const WorkBoard = () => {
         handleLogout(navigate);
         break;
       default:
-        console.warn("Unknown header button clicked");
+        console.log("Unknown header button clicked");
     }
   };
 
@@ -236,15 +230,8 @@ const WorkBoard = () => {
     }
   };
 
-  const addListOnClick = () => {
-    console.log("addListOnClick clicked");
-
-    const newList = {
-      name: `New List`,
-      cards: [],
-    };
-    console.log("newList: ", newList);
-
+  const addListToState = (list) => {
+    console.log("inside aaddListToState, list: ", list);
     setDataLists((prev) => {
       const updatedLists = prev.map((list) => {
         const updatedList = {
@@ -254,34 +241,73 @@ const WorkBoard = () => {
         return updatedList;
       });
 
-      updatedLists.push(newList);
+      updatedLists.push(list);
       return updatedLists;
     });
   };
 
-  const addTaskOnClick = (index) => {
-    console.log("Add Task btn clicked");
-    const numOfCards =
-      dataLists[index].cards == undefined ? 0 : dataLists[index].cards.length;
-
-    const newCard = {
-      name: `Task Card ${numOfCards + 1}`,
-      desc: "Added task description here",
+  const addListOnClick = () => {
+    console.log("addListOnClick clicked");
+    const newList = {
+      name: `New List`,
+      cards: [],
     };
-    console.log("newCard: ", newCard);
+    console.log("newList: ", newList);
+    addListToState(newList);
+  };
 
+  const removeDummyTaskCard = (listIdx) => {
+    console.log("inside removeDummyTaskCard, listIdx: ", listIdx);
+
+    // Remove the dummyTaskCard & update the state
     setDataLists((prev) => {
       const updatedLists = prev.map((list, idx) => {
         let updatedList = {};
-        if (idx === index) {
-          const existingCards = list.cards ? [...list.cards] : [];
+
+        if (idx === listIdx) {
+          // getting filtered-card -> cards which does not have the "isDummy" attr.
+          const filteredCards = (list.cards ? [...list.cards] : []).filter(
+            (card) => !card.isDummy
+          );
+
+          // setting up the updatedList with filteredCards
           updatedList = {
             ...list,
-            cards: [...existingCards, newCard],
+            cards: filteredCards,
           };
         } else {
           updatedList = { ...list };
         }
+        return updatedList;
+      });
+      console.log("Removed dummy task. Updated lists:", updatedLists);
+      return updatedLists;
+    });
+  };
+
+  const addTaskToState = (listIdx, newCard) => {
+    console.log(
+      "inside addTaskToState, taskCard: ",
+      newCard,
+      "\n selectedListIdx: ",
+      listIdx
+    );
+
+    // update the state
+    setDataLists((prev) => {
+      const updatedLists = prev.map((list, idx) => {
+        let updatedList = {};
+
+        if (idx === listIdx) {
+          const existingCards = list.cards ? [...list.cards] : [];
+          updatedList = {
+            ...list,
+            cards: [...existingCards, newCard], // add the existingCards AND the newCard
+          };
+        } else {
+          updatedList = { ...list };
+        }
+
         return updatedList;
       });
       console.log("updatedLists: ", updatedLists);
@@ -289,128 +315,202 @@ const WorkBoard = () => {
     });
   };
 
-  const removeListOnClick = async (index, id) => {
-    console.log("removeListOnClick index: ", index, " id: ", id);
+  const addTaskOnClick = (listId) => {
+    console.log("inside addTaskOnClick, listId: ", listId);
+
+    const listIdx = dataLists.findIndex((list) => list.id === listId);
+
+    console.log(
+      "Add Task btn clicked, listIdx: ",
+      listIdx,
+      " listId: ",
+      listId
+    );
+    const numOfCards =
+      dataLists[listIdx].cards == undefined
+        ? 0
+        : dataLists[listIdx].cards.length;
+
+    const newCard = {
+      name: `Task Card ${numOfCards + 1}`,
+      desc: "Added task description here",
+      isActive: true,
+      isCompleted: false,
+      isDummy: true,
+    };
+    console.log("newCard: ", newCard);
+    setSelectedListIdx(listIdx);
+    addTaskToState(listIdx, newCard);
+  };
+
+  const removeListOnClick = (listId) => {
+    console.log("removeListOnClick  listId: ", listId);
+    const listIdx = dataLists.findIndex((list) => list.id === listId);
 
     // diabling yes btn for deletion
     setIsDisabled(true);
 
-    if (index != null) {
-      const response = await deleteBoardList(id);
-
-      if (response.success === true) {
-        setDataLists((prev) => {
-          const updatedBoardLists = [...prev];
-          updatedBoardLists.splice(index, 1);
-          return updatedBoardLists;
+    if (listIdx != null) {
+      // const response = await deleteBoardList(id);
+      deleteBoardList(listId)
+        .then((response) => {
+          if (response.success === true) {
+            setDataLists((prev) => {
+              const updatedBoardLists = [...prev];
+              updatedBoardLists.splice(listIdx, 1);
+              return updatedBoardLists;
+            });
+            addToast("Board-list deleted successfully", "success");
+          } else {
+            addToast("Failed to delete the Board-list", "error");
+          }
+        })
+        .catch((error) => {
+          console.log(
+            "Failed to delete the Board-list:",
+            error.response?.data || error.message
+          );
+          addToast("Failed to delete the Board-list", "error");
+        })
+        .finally(() => {
+          // enabling yes btn for deletion
+          setIsDisabled(false);
         });
-        addToast("Board-list deleted successfully", "success");
-      } else {
-        addToast("Failed to delete the Board-list", "error");
-      }
-    }
-    // enabling yes btn for deletion
-    setIsDisabled(false);
-  };
-
-  const deleteBoardList = async (id) => {
-    try {
-      const url = "http://localhost:8080/api/list/delete";
-      const data = { id: id };
-      const headersObj = { "Content-Type": "application/json" };
-      const configObj = {
-        headers: headersObj,
-        withCredentials: true,
-      };
-      const response = await axios.post(url, data, configObj);
-      console.log(
-        "Response after deleting the board-list response.data: ",
-        response.data
-      );
-      return response.data;
-    } catch (error) {
-      console.log("Failed to get boards: ", error);
-      return { success: false };
+    } else {
+      // enabling yes btn for deletion
+      setIsDisabled(false);
     }
   };
 
-  const removeCardOnClick = (listIdx, cardIdx, cardId) => {
-    console.log(
-      "removeCardOnClick listIdx: ",
-      listIdx,
-      " cardIdx: ",
-      cardIdx,
-      " cardId: ",
-      cardId
+  const deleteBoardList = (id) => {
+    const url = "http://localhost:8080/api/list/delete";
+    const data = { id: id };
+    const headersObj = { "Content-Type": "application/json" };
+    const configObj = {
+      headers: headersObj,
+      withCredentials: true,
+    };
+    // const response = await axios.post(url, data, configObj);
+    axios
+      .post(url, data, configObj)
+      .then((response) => {
+        console.log(
+          "Response after deleting the board-list response.data: ",
+          response.data
+        );
+        return response.data;
+      })
+      .catch((error) => {
+        console.log(
+          "Failed to delete board-list: ",
+          error.response?.data || error.message
+        );
+        return { success: false };
+      });
+  };
+
+  const removeCardOnClick = (listId, cardObj) => {
+    const listIdx = dataLists.findIndex((list) => list.id === listId);
+    console.log("removeCardOnClick listIdx: ", listIdx, " cardObj: ", cardObj);
+
+    // diabling yes btn for deletion
+    setIsDisabled(true);
+
+    //  getting the card idx.
+    const cardIdx = dataLists[listIdx]?.cards?.findIndex(
+      (card) => card.id === cardObj.id
     );
 
-    // diabling yes btn for deletion
-    setIsDisabled(true);
+    if (cardIdx != null && cardObj.id != null) {
+      // const response = deleteTaskCard(cardId);
 
-    if (cardIdx != null) {
-      const response = { success: true };
-      // deleteTaskCard(cardId);
+      deleteTaskCard(cardObj.id)
+        .then((response) => {
+          console.log("inside removeCardOnClick, response: ", response);
+          if (response.success === true) {
+            // updating state
+            setDataLists((prev) => {
+              const updatedBoardLists = prev.map((list) => ({
+                ...list,
+                cards: list.cards.map((card) => ({ ...card })), // deep copy of cards
+              }));
 
-      if (response.success === true) {
-        setDataLists((prev) => {
-          const updatedBoardLists = prev.map((list) => ({
-            ...list,
-            cards: list.cards.map((card) => ({ ...card })), // deep copy of cards
-          }));
+              // Remove from source
+              const [removedCard] = updatedBoardLists[listIdx].cards.splice(
+                cardIdx,
+                1
+              );
+              console.log("removedCard: ", removedCard);
 
-          // Remove from source
-          const [removedCard] = updatedBoardLists[listIdx].cards.splice(
-            cardIdx,
-            1
+              // To remove undefined/null
+              updatedBoardLists.forEach((list) => {
+                list.cards = list.cards.filter(Boolean);
+              });
+
+              console.log("updatedBoardLists: ", updatedBoardLists);
+              return updatedBoardLists;
+            });
+            addToast("Task-card deleted successfully", "success");
+          } else {
+            addToast("Failed to delete the Task-card", "error");
+          }
+        })
+        .catch((error) => {
+          console.log(
+            "Failed to delete the Task-card, error: ",
+            error.response?.data || error.message
           );
-
-          console.log("removedCard: ", removedCard);
-
-          // To remove undefined/null
-          updatedBoardLists.forEach((list) => {
-            list.cards = list.cards.filter(Boolean);
-          });
-
-          console.log("updatedBoardLists: ", updatedBoardLists);
-          return updatedBoardLists;
+          addToast("Failed to delete the Task-card", "error");
+        })
+        .finally(() => {
+          // enabling yes btn for deletion
+          setIsDisabled(false);
         });
-        addToast("Task-card deleted successfully", "success");
-      } else {
-        addToast("Failed to delete the Task-card", "error");
-      }
+    } else {
+      // enabling yes btn for deletion
+      setIsDisabled(false);
     }
-    // enabling yes btn for deletion
-    setIsDisabled(false);
   };
 
   const deleteTaskCard = async (id) => {
-    /*try {
-      const url = "http://localhost:8080/api/list/delete";
-      const data = { id: id };
-      const headersObj = { "Content-Type": "application/json" };
-      const configObj = {
-        headers: headersObj,
-        withCredentials: true,
-      };
-      const response = await axios.post(url, data, configObj);
-      console.log(
-        "Response after deleting the board-list response.data: ",
-        response.data
-      );
-      return response.data;
-    } catch (error) {
-      console.log("Failed to get boards: ", error);
-      return { success: false };
-    }*/
+    const url = "http://localhost:8080/api/task/delete";
+    const data = { id: id };
+    const headersObj = { "Content-Type": "application/json" };
+    const configObj = {
+      headers: headersObj,
+      withCredentials: true,
+    };
+    // const response = await axios.post(url, data, configObj);
+    return axios
+      .post(url, data, configObj)
+      .then((response) => {
+        console.log(
+          "Response after deleting the task-card response.data: ",
+          response.data
+        );
+        return response.data;
+      })
+      .catch((error) => {
+        console.log(
+          "Failed to delete task-card: ",
+          error.response?.data || error.message
+        );
+        return { success: false };
+      });
   };
 
   const taskMenuOnClick = (listId, cardObj) => {
+    const listIdx = dataLists.findIndex((list) => list.id === listId);
+
     console.log(
       "task menu onclick invoked, listId: ",
       listId,
+      "listIdx: ",
+      listIdx,
       "\n cardObj: ",
       cardObj
     );
+    setSelectedListIdx(listIdx);
     setSelectedListId(listId);
     setSelectedTaskCard(cardObj);
     showAddTaskModal();
@@ -426,7 +526,9 @@ const WorkBoard = () => {
     setAddTaskModal((prevState) => prevState && false);
   };
 
-  const handleTaskCardDragStart = (e, srcPhaseIdx, srcCardIdx) => {
+  const handleTaskCardDragStart = (e, srcListId, srcCardIdx) => {
+    const srcListIdx = dataLists.findIndex((list) => list.id === srcListId);
+
     console.log("drag start on task card");
     let taskCard = e.target;
     console.log("taskCard: ");
@@ -434,7 +536,7 @@ const WorkBoard = () => {
     taskCard.style.opacity = 0.5;
     e.dataTransfer.setData(
       "application/json",
-      JSON.stringify({ fromPhaseIdx: srcPhaseIdx, fromCardIdx: srcCardIdx })
+      JSON.stringify({ fromListIdx: srcListIdx, fromCardIdx: srcCardIdx })
     );
   };
 
@@ -581,7 +683,8 @@ const WorkBoard = () => {
                         msg: "Do you want delete this board-list ?",
                         isOpen: true,
                         onYesBtnClick: () => {
-                          removeListOnClick(list.id, listIdx);
+                          // sending list.id
+                          removeListOnClick(list.id);
                         },
                       });
                     }}
@@ -601,7 +704,7 @@ const WorkBoard = () => {
                         <TaskCard
                           key={cardIdx}
                           handleTaskCardDragStart={(e) =>
-                            handleTaskCardDragStart(e, listIdx, cardIdx)
+                            handleTaskCardDragStart(e, list.id, cardIdx)
                           }
                           handleTaskCardDragEnd={handleTaskCardDragEnd}
                           cardName={card.name}
@@ -614,7 +717,7 @@ const WorkBoard = () => {
                             handleTaskDescChange(e.target.value, cardIdx);
                           }}
                           removeCardOnClick={() => {
-                            removeCardOnClick(listIdx, cardIdx, card.id);
+                            removeCardOnClick(list.id, card);
                           }}
                           openDeleteModal={openModal}
                         />
@@ -622,7 +725,9 @@ const WorkBoard = () => {
                     })}
 
                   <BoardBtn
-                    onClick={() => addTaskOnClick(listIdx)}
+                    onClick={() => {
+                      taskMenuOnClick(list.id, {});
+                    }}
                     label="Add Task"
                     style={{ marginBottom: "1%" }}
                   />
@@ -654,8 +759,13 @@ const WorkBoard = () => {
           closeBtnOnClick={closeAddTaskModal}
           onBackDropClick={closeAddTaskModal}
           boardId={boardId}
+          listIdx={selectedListIdx}
           listId={selectedListId}
           cardObj={selectedTaskCard}
+          addToast={addToast}
+          removeToast={removeToast}
+          removeDummyTaskCard={removeDummyTaskCard}
+          addTaskToState={addTaskToState}
         />
       )}
     </BoardContainer>

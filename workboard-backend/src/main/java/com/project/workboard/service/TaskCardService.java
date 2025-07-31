@@ -8,6 +8,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.project.workboard.dto.ApiResponseDTO;
 import com.project.workboard.dto.SavedTaskCardDTO;
@@ -39,7 +40,7 @@ public class TaskCardService {
 	private TaskMemberRepository taskMemberRepository;
 
 	public ResponseEntity<?> saveTaskCard(TaskDataDTO taskData) {
-		System.out.println("Inside TaskCardService :: saveTaskCard");
+		System.out.println("Inside TaskCardService :: saveTaskCard, taskData: "+taskData.toString());
 
 		try {
 			SavedTaskCardDTO savedTaskCardDTO = new SavedTaskCardDTO();
@@ -85,6 +86,8 @@ public class TaskCardService {
 				savedTaskCardDTO.setTaskId(taskCardId);
 				savedTaskCardDTO.setName(savedTaskCard.getName());
 				savedTaskCardDTO.setDesc(savedTaskCard.getDescription());
+				savedTaskCardDTO.setActive(savedTaskCard.isActive());
+				savedTaskCardDTO.setCompleted(savedTaskCard.isCompleted());
 
 				// this means taskCard is saved successfully, let's save the task-members as
 				// well
@@ -130,10 +133,7 @@ public class TaskCardService {
 						System.out.println("successfully saved task-member with id: " + taskMemberId);
 
 						// Saving member-data-dto in memberIds arr.
-						taskMemberDataList.add(new 
-								TaskMemberData(taskMemberId, 
-										fetchedTaskMember.getRole())
-								);
+						taskMemberDataList.add(new TaskMemberData(taskMemberId, fetchedTaskMember.getRole()));
 
 					}
 
@@ -161,13 +161,36 @@ public class TaskCardService {
 			String msg = (taskCardId > 0 ? "Task data & members saved successfully"
 					: "Error in saving Task data & members");
 
-			ApiResponseDTO<SavedTaskCardDTO> apiResponse = new 
-					ApiResponseDTO<SavedTaskCardDTO>(successFlag, savedTaskCardDTO, msg);
+			ApiResponseDTO<SavedTaskCardDTO> apiResponse = new ApiResponseDTO<SavedTaskCardDTO>(successFlag,
+					savedTaskCardDTO, msg);
 
 			return ResponseEntity.ok(apiResponse);
 		} catch (Exception e) {
 			System.out.println("Exception while saving task-card : " + e.getMessage());
 			return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Error while saving task-card data");
+		}
+	}
+
+	@Transactional
+	public ResponseEntity<?> deleteTaskCard(Integer cardId) {
+		System.out.println("Inside TaskCardService :: deleteTaskCard, cardId: "+cardId);
+		try {
+			taskCardRepository.deleteById(cardId);
+			
+			// Data is saved successfully, let's send Api-Response for the same
+			boolean successFlag = true;
+			String msg = "Task-card deleted successfully";
+
+			ApiResponseDTO<Integer> apiResponse = new ApiResponseDTO<Integer>(successFlag,
+					cardId, msg);
+
+			return ResponseEntity.ok(apiResponse);
+		} 
+		catch (Exception e) {
+			System.out.println("Exception while deleting task-card : " + e.getMessage());
+			return ResponseEntity
+					.status(HttpStatus.BAD_REQUEST)
+					.body("Error while deleting task-card, invalid id");
 		}
 	}
 
