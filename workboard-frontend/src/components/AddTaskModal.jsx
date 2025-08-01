@@ -15,6 +15,7 @@ const AddTaskModal = ({
   listIdx,
   listId,
   cardObj,
+  taskMembersMap,
   addToast,
   closeToast,
   removeDummyTaskCard,
@@ -54,8 +55,25 @@ const AddTaskModal = ({
             // checking if the member is board-creator based on id
             const loggedIn_userId = JSON.parse(localStorage.getItem("user")).id;
 
-            userObj.role = member.id === loggedIn_userId ? 1 : 0; // role set as MANAGER i.e. 1
-            userObj.isAdded = member.id === loggedIn_userId ? true : false; // isAdded attr. set as true
+            // userObj.role = member.id === loggedIn_userId ? 1 : 0; // role set as MANAGER i.e. 1
+            if (member.id === loggedIn_userId) {
+              userObj.role = 1;
+            } else if (taskMembersMap.hasOwnProperty(member.id)) {
+              userObj.role = taskMembersMap[member.id];
+            } else {
+              userObj.role = 0;
+            }
+
+            // userObj.isAdded = member.id === loggedIn_userId ? true : false; // isAdded attr. set as true
+            if (
+              member.id === loggedIn_userId ||
+              taskMembersMap.hasOwnProperty(member.id)
+            ) {
+              userObj.isAdded = true;
+            } else {
+              userObj.isAdded = false;
+            }
+
             return userObj;
           });
 

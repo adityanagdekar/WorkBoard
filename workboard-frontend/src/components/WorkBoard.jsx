@@ -66,6 +66,8 @@ const WorkBoard = () => {
   const [selectedListIdx, setSelectedListIdx] = useState(-1);
   // selected card obj.
   const [selectedTaskCard, setSelectedTaskCard] = useState({});
+  // selected card's task-members.
+  const [taskMembersMap, setTaskMembersMap] = useState([]);
 
   // for drag events
   // src list & card idx.
@@ -523,9 +525,17 @@ const WorkBoard = () => {
       "\n cardObj: ",
       cardObj
     );
+    <div className="W"></div>;
+
+    const membersMap = cardObj.members.reduce((map, member) => {
+      map[member.userId] = member.role;
+      return map;
+    }, {});
+
     setSelectedListIdx(listIdx);
     setSelectedListId(listId);
     setSelectedTaskCard(cardObj);
+    setTaskMembersMap(membersMap);
     showAddTaskModal();
   };
 
@@ -806,6 +816,7 @@ const WorkBoard = () => {
           listIdx={selectedListIdx}
           listId={selectedListId}
           cardObj={selectedTaskCard}
+          taskMembersMap={taskMembersMap}
           addToast={addToast}
           removeToast={removeToast}
           removeDummyTaskCard={removeDummyTaskCard}
