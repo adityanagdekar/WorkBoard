@@ -152,8 +152,8 @@ const AddTaskModal = ({
     const taskData = {
       name: taskName,
       description: taskDesc,
-      is_active: isActive,
-      is_completed: isCompleted,
+      isActive: isActive,
+      isCompleted: isCompleted,
       members: selectedMembers,
       userId: loggedIn_userId,
       listId: listId,
@@ -176,8 +176,9 @@ const AddTaskModal = ({
             isActive: taskDataFetched.isActive,
             isCompleted: taskDataFetched.isCompleted,
           };
+
           // removing dummyCard from the cards[] from boardList having idx === listIdx
-          removeDummyTaskCard(listIdx);
+          // removeDummyTaskCard(listIdx);
 
           // adding newCard to state to render it
           addTaskToState(listIdx, newCard);

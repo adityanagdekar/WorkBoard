@@ -7,11 +7,9 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 public class TaskDataDTO {
 	private int id;
 	private String name;
-	private String description;
-	@JsonProperty("isActive")	
-	private boolean isActive;
-	@JsonProperty("isCompleted")	
-	private boolean isCompleted;
+	private String description;	
+	private boolean active;	
+	private boolean completed;
 	private Member[] members;
 	private int userId;
 	private int listId;
@@ -25,8 +23,8 @@ public class TaskDataDTO {
 		this.setId(id);
 		this.name = name;
 		this.description = description;
-		this.isActive = isActive;
-		this.isCompleted = isCompleted;
+		this.active = isActive;
+		this.completed = isCompleted;
 		this.members = members;
 		this.userId = userId;
 		this.listId = listId;
@@ -101,20 +99,24 @@ public class TaskDataDTO {
 		this.description = description;
 	}
 
+	@JsonProperty("isActive")
 	public boolean isActive() {
-		return isActive;
+		return active;
 	}
 
+	@JsonProperty("isActive")
 	public void setActive(boolean isActive) {
-		this.isActive = isActive;
+		this.active = isActive;
 	}
 
+	@JsonProperty("isCompleted")
 	public boolean isCompleted() {
-		return isCompleted;
+		return completed;
 	}
 
+	@JsonProperty("isCompleted")
 	public void setCompleted(boolean isCompleted) {
-		this.isCompleted = isCompleted;
+		this.completed = isCompleted;
 	}
 
 	public Member[] getMembers() {
@@ -143,8 +145,8 @@ public class TaskDataDTO {
 
 	@Override
 	public String toString() {
-		return "TaskDataDTO [id=" + id + ", name=" + name + ", description=" + description + ", isActive=" + isActive
-				+ ", isCompleted=" + isCompleted + ", members=" + membersToString(members) + ", userId=" + userId
+		return "TaskDataDTO [id=" + id + ", name=" + name + ", description=" + description + ", isActive=" + active
+				+ ", isCompleted=" + completed + ", members=" + membersToString(members) + ", userId=" + userId
 				+ ", listId=" + listId + "]";
 	}
 	

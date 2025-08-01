@@ -73,9 +73,11 @@ const WorkBoard = () => {
   const srcCardIdxRef = useRef(-1);
   const [hoveredListIdx, setHoveredListIdx] = useState(-1);
 
+  // debouncing for delayed-auto-saving of data
   const debouncedListName = useDebounce(listName, 1000);
   const debouncedTaskName = useDebounce(taskName, 1000);
   const debouncedTaskDesc = useDebounce(taskDesc, 1000);
+  const debouncedLists = useDebounce(dataLists, 1000);
 
   // getting state-params passed
   // from ManageBoard.jsx to BoardGrid.jsx
@@ -140,6 +142,11 @@ const WorkBoard = () => {
       saveTaskDesc({ description: debouncedTaskDesc });
     }
   }, [debouncedTaskDesc]);
+
+  useEffect(() => {
+    if (debouncedLists.length > 0)
+      console.log("debouncedList: ", debouncedLists);
+  }, [debouncedLists]);
 
   const openModalToDelete = (listId, idx) => {
     console.log("openModalToDelete for list with id: ", listId);

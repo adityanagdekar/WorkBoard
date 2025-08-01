@@ -6,9 +6,7 @@ public class TaskCardDTO {
 	private int id;
 	private String name;
 	private String desc;
-	@JsonProperty("isActive")
 	private boolean isActive;
-	@JsonProperty("isCompleted")
 	private boolean isCompleted;
 	
 	public TaskCardDTO() {}
@@ -46,18 +44,22 @@ public class TaskCardDTO {
 		this.desc = desc;
 	}
 
+	@JsonProperty("isActive")
 	public boolean isActive() {
 		return isActive;
 	}
 
+	@JsonProperty("isActive")
 	public void setActive(boolean isActive) {
 		this.isActive = isActive;
 	}
 
+	@JsonProperty("isCompleted")
 	public boolean isCompleted() {
 		return isCompleted;
 	}
 
+	@JsonProperty("isCompleted")
 	public void setCompleted(boolean isCompleted) {
 		this.isCompleted = isCompleted;
 	}

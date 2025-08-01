@@ -13,7 +13,7 @@ import org.springframework.transaction.annotation.Transactional;
 import com.project.workboard.dto.ApiResponseDTO;
 import com.project.workboard.dto.SavedTaskCardDTO;
 import com.project.workboard.dto.TaskDataDTO;
-import com.project.workboard.dto.SavedTaskCardDTO.TaskMemberData;
+import com.project.workboard.dto.SavedTaskMemberDTO;
 import com.project.workboard.dto.TaskDataDTO.Member;
 import com.project.workboard.entity.AppUser;
 import com.project.workboard.entity.BoardList;
@@ -40,7 +40,7 @@ public class TaskCardService {
 	private TaskMemberRepository taskMemberRepository;
 
 	public ResponseEntity<?> saveTaskCard(TaskDataDTO taskData) {
-		System.out.println("Inside TaskCardService :: saveTaskCard, taskData: "+taskData.toString());
+		System.out.println("Inside TaskCardService :: saveTaskCard, taskData: "+taskData.toString()+"\n");
 
 		try {
 			SavedTaskCardDTO savedTaskCardDTO = new SavedTaskCardDTO();
@@ -83,7 +83,7 @@ public class TaskCardService {
 			if (taskCardId > 0) {
 
 				// Setting SavedTaskCardDTO obj.
-				savedTaskCardDTO.setTaskId(taskCardId);
+				savedTaskCardDTO.setId(taskCardId);
 				savedTaskCardDTO.setName(savedTaskCard.getName());
 				savedTaskCardDTO.setDesc(savedTaskCard.getDescription());
 				savedTaskCardDTO.setActive(savedTaskCard.isActive());
@@ -97,7 +97,7 @@ public class TaskCardService {
 					int numTaskMembers = taskMembers.length;
 
 					// this list. is later stored in our savedTaskCardDTO obj.
-					List<TaskMemberData> taskMemberDataList = new ArrayList<>();
+					List<SavedTaskMemberDTO> taskMemberDataList = new ArrayList<>();
 
 					// Saving board-members as well
 					for (int i = 0; i < numTaskMembers; i++) {
@@ -130,30 +130,36 @@ public class TaskCardService {
 						// Saving boardMember
 						taskMemberRepository.save(taskMember);
 						taskMemberId = taskMember.getUser().getId();
-						System.out.println("successfully saved task-member with id: " + taskMemberId);
+						System.out.println("successfully saved task-member with id: " + 
+						taskMemberId+"\n");
 
 						// Saving member-data-dto in memberIds arr.
-						taskMemberDataList.add(new TaskMemberData(taskMemberId, fetchedTaskMember.getRole()));
+						taskMemberDataList.add(new SavedTaskMemberDTO(taskMemberId, fetchedTaskMember.getRole()));
 
 					}
 
 					// once we have processed all task-members, save the arr. of task-members
-					savedTaskCardDTO.setMembers(taskMemberDataList.toArray(new TaskMemberData[0]));
+					savedTaskCardDTO.setMembers(taskMemberDataList.toArray(new SavedTaskMemberDTO[0]));
 
 				} catch (Exception e) {
 					System.out.println("Exception while saving task-member: " + e.getMessage());
 					System.out.println(
-							"Need to delete the board, if saved. " + "Can't save task without it's task-members");
+							"Need to delete the board, if saved. " + 
+					"Can't save task without it's task-members");
 
 					// delete the board, if not able to save board-members
 					taskCardRepository.deleteById(taskCardId);
 
-					return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Error while saving task-member");
+					return ResponseEntity
+							.status(HttpStatus.UNAUTHORIZED)
+							.body("Error while saving task-member");
 				}
 
 			} else if (taskCardId < 0) {
 				// task-card not saved successfully
-				return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Error while saving task-card");
+				return ResponseEntity
+						.status(HttpStatus.BAD_REQUEST)
+						.body("Error while saving task-card, invalid task-card id");
 			}
 
 			// Data is saved successfully, let's send Api-Response for the same
@@ -161,7 +167,8 @@ public class TaskCardService {
 			String msg = (taskCardId > 0 ? "Task data & members saved successfully"
 					: "Error in saving Task data & members");
 
-			ApiResponseDTO<SavedTaskCardDTO> apiResponse = new ApiResponseDTO<SavedTaskCardDTO>(successFlag,
+			ApiResponseDTO<SavedTaskCardDTO> apiResponse = new 
+					ApiResponseDTO<SavedTaskCardDTO>(successFlag,
 					savedTaskCardDTO, msg);
 
 			return ResponseEntity.ok(apiResponse);

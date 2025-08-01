@@ -35,6 +35,7 @@ public class JwtService {
 	public String generateToken(String email, int userId) {
 		
 		Date currentDate = new Date();
+		// expiration time for jwt token
 		Date expireDate = new Date(currentDate.getTime() + SecurityConstants.JWT_EXPIRATION);
 		String tokenString = "";
 		try {
@@ -141,7 +142,8 @@ public class JwtService {
 		jwtCookie.setSecure(!isLocal);
 
 		jwtCookie.setPath("/");
-		jwtCookie.setMaxAge(5 * 60);
+		// jwt cookie expiration time
+		jwtCookie.setMaxAge(15 * 60);
 		
 		return jwtCookie;
 	}

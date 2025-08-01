@@ -7,6 +7,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import com.project.workboard.dto.SavedTaskCardDTO;
 import com.project.workboard.dto.TaskCardDTO;
 import com.project.workboard.entity.TaskCard;
 
@@ -21,5 +22,5 @@ public interface TaskCardRepository extends JpaRepository<TaskCard, Integer>{
 		    FROM task_card 
 		    WHERE list_id=:listId
 		""", nativeQuery = true)
-	List<TaskCardDTO> getTasksByListId(@Param("listId") int listId);
+	List<SavedTaskCardDTO> getTasksByListId(@Param("listId") int listId);
 }

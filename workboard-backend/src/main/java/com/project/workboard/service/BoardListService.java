@@ -13,12 +13,15 @@ import org.springframework.transaction.annotation.Transactional;
 import com.project.workboard.dto.ApiResponseDTO;
 import com.project.workboard.dto.BoardListDTO;
 import com.project.workboard.dto.SavedBoardListDTO;
+import com.project.workboard.dto.SavedTaskCardDTO;
+import com.project.workboard.dto.SavedTaskMemberDTO;
 import com.project.workboard.dto.TaskCardDTO;
 import com.project.workboard.entity.Board;
 import com.project.workboard.entity.BoardList;
 import com.project.workboard.repository.BoardListRepository;
 import com.project.workboard.repository.BoardRepository;
 import com.project.workboard.repository.TaskCardRepository;
+import com.project.workboard.repository.TaskMemberRepository;
 
 import jakarta.servlet.http.HttpServletResponse;
 
@@ -33,6 +36,9 @@ public class BoardListService {
 
 	@Autowired
 	private TaskCardRepository taskCardRepository;
+	
+	@Autowired
+	private TaskMemberRepository taskMemberRepository;
 
 	public ResponseEntity<?> getLists(int boardId) {
 		System.out.println("inside BoardListService -> getLists(int boardId), boardId: " + boardId);
@@ -50,9 +56,34 @@ public class BoardListService {
 				for (BoardListDTO boardListDTO : boardLists) {
 					int listId = boardListDTO.getId();
 					try {
-						List<TaskCardDTO> taskCards = taskCardRepository.getTasksByListId(listId);
+						// Getting task-cards 
+						List<SavedTaskCardDTO> taskCards = taskCardRepository.getTasksByListId(listId);
+						
 						System.out.println("no. of taskCards: " + taskCards.size());
-						boardListDTO.setCards(taskCards.toArray(new TaskCardDTO[0]));
+						
+						if (taskCards.size() > 0) {
+							for(SavedTaskCardDTO taskCard: taskCards) {
+								int cardId = taskCard.getId();
+								try {
+									// fetching members of the task-card
+									List<SavedTaskMemberDTO> members = taskMemberRepository.getAllTaskMembers(cardId);
+									
+									// converting list to array
+									SavedTaskMemberDTO[]  membersArr = members.toArray(new SavedTaskMemberDTO[0]);
+									
+									// setting task-members inside task-card
+									taskCard.setMembers(membersArr);
+								} catch (Exception e) {
+									System.out.println("Exception while fetching members of task-card with id: " + cardId
+											+ "\n Exception: " + e.getMessage());
+									return ResponseEntity.status(HttpStatus.CONFLICT)
+											.body("Error while fetching members of task-card with id: " + cardId);
+								}
+							}
+						}
+						
+						// setting task-card inside board-list
+						boardListDTO.setCards(taskCards.toArray(new SavedTaskCardDTO[0]));
 					} catch (Exception e) {
 						System.out.println("Exception while fetching task-cards for listId: " + listId
 								+ "\n Exception: " + e.getMessage());
@@ -177,7 +208,7 @@ public class BoardListService {
 			if (boardList != null) {
 				System.out.println("fetching task-cards");
 
-				List<TaskCardDTO> taskCards = new ArrayList<>();
+				List<SavedTaskCardDTO> taskCards = new ArrayList<>();
 				
 				try {
 					// fetching task-cards from Db
@@ -191,8 +222,10 @@ public class BoardListService {
 							+ e.getMessage());
 				}
 				finally {
+					// converting list to arr.
+					SavedTaskCardDTO[] taskCardsArr = taskCards.toArray(new SavedTaskCardDTO[0]);
 					// setting task-cards in boardList obj.
-					boardList.setCards(taskCards.toArray(new TaskCardDTO[0]));
+					boardList.setCards(taskCardsArr);
 				}
 			}
 		} 

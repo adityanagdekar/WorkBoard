@@ -5,7 +5,7 @@ public class BoardListDTO {
 	private int boardId;
 	private String name;
 	private int userId;
-	private TaskCardDTO[] cards = new TaskCardDTO[0];
+	private SavedTaskCardDTO[] cards = new SavedTaskCardDTO[0];
 
 	public BoardListDTO() {
 	}
@@ -18,7 +18,7 @@ public class BoardListDTO {
 		this.name = name;
 	}
 
-	public BoardListDTO(int id, int boardId, String name, int userId, TaskCardDTO[] cards) {
+	public BoardListDTO(int id, int boardId, String name, int userId, SavedTaskCardDTO[] cards) {
 		super();
 		this.id = id;
 		this.boardId = boardId;
@@ -59,11 +59,11 @@ public class BoardListDTO {
 		this.name = name;
 	}
 	
-	public TaskCardDTO[] getCards() {
+	public SavedTaskCardDTO[] getCards() {
 		return cards;
 	}
 
-	public void setCards(TaskCardDTO[] cards) {
+	public void setCards(SavedTaskCardDTO[] cards) {
 		this.cards = cards;
 	}
 
