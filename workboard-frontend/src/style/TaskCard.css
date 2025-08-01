@@ -1,3 +1,10 @@
+.TaskCard {
+  margin: 1%;
+  padding: 8%;
+  border: 1px solid black;
+  border-radius: 1rem;
+}
+
 .TaskCardHeader {
   display: flex;
   align-items: center;

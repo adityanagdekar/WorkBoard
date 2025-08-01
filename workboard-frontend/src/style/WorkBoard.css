@@ -112,3 +112,8 @@ body {
   border-radius: 1rem;
   padding: 1rem;
 }
+
+.TaskContainer.drag-over {
+  border-color: #007bff;
+  background-color: #eaf4ff;
+}

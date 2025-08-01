@@ -1,5 +1,5 @@
 /***********---external libs---***********/
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useNavigate, useParams, useLocation } from "react-router-dom";
 import axios from "axios";
 
@@ -66,6 +66,12 @@ const WorkBoard = () => {
   const [selectedListIdx, setSelectedListIdx] = useState(-1);
   // selected card obj.
   const [selectedTaskCard, setSelectedTaskCard] = useState({});
+
+  // for drag events
+  // src list & card idx.
+  const srcListIdxRef = useRef(-1);
+  const srcCardIdxRef = useRef(-1);
+  const [hoveredListIdx, setHoveredListIdx] = useState(-1);
 
   const debouncedListName = useDebounce(listName, 1000);
   const debouncedTaskName = useDebounce(taskName, 1000);
@@ -526,67 +532,89 @@ const WorkBoard = () => {
     setAddTaskModal((prevState) => prevState && false);
   };
 
-  const handleTaskCardDragStart = (e, srcListId, srcCardIdx) => {
-    const srcListIdx = dataLists.findIndex((list) => list.id === srcListId);
+  const handleTaskCardDragStart = (e, srcListObj, srcCardObj) => {
+    const listIdx = dataLists.findIndex((list) => list.id === srcListObj.id);
+    const cardIdx = dataLists[listIdx]?.cards?.findIndex(
+      (card) => card.id === srcCardObj.id
+    );
+
+    srcListIdxRef.current = listIdx;
+    srcCardIdxRef.current = cardIdx;
 
     console.log("drag start on task card");
+
+    // ✅ Required line to make drop target receive data
+    e.dataTransfer.setData("text/plain", "dragging-task");
+
     let taskCard = e.target;
     console.log("taskCard: ");
     console.log(taskCard);
     taskCard.style.opacity = 0.5;
-    e.dataTransfer.setData(
-      "application/json",
-      JSON.stringify({ fromListIdx: srcListIdx, fromCardIdx: srcCardIdx })
-    );
   };
 
   const handleTaskCardDragEnd = (e) => {
     console.log("drag end on task card");
     let taskCard = e.target;
     taskCard.style.opacity = 1;
+    setHoveredListIdx(-1);
   };
 
-  const handleTaskContainerOnDrop = (e, targetPhaseIdx) => {
+  const handleTaskContainerOnDrop = (e, targetListIdx) => {
     console.log("on drop for task container");
 
-    /*const { fromPhaseIdx, fromCardIdx } = JSON.parse(
-      e.dataTransfer.getData("application/json")
-    );
+    const srcListIdx = srcListIdxRef.current;
+    const srcCardIdx = srcCardIdxRef.current;
 
     // Prevent dropping into same list without movement
-    if (fromPhaseIdx === targetPhaseIdx) return;
+    if (srcListIdx === targetListIdx) return;
 
     setDataLists((prev) => {
-      const updatedPhases = prev.map((list) => ({
+      const updatedDataLists = prev.map((list) => ({
         ...list,
-        cards: list.cards.map((card) => ({ ...card })), // deep copy of cards
+        cards: [...list.cards.map((card) => ({ ...card }))], // deep copy of cards
       }));
 
       // Remove from source
-      const [movedCard] = updatedPhases[fromPhaseIdx].cards.splice(
-        fromCardIdx,
+      const [movedCard] = updatedDataLists[srcListIdx].cards.splice(
+        srcCardIdx,
         1
       );
 
       console.log("movedCard: ", movedCard);
 
       // Add to target
-      updatedPhases[targetPhaseIdx].cards.push(movedCard);
+      updatedDataLists[targetListIdx].cards.push(movedCard);
 
       // To remove undefined/null
-      updatedPhases.forEach((list) => {
+      updatedDataLists.forEach((list) => {
         list.cards = list.cards.filter(Boolean);
       });
 
-      // console.log(updatedPhases);
-      return updatedPhases;
+      console.log(
+        "updatedDataLists[srcListIdx]: ",
+        updatedDataLists[srcListIdx]
+      );
+
+      console.log(
+        "updatedDataLists[targetListIdx]: ",
+        updatedDataLists[targetListIdx]
+      );
+
+      return updatedDataLists;
     });
-    */
+    setHoveredListIdx(-1);
   };
 
-  const handleTaskContainerDragOver = (e) => {
+  const handleTaskContainerDragOver = (e, listIdx) => {
     console.log("on drag over for task container");
     e.preventDefault();
+    setHoveredListIdx(listIdx);
+  };
+
+  const handleTaskContainerDragLeave = (e) => {
+    console.log("on drag leave for task container");
+    // e.preventDefault();
+    if (!e.currentTarget.contains(e.relatedTarget)) setHoveredListIdx(-1);
   };
 
   const handleTaskNameChange = (updatedName, taskIdx) => {
@@ -676,6 +704,7 @@ const WorkBoard = () => {
                     }}
                   />
 
+                  {/*btn to delete task*/}
                   <BoardBtn
                     // onClick={() => openModalToDelete(list.id, listIdx)}
                     onClick={() => {
@@ -693,18 +722,21 @@ const WorkBoard = () => {
                   />
                 </div>
                 <div
-                  className="TaskContainer"
+                  className={`TaskContainer ${
+                    hoveredListIdx === listIdx ? "drag-over" : ""
+                  }`}
                   onDrop={(e) => handleTaskContainerOnDrop(e, listIdx)}
-                  onDragOver={handleTaskContainerDragOver}
+                  onDragOver={(e) => handleTaskContainerDragOver(e, listIdx)}
+                  onDragLeave={(e) => handleTaskContainerDragLeave(e)}
                 >
                   {/* <p>These are the cards in {data.phase_name}</p> */}
                   {(list.cards?.length ?? 0) > 0 &&
                     list.cards.map((card, cardIdx) => {
                       return card != undefined ? (
                         <TaskCard
-                          key={cardIdx}
+                          key={card.id}
                           handleTaskCardDragStart={(e) =>
-                            handleTaskCardDragStart(e, list.id, cardIdx)
+                            handleTaskCardDragStart(e, list, card)
                           }
                           handleTaskCardDragEnd={handleTaskCardDragEnd}
                           cardName={card.name}
@@ -724,6 +756,7 @@ const WorkBoard = () => {
                       ) : null;
                     })}
 
+                  {/*btn to add more tasks*/}
                   <BoardBtn
                     onClick={() => {
                       taskMenuOnClick(list.id, {});
@@ -739,6 +772,8 @@ const WorkBoard = () => {
           <p>Click on Add List button to Add New Lists</p>
         )}
       </div>
+
+      {/*Delete Modal*/}
       {modalConfig.isOpen && (
         <Modal
           modalMsg={isDisabled ? "Please wait..." : modalConfig.msg}
@@ -754,6 +789,8 @@ const WorkBoard = () => {
           disabledChk={isDisabled}
         />
       )}
+
+      {/*Add task Modal*/}
       {toggleAddTaskModal && (
         <AddTaskModal
           closeBtnOnClick={closeAddTaskModal}

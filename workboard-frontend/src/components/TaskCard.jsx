@@ -23,7 +23,7 @@ const TaskCard = ({
   return (
     <div
       className="TaskCard"
-      draggable
+      draggable="true"
       onDragStart={handleTaskCardDragStart}
       onDragEnd={handleTaskCardDragEnd}
     >
