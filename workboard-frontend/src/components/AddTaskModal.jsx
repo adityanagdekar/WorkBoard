@@ -56,10 +56,10 @@ const AddTaskModal = ({
             const loggedIn_userId = JSON.parse(localStorage.getItem("user")).id;
 
             // userObj.role = member.id === loggedIn_userId ? 1 : 0; // role set as MANAGER i.e. 1
-            if (member.id === loggedIn_userId) {
-              userObj.role = 1;
-            } else if (taskMembersMap.hasOwnProperty(member.id)) {
+            if (taskMembersMap.hasOwnProperty(member.id)) {
               userObj.role = taskMembersMap[member.id];
+            } else if (member.id === loggedIn_userId) {
+              userObj.role = 1;
             } else {
               userObj.role = 0;
             }
@@ -347,7 +347,10 @@ const AddTaskModal = ({
                           /* If the user is board-creator/logged-in user then by-default 
                             mark this checkbox & disable it */
                           disabled={
-                            taskMember.id === loggedIn_userId ? true : false
+                            taskMember.id === loggedIn_userId ||
+                            taskMember.role === 1
+                              ? true
+                              : false
                           }
                         />
                       </td>
@@ -358,7 +361,10 @@ const AddTaskModal = ({
                           /* If the user is board-creator/logged-in user then by-default 
                             set the role as Manager & disable it*/
                           disabled={
-                            taskMember.id === loggedIn_userId ? true : false
+                            taskMember.id === loggedIn_userId ||
+                            taskMember.role === 1
+                              ? true
+                              : false
                           }
                         >
                           <option value="">-- select --</option>
