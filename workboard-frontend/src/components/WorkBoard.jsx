@@ -225,10 +225,12 @@ const WorkBoard = () => {
 
   const handleListNameChange = (updatedName, id) => {
     console.log("updated list name: ", updatedName, "list id: ", id);
-    setListName({
-      id: id,
-      name: updatedName,
-    });
+    if (updatedName.length > 0) {
+      setListName({
+        id: id,
+        name: updatedName,
+      });
+    }
   };
 
   const saveTaskName = async (taskNameObj) => {
@@ -252,6 +254,7 @@ const WorkBoard = () => {
 
       // making api call
       try {
+        const url = "http://localhost:8080/api/list/save";
         const data = listNameObj;
         // listName;
         const configObj = {
@@ -260,11 +263,28 @@ const WorkBoard = () => {
             "Content-Type": "application/json",
           },
         };
-        const response = await axios.post(
-          "http://localhost:8080/api/list/save",
-          data,
-          configObj
-        );
+        const response = await axios.post(url, data, configObj);
+
+        const responseData = response.data;
+
+        const savedList = responseData.data;
+
+        setDataLists((prevLists) => {
+          const updatedLists = [...prevLists];
+          const dummyIdx = updatedLists.findIndex(
+            (list) => list.id === -1 && list.name === savedList.name
+          );
+          if (dummyIdx !== -1) {
+            updatedLists[dummyIdx] = {
+              ...updatedLists[dummyIdx],
+              id: savedList.id,
+              boardId: savedList.boardId,
+              name: savedList.name,
+            };
+          }
+          return updatedLists;
+        });
+
         console.log("list saved successfully: ", response.data);
 
         addToast("List saved successfully", "sucess");
@@ -300,6 +320,7 @@ const WorkBoard = () => {
   const addListOnClick = () => {
     console.log("addListOnClick clicked");
     const newList = {
+      id: -1,
       name: `New List`,
       cards: [],
     };
@@ -433,7 +454,7 @@ const WorkBoard = () => {
     }
   };
 
-  const deleteBoardList = (id) => {
+  const deleteBoardList = async (id) => {
     const url = "http://localhost:8080/api/list/delete";
     const data = { id: id };
     const headersObj = { "Content-Type": "application/json" };
@@ -442,7 +463,7 @@ const WorkBoard = () => {
       withCredentials: true,
     };
     // const response = await axios.post(url, data, configObj);
-    axios
+    return axios
       .post(url, data, configObj)
       .then((response) => {
         console.log(

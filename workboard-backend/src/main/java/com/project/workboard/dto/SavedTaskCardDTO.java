@@ -90,7 +90,7 @@ public class SavedTaskCardDTO {
 	@Override
 	public String toString() {
 		return "task-card -> [ taskId=" + id + 
-				", members=" + memberToString(members) + ", name="
+				", members=" + (members.length > 0 ? memberToString(members) : "[]") + ", name="
 				+ name + ", desc=" + desc 
 				+" isActive: "+isActive+" isCompleted: "+isCompleted+" ]";
 	}

@@ -121,6 +121,7 @@ public class BoardListService {
 	}
 
 	private BoardList saveBoardListData(BoardListDTO boardListData) {
+		System.out.println("inside BoardListService :: saveBoardListData, boardListData: "+boardListData.toString());
 		try {
 			// Setting boardList
 			BoardList boardList;

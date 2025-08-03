@@ -73,7 +73,7 @@ public class BoardListDTO {
 	public String toString() {
 		return "BoardList-> [ id=" + id + ", boardId=" + boardId + 
 				", name=" + name + ", userId=" + userId + 
-				", cards=" + cardsToString(cards) + " ]";
+				", cards= " + (cards.length > 0 ? cardsToString(cards) : "[]") + " ]";
 	}
 
 	private String cardsToString(SavedTaskCardDTO[] taskCardDTOs) {
