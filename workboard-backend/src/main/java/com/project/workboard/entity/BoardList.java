@@ -72,6 +72,15 @@ public class BoardList {
     
 	/*----------------@ManyToOne relationships----------------*/
     
+	public List<TaskCard> getTaskCards() {
+		return taskCards;
+	}
+
+	public void setTaskCards(List<TaskCard> taskCards) {
+		this.taskCards = taskCards;
+	}
+
+
 	@ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "board_id", nullable = false) // refers to FK column in board_list table
     private Board board;

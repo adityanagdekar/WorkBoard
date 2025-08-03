@@ -92,7 +92,7 @@ public class TaskCard {
 
 	
 	/*----------------@ManyToOne relationships----------------*/
-    
+
 	@ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "list_id", nullable = false) // refers to FK column in task_card table
 	@JsonBackReference

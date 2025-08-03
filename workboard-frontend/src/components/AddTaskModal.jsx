@@ -56,7 +56,7 @@ const AddTaskModal = ({
             const loggedIn_userId = JSON.parse(localStorage.getItem("user")).id;
 
             // userObj.role = member.id === loggedIn_userId ? 1 : 0; // role set as MANAGER i.e. 1
-            if (taskMembersMap.hasOwnProperty(member.id)) {
+            if (taskMembersMap && taskMembersMap.hasOwnProperty(member.id)) {
               userObj.role = taskMembersMap[member.id];
             } else if (member.id === loggedIn_userId) {
               userObj.role = 1;
@@ -67,7 +67,7 @@ const AddTaskModal = ({
             // userObj.isAdded = member.id === loggedIn_userId ? true : false; // isAdded attr. set as true
             if (
               member.id === loggedIn_userId ||
-              taskMembersMap.hasOwnProperty(member.id)
+              (taskMembersMap && taskMembersMap.hasOwnProperty(member.id))
             ) {
               userObj.isAdded = true;
             } else {
@@ -138,28 +138,6 @@ const AddTaskModal = ({
     setTaskDesc((prev) => desc);
   };
 
-  /*
-    {
-    "success": true,
-    "data": {
-        "taskId": 11,
-        "members": [
-            {
-                "memberId": 1,
-                "memberRole": 0
-            },
-            {
-                "memberId": 10,
-                "memberRole": 1
-            }
-        ],
-        "name": "Create dashboard for reserved items",
-        "desc": "Create dashboard for reserved items"
-    },
-    "message": "Task data & members saved successfully"
-}
-    */
-
   const saveTaskBtnOnClick = () => {
     console.log("save btn clicked");
     const loggedIn_userId = JSON.parse(localStorage.getItem("user")).id;
@@ -187,16 +165,7 @@ const AddTaskModal = ({
           addToast("Task-card added successfully", "success");
 
           // setting up newCard using data sent from backend
-          const taskDataFetched = response.data;
-          const newCard = {
-            name: taskDataFetched.name,
-            desc: taskDataFetched.desc,
-            isActive: taskDataFetched.isActive,
-            isCompleted: taskDataFetched.isCompleted,
-          };
-
-          // removing dummyCard from the cards[] from boardList having idx === listIdx
-          // removeDummyTaskCard(listIdx);
+          const newCard = response.data;
 
           // adding newCard to state to render it
           addTaskToState(listIdx, newCard);

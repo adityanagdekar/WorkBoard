@@ -105,14 +105,20 @@ public class JwtService {
 	}
 
 	public boolean validateToken(String token, UserDetails userDetails) {
+		System.out.println("inside validToken, token: "+token);
 		Claims claims = getClaims(token);
 		String email = claims.getSubject();
-		return email.equals(userDetails.getUsername()) && !isTokenExpired(token);
+		String userName = userDetails.getUsername();
+		System.out.println("userName: "+userName);
+ 		return email.equals(userName) && !isTokenExpired(token);
 	}
 
 	// Check if token is expired
 	private boolean isTokenExpired(String token) {
-		return getClaims(token).getExpiration().before(new Date());
+		System.out.println("inside isTokenExpired, token: "+token);
+		boolean flag = getClaims(token).getExpiration().before(new Date());
+		System.out.println("flag: "+flag);
+		return flag;
 	}
 
 	// Get token claims

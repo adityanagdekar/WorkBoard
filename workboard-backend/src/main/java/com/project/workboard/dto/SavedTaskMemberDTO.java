@@ -14,7 +14,7 @@ public class SavedTaskMemberDTO {
 
 	@Override
 	public String toString() {
-		return "SavedTaskMemberDTO [userId=" + userId + ", role=" + role + "]";
+		return "task-member -> [userId=" + userId + ", role=" + role + "]";
 	}
 
 	public int getUserId() {

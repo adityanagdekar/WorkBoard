@@ -74,6 +74,7 @@ const WorkBoard = () => {
   const srcListIdxRef = useRef(-1);
   const srcCardIdxRef = useRef(-1);
   const [hoveredListIdx, setHoveredListIdx] = useState(-1);
+  const dragUpdateFlagRef = useRef(false);
 
   // debouncing for delayed-auto-saving of data
   const debouncedListName = useDebounce(listName, 1000);
@@ -146,9 +147,44 @@ const WorkBoard = () => {
   }, [debouncedTaskDesc]);
 
   useEffect(() => {
-    if (debouncedLists.length > 0)
+    if (debouncedLists.length > 0 && dragUpdateFlagRef.current) {
       console.log("debouncedList: ", debouncedLists);
+      saveListsAndTasks();
+    }
   }, [debouncedLists]);
+
+  const saveListsAndTasks = async () => {
+    console.log("inside saveListsAndTasks");
+
+    try {
+      const url = "http://localhost:8080/api/list/updateLists";
+      const data = dataLists;
+      const configObj = {
+        withCredentials: true,
+        headers: {
+          "Content-Type": "application/json",
+        },
+      };
+
+      const response = await axios.post(url, data, configObj);
+
+      const responseData = response.data;
+
+      if (responseData) {
+        console.log(responseData.message);
+        if (responseData.success) {
+          console.log("list saved successfully: ", responseData.data);
+          addToast("Lists saved successfully", "sucess");
+        }
+      }
+    } catch (error) {
+      console.log("Saving List failed:", error.response?.data || error.message);
+      addToast("Failed to save the Lists", "error");
+    } finally {
+      // reset the dragUpdateFlagRef
+      dragUpdateFlagRef.current = false;
+    }
+  };
 
   const openModalToDelete = (listId, idx) => {
     console.log("openModalToDelete for list with id: ", listId);
@@ -527,7 +563,7 @@ const WorkBoard = () => {
     );
     <div className="W"></div>;
 
-    const membersMap = cardObj.members.reduce((map, member) => {
+    const membersMap = cardObj.members?.reduce((map, member) => {
       map[member.userId] = member.role;
       return map;
     }, {});
@@ -584,6 +620,9 @@ const WorkBoard = () => {
 
     // Prevent dropping into same list without movement
     if (srcListIdx === targetListIdx) return;
+
+    // setting drag-list-flag
+    dragUpdateFlagRef.current = true;
 
     setDataLists((prev) => {
       const updatedDataLists = prev.map((list) => ({

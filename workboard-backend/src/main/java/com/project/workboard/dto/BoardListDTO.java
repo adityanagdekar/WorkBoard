@@ -1,5 +1,7 @@
 package com.project.workboard.dto;
 
+import java.util.Arrays;
+
 public class BoardListDTO {
 	private int id;
 	private int boardId;
@@ -58,13 +60,28 @@ public class BoardListDTO {
 	public void setName(String name) {
 		this.name = name;
 	}
-	
+
 	public SavedTaskCardDTO[] getCards() {
 		return cards;
 	}
 
 	public void setCards(SavedTaskCardDTO[] cards) {
 		this.cards = cards;
+	}
+	
+	@Override
+	public String toString() {
+		return "BoardList-> [ id=" + id + ", boardId=" + boardId + 
+				", name=" + name + ", userId=" + userId + 
+				", cards=" + cardsToString(cards) + " ]";
+	}
+
+	private String cardsToString(SavedTaskCardDTO[] taskCardDTOs) {
+		StringBuffer buffer= new StringBuffer();
+		for(SavedTaskCardDTO savedTaskCardDTO: taskCardDTOs) {
+			buffer.append("\n "+savedTaskCardDTO.toString());
+		}
+		return buffer.toString();
 	}
 
 	/*

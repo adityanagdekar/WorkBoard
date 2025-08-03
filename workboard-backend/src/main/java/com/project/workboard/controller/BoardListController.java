@@ -5,6 +5,7 @@ import java.util.Map;
 import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -32,23 +33,29 @@ import jakarta.servlet.http.HttpServletResponse;
 public class BoardListController {
 	@Autowired
 	private BoardListService boardListService;
-	
+
 	@GetMapping("/lists/{boardId}")
-	public ResponseEntity<?> getBoardLists(HttpServletRequest request, @PathVariable int boardId){
+	public ResponseEntity<?> getBoardLists(HttpServletRequest request, @PathVariable int boardId) {
 		return boardListService.getLists(boardId);
 	}
-	
+
 	@PostMapping("/save")
-    public ResponseEntity<?> saveBoardList(@RequestBody BoardListDTO boardListData,  
-			HttpServletResponse response) {
+	public ResponseEntity<?> saveBoardList(@RequestBody BoardListDTO boardListData, HttpServletResponse response) {
 		System.out.println("Inside BoardListController: saveBoardList");
-		return boardListService.saveBoardList(boardListData, response);  
+		return boardListService.saveBoardList(boardListData, response);
 	}
-	
+
+	@PostMapping("/updateLists")
+	public ResponseEntity<?> saveUpdatedBoardLists(@RequestBody List<BoardListDTO> boardLists, HttpServletResponse response) {
+		System.out.println("Inside BoardListController: saveBoardLists");
+		return boardListService.saveUpdatedBoardLists(boardLists, response);
+		// return ResponseEntity.status(HttpStatus.OK).body("Data received: " + boardLists.toString());
+	}
+
 	@PostMapping("/delete")
 	public ResponseEntity<?> deleteBoardList(@RequestBody Map<String, Integer> payload) {
 		Integer id = payload.get("id");
-		System.out.println("Inside BoardListController:: deleteBoardList, id: "+id);
+		System.out.println("Inside BoardListController:: deleteBoardList, id: " + id);
 		return boardListService.deleteBoardList(id);
 	}
 }
