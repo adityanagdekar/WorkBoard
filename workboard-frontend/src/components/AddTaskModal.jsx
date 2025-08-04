@@ -146,6 +146,7 @@ const AddTaskModal = ({
       (member) => member.isAdded && member.role >= 0
     );
     const taskData = {
+      id: cardObj && cardObj.hasOwnProperty("id") ? cardObj.id : -1,
       name: taskName,
       description: taskDesc,
       isActive: isActive,
@@ -162,13 +163,23 @@ const AddTaskModal = ({
         console.log("response.success: ", response.success);
 
         if (response.success === true) {
-          addToast("Task-card added successfully", "success");
-
           // setting up newCard using data sent from backend
           const newCard = response.data;
+          let flag = -1;
+          // setting update flag
+          if (cardObj && cardObj.hasOwnProperty("id") && cardObj.id > 0) {
+            // this means card already exists &
+            // only updates are needed to be saved in the state
+            flag = 1;
+            addToast("Task-card updated successfully", "success");
+          } else {
+            // this means card was created & needs to be added to state
+            flag = 0;
+            addToast("Task-card added successfully", "success");
+          }
 
           // adding newCard to state to render it
-          addTaskToState(listIdx, newCard);
+          addTaskToState(listIdx, newCard, flag);
         } else addToast("Failed to add the Task-card", "error");
       })
       .catch((error) => {

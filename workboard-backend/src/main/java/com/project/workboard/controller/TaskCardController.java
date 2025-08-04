@@ -23,17 +23,20 @@ import com.project.workboard.service.TaskCardService;
 public class TaskCardController {
 	@Autowired
 	private TaskCardService taskCardService;
-	
+
 	@GetMapping("/getAllTasks")
-	private List<TaskCard> getTaskCards(@RequestBody Long boardId, Long boardListId){
+	private List<TaskCard> getTaskCards(@RequestBody Long boardId, Long boardListId) {
 		return null;
 	}
-	
+
 	@PostMapping("/save")
-    public ResponseEntity<?> saveTaskCard(@RequestBody TaskDataDTO taskData) {
-		return taskCardService.saveTaskCard(taskData);  
+	public ResponseEntity<?> saveTaskCard(@RequestBody TaskDataDTO taskData) {
+		if (taskData.getId() > 0)
+			return taskCardService.updateTaskCard(taskData);
+		else
+			return taskCardService.saveTaskCard(taskData);
 	}
-	
+
 	@PostMapping("/delete")
 	private ResponseEntity<?> deleteTaskCard(@RequestBody Map<String, Integer> payload) {
 		Integer id = payload.get("id");

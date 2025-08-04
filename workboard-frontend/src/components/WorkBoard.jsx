@@ -374,9 +374,9 @@ const WorkBoard = () => {
     });
   };
 
-  const addTaskToState = (listIdx, newCard) => {
+  const addTaskToState = (listIdx, newCard, flag) => {
     console.log(
-      "inside addTaskToState, taskCard: ",
+      "inside addTaskToState, newCard: ",
       newCard,
       "\n selectedListIdx: ",
       listIdx
@@ -385,24 +385,71 @@ const WorkBoard = () => {
     // update the state
     setDataLists((prev) => {
       const updatedLists = prev.map((list, idx) => {
-        let updatedList = {};
+        if (idx !== listIdx) return { ...list };
 
-        if (idx === listIdx) {
-          const existingCards = list.cards ? [...list.cards] : [];
-          updatedList = {
-            ...list,
-            cards: [...existingCards, newCard], // add the existingCards AND the newCard
-          };
-        } else {
-          updatedList = { ...list };
+        const existingCards = list.cards ? [...list.cards] : [];
+        if (flag === 0) {
+          // inserting a new card
+          existingCards.push(newCard);
+        } else if (flag === 1) {
+          // update and existing card
+          const cardIdx = existingCards.findIndex(
+            (card) => card.id === newCard.id
+          );
+          if (cardIdx !== -1) {
+            existingCards[cardIdx] = { ...newCard };
+          } else if (cardIdx === -1) {
+            // Reqd. card not found, fallback to original list
+            console.warn("Card to update not found in list:", newCard.id);
+            return list;
+          }
         }
+
+        // adding all changes
+        const updatedList = {
+          ...list,
+          cards: existingCards,
+        };
 
         return updatedList;
       });
+
       console.log("updatedLists: ", updatedLists);
       return updatedLists;
     });
   };
+
+  /* TASK-CARD OBj.
+  {
+    "id": -1,
+    "name": "Make new banner",
+    "description": "Make new banner images for finance dept.",
+    "isActive": true,
+    "isCompleted": false,
+    "members": [
+        {
+            "id": 1,
+            "name": "John Doe",
+            "isAdded": true,
+            "role": 0
+        },
+        {
+            "id": 10,
+            "name": "Shree",
+            "isAdded": true,
+            "role": 1
+        },
+        {
+            "id": 11,
+            "name": "Niel",
+            "isAdded": true,
+            "role": 0
+        }
+    ],
+    "userId": 10,
+    "listId": 9
+}
+  */
 
   const addTaskOnClick = (listId) => {
     console.log("inside addTaskOnClick, listId: ", listId);

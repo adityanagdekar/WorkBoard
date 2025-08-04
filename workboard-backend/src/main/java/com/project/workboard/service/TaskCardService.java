@@ -2,6 +2,7 @@ package com.project.workboard.service;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -40,7 +41,7 @@ public class TaskCardService {
 	private TaskMemberRepository taskMemberRepository;
 
 	public ResponseEntity<?> saveTaskCard(TaskDataDTO taskData) {
-		System.out.println("Inside TaskCardService :: saveTaskCard, taskData: "+taskData.toString()+"\n");
+		System.out.println("Inside TaskCardService :: saveTaskCard, taskData: " + taskData.toString() + "\n");
 
 		try {
 			SavedTaskCardDTO savedTaskCardDTO = new SavedTaskCardDTO();
@@ -130,8 +131,7 @@ public class TaskCardService {
 						// Saving boardMember
 						taskMemberRepository.save(taskMember);
 						taskMemberId = taskMember.getUser().getId();
-						System.out.println("successfully saved task-member with id: " + 
-						taskMemberId+"\n");
+						System.out.println("successfully saved task-member with id: " + taskMemberId + "\n");
 
 						// Saving member-data-dto in memberIds arr.
 						taskMemberDataList.add(new SavedTaskMemberDTO(taskMemberId, fetchedTaskMember.getRole()));
@@ -144,21 +144,17 @@ public class TaskCardService {
 				} catch (Exception e) {
 					System.out.println("Exception while saving task-member: " + e.getMessage());
 					System.out.println(
-							"Need to delete the board, if saved. " + 
-					"Can't save task without it's task-members");
+							"Need to delete the board, if saved. " + "Can't save task without it's task-members");
 
 					// delete the board, if not able to save board-members
 					taskCardRepository.deleteById(taskCardId);
 
-					return ResponseEntity
-							.status(HttpStatus.UNAUTHORIZED)
-							.body("Error while saving task-member");
+					return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Error while saving task-member");
 				}
 
 			} else if (taskCardId < 0) {
 				// task-card not saved successfully
-				return ResponseEntity
-						.status(HttpStatus.BAD_REQUEST)
+				return ResponseEntity.status(HttpStatus.BAD_REQUEST)
 						.body("Error while saving task-card, invalid task-card id");
 			}
 
@@ -167,8 +163,7 @@ public class TaskCardService {
 			String msg = (taskCardId > 0 ? "Task data & members saved successfully"
 					: "Error in saving Task data & members");
 
-			ApiResponseDTO<SavedTaskCardDTO> apiResponse = new 
-					ApiResponseDTO<SavedTaskCardDTO>(successFlag,
+			ApiResponseDTO<SavedTaskCardDTO> apiResponse = new ApiResponseDTO<SavedTaskCardDTO>(successFlag,
 					savedTaskCardDTO, msg);
 
 			return ResponseEntity.ok(apiResponse);
@@ -178,26 +173,98 @@ public class TaskCardService {
 		}
 	}
 
+	public ResponseEntity<?> updateTaskCard(TaskDataDTO taskDataDTO) {
+		System.out.println("inside TaskCardService :: updatedTaskCard, taskData: " + taskDataDTO.toString() + " \n");
+		try {
+			// Getting taskCard using the task-card id. which we have received from the front-end
+			Optional<TaskCard> optTaskCard = taskCardRepository.findById(taskDataDTO.getId());
+			if (optTaskCard.isEmpty()) {
+				throw new IllegalArgumentException("TaskCard not found: id= " + taskDataDTO.getId());
+			}
+
+			TaskCard taskCard = optTaskCard.get();
+
+			boolean taskChanged = false;
+
+			if (!Objects.equals(taskCard.getName(), taskDataDTO.getName())) {
+				taskCard.setName(taskDataDTO.getName());
+				taskChanged = true;
+			}
+
+			if (!Objects.equals(taskCard.getDescription(), taskDataDTO.getDescription())) {
+				taskCard.setDescription(taskDataDTO.getDescription());
+				taskChanged = true;
+			}
+
+			if (taskCard.isActive() != taskDataDTO.isActive()) {
+				taskCard.setActive(taskDataDTO.isActive());
+				taskChanged = true;
+			}
+
+			if (taskCard.isCompleted() != taskDataDTO.isCompleted()) {
+				taskCard.setCompleted(taskDataDTO.isCompleted());
+				taskChanged = true;
+			}
+
+			// Most important: check if task was moved to another list
+			if (!Objects.equals(taskCard.getBoardList().getId(), taskDataDTO.getListId())) {
+				
+				Optional<BoardList> boardListOpt = boardListRepository.findById(taskDataDTO.getListId());
+				if (boardListOpt.isEmpty()) {
+					throw new IllegalArgumentException("BoardList not found, while updating task-card");
+				}
+				BoardList boardList = boardListOpt.get();
+				
+				taskCard.setBoardList(boardList);
+				taskChanged = true;
+			}
+
+			// checking if taskCard was updated or not
+			if (taskChanged) {
+				// saving the updates to the task-card
+				taskCard = taskCardRepository.save(taskCard);
+				System.out.println(
+						"Saved updates to taskCard with id: " + 
+								taskCard.getId() + " & name: " + taskCard.getName());
+			} else {
+				System.out.println(
+						"No changes were made to taskCard with id: " + 
+								taskCard.getId() + " & name: " + taskCard.getName());
+			}
+
+			// Data is saved successfully, let's send Api-Response for the same
+			boolean successFlag = true;
+			String msg = "Task data & members saved successfully";
+
+			ApiResponseDTO<TaskDataDTO> apiResponse = new ApiResponseDTO<>(successFlag,
+					taskDataDTO, msg);
+
+			return ResponseEntity.ok(apiResponse);
+		} catch (IllegalArgumentException e) {
+			System.out.println("Exception with data: " + e.getMessage());
+			return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Error while updating task-card");
+		} catch (Exception e) {
+			System.out.println("Exception while updating task-card : " + e.getMessage());
+			return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Error while updating task-card data");
+		}
+	}
+
 	@Transactional
 	public ResponseEntity<?> deleteTaskCard(Integer cardId) {
-		System.out.println("Inside TaskCardService :: deleteTaskCard, cardId: "+cardId);
+		System.out.println("Inside TaskCardService :: deleteTaskCard, cardId: " + cardId);
 		try {
 			taskCardRepository.deleteById(cardId);
-			
+
 			// Data is saved successfully, let's send Api-Response for the same
 			boolean successFlag = true;
 			String msg = "Task-card deleted successfully";
 
-			ApiResponseDTO<Integer> apiResponse = new ApiResponseDTO<Integer>(successFlag,
-					cardId, msg);
+			ApiResponseDTO<Integer> apiResponse = new ApiResponseDTO<Integer>(successFlag, cardId, msg);
 
 			return ResponseEntity.ok(apiResponse);
-		} 
-		catch (Exception e) {
+		} catch (Exception e) {
 			System.out.println("Exception while deleting task-card : " + e.getMessage());
-			return ResponseEntity
-					.status(HttpStatus.BAD_REQUEST)
-					.body("Error while deleting task-card, invalid id");
+			return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Error while deleting task-card, invalid id");
 		}
 	}
 

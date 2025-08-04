@@ -146,7 +146,7 @@ public class TaskDataDTO {
 	@Override
 	public String toString() {
 		return "TaskDataDTO [id=" + id + ", name=" + name + ", description=" + description + ", isActive=" + active
-				+ ", isCompleted=" + completed + ", members=" + membersToString(members) + ", userId=" + userId
+				+ ", isCompleted=" + completed + ", members=" + (members.length > 0 ? membersToString(members) : "[]") + ", userId=" + userId
 				+ ", listId=" + listId + "]";
 	}
 	
