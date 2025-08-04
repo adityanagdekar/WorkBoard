@@ -98,9 +98,10 @@ const ManageDashboard = () => {
 
   const boardCardHeaderOnClick = (board) => {
     console.log("boardCardHeaderOnClick");
+    const loggedIn_userId = JSON.parse(localStorage.getItem("user")).id;
     navigate(`/board/${board.boardId}`, {
       state: {
-        userId: board.members[0].memberId,
+        userId: loggedIn_userId,
         boardName: board.boardName,
       },
     });

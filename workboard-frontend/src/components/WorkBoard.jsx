@@ -126,7 +126,7 @@ const WorkBoard = () => {
     if (debouncedListName) {
       // Call backend updateList API here
       console.log("Saving list name: ", debouncedListName);
-      saveListName(debouncedListName);
+      saveOrUpdateList(debouncedListName);
     }
   }, [debouncedListName]);
 
@@ -241,21 +241,19 @@ const WorkBoard = () => {
     console.log("taskName obj.: ", taskNameObj);
   };
 
-  const saveListName = async (listNameObj) => {
-    console.log("listname obj.: ", listNameObj);
+  const saveOrUpdateList = async (listObj) => {
+    console.log(" inside saveOrUpdateList, listObj : ", listObj);
 
-    if (
-      listNameObj.hasOwnProperty("id") &&
-      listNameObj.hasOwnProperty("name")
-    ) {
-      // adding boardId to listName obj.
-      listNameObj.boardId = boardId;
-      listNameObj.userId = userId;
+    if (listObj.hasOwnProperty("id") && listObj.hasOwnProperty("name")) {
+      // adding boardId
+      if (!listObj.hasOwnProperty("boardId")) listObj.boardId = boardId;
+      // adding userId
+      if (!listObj.hasOwnProperty("userId")) listObj.userId = userId;
 
       // making api call
       try {
         const url = "http://localhost:8080/api/list/save";
-        const data = listNameObj;
+        const data = listObj;
         // listName;
         const configObj = {
           withCredentials: true,
@@ -268,24 +266,40 @@ const WorkBoard = () => {
         const responseData = response.data;
 
         const savedList = responseData.data;
+        console.log("list saved successfully: ", savedList);
 
         setDataLists((prevLists) => {
           const updatedLists = [...prevLists];
-          const dummyIdx = updatedLists.findIndex(
-            (list) => list.id === -1 && list.name === savedList.name
-          );
-          if (dummyIdx !== -1) {
-            updatedLists[dummyIdx] = {
-              ...updatedLists[dummyIdx],
+
+          if (listObj.id && listObj.id > 0) {
+            // this means list already exists & list-name was updated
+            const idx = updatedLists.findIndex(
+              (list) => list.id === listObj.id
+            );
+            // setting list data
+            if (idx !== -1) {
+              // updating list-name
+              updatedLists[idx] = {
+                ...updatedLists[idx],
+                name: savedList.name,
+              };
+            }
+          } else {
+            // setting newList obj.
+            const newList = {
               id: savedList.id,
               boardId: savedList.boardId,
               name: savedList.name,
+              userId: userId,
+              cards: [],
             };
+
+            // adding newly added list to the state var.
+            updatedLists.push(newList);
           }
+          console.log("inside saveOrUpdateList, updatedLists: ", updatedLists);
           return updatedLists;
         });
-
-        console.log("list saved successfully: ", response.data);
 
         addToast("List saved successfully", "sucess");
       } catch (error) {
@@ -324,8 +338,11 @@ const WorkBoard = () => {
       name: `New List`,
       cards: [],
     };
+
     console.log("newList: ", newList);
-    addListToState(newList);
+
+    // addListToState(newList);
+    saveOrUpdateList(newList);
   };
 
   const removeDummyTaskCard = (listIdx) => {
