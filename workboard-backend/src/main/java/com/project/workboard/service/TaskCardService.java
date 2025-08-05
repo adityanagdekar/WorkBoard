@@ -1,9 +1,12 @@
 package com.project.workboard.service;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -218,6 +221,135 @@ public class TaskCardService {
 				taskCard.setBoardList(boardList);
 				taskChanged = true;
 			}
+			
+			// Checking if updates are made to Task-members
+			
+			// getting existing members of the task
+			List<SavedTaskMemberDTO> existingMembersList = taskMemberRepository.getAllTaskMembers(taskCard.getId());
+			
+			// mapping user-id to role for existing-members
+			Map<Integer, Integer> existingMembersMap = existingMembersList.stream()
+					.collect(Collectors.toMap(
+							SavedTaskMemberDTO :: getUserId, 
+							SavedTaskMemberDTO :: getRole
+							));
+			
+			// getting updated-members of the task from taskDataDTO
+			TaskDataDTO.Member[] updatedMembersArr = taskDataDTO.getMembers();
+			
+			// mapping user-id to role for updated-members
+			Map<Integer, Integer> updatedMembersMap = new HashMap<>();
+			for(TaskDataDTO.Member member: updatedMembersArr) {
+				updatedMembersMap.put(member.getId(), member.getRole());
+			}
+			
+			// Lists for various purposes
+			List<TaskMember> addList = new ArrayList<>();
+			List<TaskMember> removeList = new ArrayList<>();
+			List<TaskMember> updateList = new ArrayList<>();
+			
+			// Checking existing-members to 
+			// Detect existing-members to be removed or updated
+			for (SavedTaskMemberDTO existingMember : existingMembersList) {
+			    int userId = existingMember.getUserId();
+			    int existingRole = existingMember.getRole();
+			    
+			    // creating TaskMember obj.
+			    TaskMember taskMember = new TaskMember();
+		    	
+		    	// getting app-user
+		        AppUser user = userRepository.findById(userId)
+		            .orElseThrow(() -> new IllegalArgumentException("User not found"));
+		        
+		        // getting task-card
+		        TaskCard card = taskCardRepository.findById(taskDataDTO.getId())
+		            .orElseThrow(() -> new IllegalArgumentException("Task-card not found"));
+		        
+		        // setting task-member
+		    	taskMember.setUser(user);
+		    	taskMember.setTaskCard(card);
+		    	taskMember.setRole(existingRole);
+
+		        // checking in updatedMembersMap
+			    if (!updatedMembersMap.containsKey(userId)) {
+			        // existing-member needs to be Removed
+			    	
+			    	// add to removeList
+			        removeList.add(taskMember);
+			        
+			    	taskChanged = true;
+			    } else {
+			    	// existingMember is present in updatedMemberMap
+			    	// let's check for change in role
+			    	// getting new-role
+			        Integer newRole = updatedMembersMap.get(userId);
+			        
+			        // checking new-role & existing-role
+			        if (!Objects.equals(existingRole, newRole)) {
+			            // Role changed
+			            taskMember.setRole(newRole);
+			            
+			            // add to updateList
+			            updateList.add(taskMember);
+
+				    	taskChanged = true;
+			        }
+			    }
+			}
+			
+			
+			// Checking new-members to 
+			// Detect new-members to be added
+			for (Map.Entry<Integer, Integer> mapEntry: updatedMembersMap.entrySet()) {
+				int userId = mapEntry.getKey();
+				int role = mapEntry.getValue();
+				
+				// new-member should not exist in existingMembersMap
+				if (!existingMembersMap.containsKey(userId)) {
+					// add the new-member to the addList
+					
+				    // creating TaskMember obj.
+				    TaskMember taskMember = new TaskMember();
+			    	
+			    	// getting app-user
+			        AppUser user = userRepository.findById(userId)
+			            .orElseThrow(() -> new IllegalArgumentException("User not found"));
+			        
+			        // getting task-card
+			        TaskCard card = taskCardRepository.findById(taskDataDTO.getId())
+			            .orElseThrow(() -> new IllegalArgumentException("Task-card not found"));
+			        
+			        // setting task-member
+			    	taskMember.setUser(user);
+			    	taskMember.setTaskCard(card);
+			    	taskMember.setRole(role);
+			    	
+			    	// pushing to addList
+			    	addList.add(taskMember);
+			    	
+			    	taskChanged = true;
+				}
+			}
+			
+			// saving the updates to Db
+			System.out.println("task-members to add: ");
+			for(TaskMember tm: addList) {
+				System.out.println(tm.toString());
+			}
+			taskMemberRepository.saveAll(addList);
+			
+			System.out.println("task-members to update: ");
+			for(TaskMember tm: updateList) {
+				System.out.println(tm.toString());
+			}
+			taskMemberRepository.saveAll(updateList);
+			
+			System.out.println("task-members to remove: ");
+			for(TaskMember tm: removeList) {
+				System.out.println(tm.toString());
+			}
+			taskMemberRepository.deleteAll(removeList);
+			
 
 			// checking if taskCard was updated or not
 			if (taskChanged) {

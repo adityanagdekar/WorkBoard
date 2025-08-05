@@ -5,7 +5,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 public class SavedTaskCardDTO {
 	private int id;
 	private String name;
-	private String desc;	
+	private String description;	
 	private boolean isActive;
 	private boolean isCompleted;
 	private SavedTaskMemberDTO[] members;
@@ -18,7 +18,7 @@ public class SavedTaskCardDTO {
 		super();
 		this.id = taskId;
 		this.name = name;
-		this.desc = desc;
+		this.description = desc;
 		this.isActive = isActive;
 		this.isCompleted = isCompleted;
 	}
@@ -29,7 +29,7 @@ public class SavedTaskCardDTO {
 		super();
 		this.id = taskId;
 		this.name = name;
-		this.desc = desc;
+		this.description = desc;
 		this.isActive = isActive;
 		this.isCompleted = isCompleted;
 		this.members = members;
@@ -59,12 +59,12 @@ public class SavedTaskCardDTO {
 		this.name = name;
 	}
 
-	public String getDesc() {
-		return desc;
+	public String getDescription() {
+		return description;
 	}
 
-	public void setDesc(String desc) {
-		this.desc = desc;
+	public void setDescription(String desc) {
+		this.description = desc;
 	}
 
 	@JsonProperty("isActive")
@@ -91,7 +91,7 @@ public class SavedTaskCardDTO {
 	public String toString() {
 		return "task-card -> [ taskId=" + id + 
 				", members=" + (members.length > 0 ? memberToString(members) : "[]") + ", name="
-				+ name + ", desc=" + desc 
+				+ name + ", desc=" + description 
 				+" isActive: "+isActive+" isCompleted: "+isCompleted+" ]";
 	}
 	

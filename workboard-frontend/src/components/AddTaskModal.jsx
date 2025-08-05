@@ -24,7 +24,7 @@ const AddTaskModal = ({
   const [boardMembers, setBoardMembers] = useState([]);
   const [taskMembers, setTaskMembers] = useState([]);
   const [taskName, setTaskName] = useState(cardObj ? cardObj.name : "");
-  const [taskDesc, setTaskDesc] = useState(cardObj ? cardObj.desc : "");
+  const [taskDesc, setTaskDesc] = useState(cardObj ? cardObj.description : "");
   const [isCompleted, setIsCompleted] = useState(
     cardObj ? cardObj.isCompleted : false
   );

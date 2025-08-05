@@ -649,9 +649,13 @@ const WorkBoard = () => {
     <div className="W"></div>;
 
     const membersMap = cardObj.members?.reduce((map, member) => {
-      map[member.userId] = member.role;
+      if (member.hasOwnProperty("id")) map[member.id] = member.role;
+      else if (member.hasOwnProperty("userId"))
+        map[member.userId] = member.role;
       return map;
     }, {});
+
+    console.log("membersMap: ", membersMap);
 
     setSelectedListIdx(listIdx);
     setSelectedListId(listId);

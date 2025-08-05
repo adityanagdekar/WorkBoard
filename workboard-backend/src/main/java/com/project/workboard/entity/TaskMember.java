@@ -16,14 +16,14 @@ public class TaskMember {
 	@ManyToOne
 	@JoinColumn(name = "card_id")
 	private TaskCard taskCard;
-	
+
 	@Id
 	@ManyToOne
 	@JoinColumn(name = "user_id")
 	private AppUser user;
-	
+
 	@Column(name = "role")
-    private int role;
+	private int role;
 
 	public TaskCard getTaskCard() {
 		return taskCard;
@@ -48,8 +48,10 @@ public class TaskMember {
 	public void setRole(int role) {
 		this.role = role;
 	}
-	
-	
+
+	@Override
+	public String toString() {
+		return "TaskMember [ taskCard=" + taskCard.getId() + ", user=" + user.getId() + ", role=" + role + "]";
+	}
+
 }
-
-
