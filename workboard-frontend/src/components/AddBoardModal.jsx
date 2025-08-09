@@ -9,7 +9,17 @@ import ToastMsg from "./ToastMsg";
 
 import capitaliseName from "../utility/capitaliseName";
 
-const AddBoardModal = ({ closeBtnOnClick, onBackDropClick }) => {
+const AddBoardModal = ({
+  boardId,
+  name,
+  desc,
+  membersMap,
+  closeBtnOnClick,
+  onBackDropClick,
+  addToast,
+  removeToast,
+  onBoardSave,
+}) => {
   const [boardName, setBoardName] = useState("");
   const [description, setDescription] = useState("");
 
@@ -36,13 +46,37 @@ const AddBoardModal = ({ closeBtnOnClick, onBackDropClick }) => {
           // checking if the user is board-creator based on id
           const loggedIn_userId = JSON.parse(localStorage.getItem("user")).id;
 
+          /*
           userObj.role = user.id === loggedIn_userId ? 1 : 0; // role set as MANAGER i.e. 1
           userObj.isAdded = user.id === loggedIn_userId ? true : false; // isAdded attr. set as true
+          */
+
+          if (membersMap && membersMap.hasOwnProperty(user.id)) {
+            userObj.role = membersMap[user.id];
+          } else if (user.id === loggedIn_userId) {
+            userObj.role = 1;
+          } else {
+            userObj.role = 0;
+          }
+
+          if (
+            user.id === loggedIn_userId ||
+            (membersMap && membersMap.hasOwnProperty(user.id))
+          ) {
+            userObj.isAdded = true;
+          } else {
+            userObj.isAdded = false;
+          }
+
           return userObj;
         });
 
         console.log("initialBoardMembers: ");
         console.log(initialBoardMembers);
+
+        if (name && name.length > 0) setBoardName(name);
+
+        if (desc && desc.length > 0) setDescription(desc);
 
         setUsers(boardMembersData);
         setBoardMembers(initialBoardMembers);
@@ -50,6 +84,7 @@ const AddBoardModal = ({ closeBtnOnClick, onBackDropClick }) => {
         console.log("Failed to get users: ", err);
       }
     };
+
     getUsers();
   }, []);
 
@@ -117,26 +152,34 @@ const AddBoardModal = ({ closeBtnOnClick, onBackDropClick }) => {
         },
       };
       const response = await axios.post(url, data, configObj);
-      console.log("board saved successfully: ", response.data);
+      const responseData = response.data;
+      console.log("board saved successfully: ", responseData);
+      return responseData;
     } catch (error) {
-      console.error(
+      console.log(
         "Saving Board failed:",
         error.response?.data || error.message
       );
+      return { success: false };
     }
   };
 
-  const saveBtnOnClick = () => {
+  const saveBtnOnClick = async () => {
     const selectedMembers = boardMembers.filter(
       (member) => member.isAdded && member.role >= 0
     );
 
     // loggedIn_user -> means board-creator or manager
     const loggedIn_user = JSON.parse(localStorage.getItem("user"));
+    let savedBoardId = boardId && boardId > 0 ? boardId : -1;
+
     const rawBoardId = localStorage.getItem("boardId");
     const parsedBoardId = rawBoardId ? parseInt(rawBoardId, 10) : NaN;
 
-    const savedBoardId = Number.isNaN(parsedBoardId) ? -1 : parsedBoardId;
+    if (savedBoardId === -1) {
+      savedBoardId = Number.isNaN(parsedBoardId) ? -1 : parsedBoardId;
+    }
+
     console.log("selectMembers: ", selectedMembers);
     const boardData = {
       boardId: savedBoardId,
@@ -146,7 +189,17 @@ const AddBoardModal = ({ closeBtnOnClick, onBackDropClick }) => {
       userId: loggedIn_user.id,
     };
     console.log("Final board data:", boardData);
-    saveBoardData(boardData);
+    const response = await saveBoardData(boardData);
+    const savedBoard = response.data;
+    if (response.success) {
+      addToast("Board data is saved successfully", "success");
+
+      onBoardSave?.({
+        id: savedBoard.id,
+        name: savedBoard.name,
+        description: savedBoard.description,
+      });
+    } else addToast("Unable to save Board data", "error");
   };
 
   return (

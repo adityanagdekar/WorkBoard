@@ -89,7 +89,7 @@ public class TaskCardService {
 				// Setting SavedTaskCardDTO obj.
 				savedTaskCardDTO.setId(taskCardId);
 				savedTaskCardDTO.setName(savedTaskCard.getName());
-				savedTaskCardDTO.setDesc(savedTaskCard.getDescription());
+				savedTaskCardDTO.setDescription(savedTaskCard.getDescription());
 				savedTaskCardDTO.setActive(savedTaskCard.isActive());
 				savedTaskCardDTO.setCompleted(savedTaskCard.isCompleted());
 

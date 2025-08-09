@@ -6,6 +6,7 @@ public class SavedBoardDataDTO {
 	private MemberDataDTO[] members;
 	private String boardName;
 	private String boardDesc;
+	private int userId;
 	
 	public static class MemberDataDTO {
 		private int memberId;
@@ -45,7 +46,7 @@ public class SavedBoardDataDTO {
 	public SavedBoardDataDTO() {}
 	
 	public SavedBoardDataDTO(int boardId, MemberDataDTO[] members, 
-			String boardName, String boardDesc) {
+			String boardName, String boardDesc, int userId) {
 		
 		// prev. constructor args. -> int boardId, int[] memberIds, 
 		// String boardName, String boardDesc
@@ -54,6 +55,7 @@ public class SavedBoardDataDTO {
 		this.members = members;
 		this.boardName = boardName;
 		this.boardDesc = boardDesc;
+		this.userId = userId;
 		// this.memberIds = memberIds;
 	}
 
@@ -88,12 +90,20 @@ public class SavedBoardDataDTO {
 	public void setBoardDesc(String boardDesc) {
 		this.boardDesc = boardDesc;
 	}
+	
+	public int getUserId() {
+		return boardId;
+	}
+	
+	public void setUserId(int userId) {
+		this.userId = userId;
+	}
 
 	@Override
 	public String toString() {
-		return "SavedBoardDataDTO [boardId=" + boardId + 
+		return "SavedBoardDataDTO [ boardId=" + boardId + 
 				", members=" + memberToString(members) + ", boardName="
-				+ boardName + ", boardDesc=" + boardDesc + "]";
+				+ boardName + ", boardDesc=" + boardDesc +", userId: "+userId+ " ]";
 	}
 	
 	private String memberToString(MemberDataDTO[] members) {

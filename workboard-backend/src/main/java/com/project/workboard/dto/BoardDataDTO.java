@@ -1,8 +1,10 @@
 package com.project.workboard.dto;
 
 import java.lang.reflect.Member;
+import java.util.Arrays;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.project.workboard.dto.SavedBoardDataDTO.MemberDataDTO;
 import com.project.workboard.entity.Board;
 
 public class BoardDataDTO {
@@ -103,6 +105,23 @@ public class BoardDataDTO {
 
 	public void setUserId(int userId) {
 		this.userId = userId;
+	}
+
+	@Override
+	public String toString() {
+		return "BoardDataDTO [ boardId=" + boardId + 
+				" name=" + name + 
+				", description=" + description + 
+				", \n members=" + memberToString(members)
+				+ ", userId=" + userId + " ]";
+	}
+	
+	private String memberToString(Member[] members) {
+		StringBuffer membersSbf = new StringBuffer();
+		for(Member member: members) {
+			membersSbf.append(" "+member.toString()+"\n");
+		}
+		return membersSbf.toString();
 	}
 }
 

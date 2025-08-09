@@ -4,7 +4,9 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -19,9 +21,14 @@ import com.project.workboard.dto.SavedBoardDataDTO;
 import com.project.workboard.dto.SavedBoardDataDTO.MemberDataDTO;
 import com.project.workboard.dto.SavedBoardMemberDTO;
 import com.project.workboard.dto.SavedBoardMemberProjection;
+import com.project.workboard.dto.SavedTaskMemberDTO;
+import com.project.workboard.dto.TaskDataDTO;
 import com.project.workboard.entity.AppUser;
 import com.project.workboard.entity.Board;
+import com.project.workboard.entity.BoardList;
 import com.project.workboard.entity.BoardMember;
+import com.project.workboard.entity.TaskCard;
+import com.project.workboard.entity.TaskMember;
 import com.project.workboard.repository.AppUserRepository;
 import com.project.workboard.repository.BoardMemberRepository;
 import com.project.workboard.repository.BoardRepository;
@@ -44,7 +51,7 @@ public class BoardService {
 	@Autowired
 	private JwtService jwtService;
 
-	public ResponseEntity<?> createBoard(BoardDataDTO boardData) {
+	public ResponseEntity<?> saveBoard(BoardDataDTO boardData) {
 		System.out.println("inside BoardService's createBoard, boardData: " + boardData.toString());
 
 		int boardId = boardData.getBoardId();
@@ -139,13 +146,14 @@ public class BoardService {
 				// board not saved successfully
 				return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Error while saving board");
 			}
-			
+
 			// Data is saved successfully, let's send Api-Response for the same
 			boolean successFlag = (boardId > 0 ? true : false);
-			String msg = (boardId > 0 ? "Board data & members saved successfully" : "Error in saving board data & members");
-			
-			ApiResponseDTO<SavedBoardDataDTO> apiResponse = new 
-					ApiResponseDTO<SavedBoardDataDTO>(successFlag, savedBoardData, msg);
+			String msg = (boardId > 0 ? "Board data & members saved successfully"
+					: "Error in saving board data & members");
+
+			ApiResponseDTO<SavedBoardDataDTO> apiResponse = new ApiResponseDTO<SavedBoardDataDTO>(successFlag,
+					savedBoardData, msg);
 
 			return ResponseEntity.ok(apiResponse);
 
@@ -155,31 +163,207 @@ public class BoardService {
 		}
 	}
 
-	// PENDING
 	public ResponseEntity<?> updateBoard(BoardDataDTO boardData) {
-		return ResponseEntity.ok("Board data & members saved successfully");
+		System.out.println("Inside BoardService :: updateBoard, boardData: " + boardData.toString());
+
+		try {
+
+			// Getting board
+			Optional<Board> boardOpt = boardRepository.findById(boardData.getBoardId());
+			if (boardOpt.isEmpty()) {
+				throw new IllegalArgumentException("Board not found");
+			}
+			Board board = boardOpt.get();
+
+			// checking name boolean
+			boolean boardChanged = false;
+			if (!Objects.equals(board.getName(), boardData.getName())) {
+				board.setName(boardData.getName());
+				boardChanged = true;
+			}
+
+			// checking description
+			boardChanged = false;
+			if (!Objects.equals(board.getDescription(), boardData.getDescription())) {
+				board.setDescription(boardData.getDescription());
+				boardChanged = true;
+			}
+
+			// checking members
+			BoardDataDTO.Member[] members = boardData.getMembers();
+			if (members.length > 0) {
+				// Checking if updates are made to Board-members
+				saveUpdatesForBoardMembers(boardData, board);
+			}
+
+			String msg = "Board data & members saved successfully";
+			if (boardChanged) {
+				// saving the updates to the board
+				board = boardRepository.save(board);
+				msg = "Successfully saved updates to board with id: " + board.getId() + " & name: " + board.getName();
+				System.out.println(msg);
+			} else {
+				msg = "No changes were made to board with id: " + board.getId() + " & name: " + board.getName();
+				System.out.println(msg);
+			}
+
+			// Data is saved successfully, let's send Api-Response for the same
+			boolean successFlag = true;
+
+			ApiResponseDTO<BoardDataDTO> apiResponse = new ApiResponseDTO<>(successFlag, boardData, msg);
+
+			return ResponseEntity.ok(apiResponse);
+
+		} catch (IllegalArgumentException e) {
+			System.out.println("Exception with board-data: " + e.getMessage());
+			return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Error while updating board-data");
+		} catch (Exception e) {
+			System.out.println("Exception while saving updates to board-data: " + e.getMessage());
+			return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Error while saving updated board-data");
+		}
+	}
+
+	private void saveUpdatesForBoardMembers(BoardDataDTO boardData, Board board) {
+		System.out.println("inside BoardService :: saveUpdatesForBoardMembers");
+
+		// getting existing members of the task
+		List<SavedBoardMemberDTO> existingMembersList = getSavedBoardMembers(boardData.getBoardId());
+		// mapping user-id to role for existing-members
+		Map<Integer, Integer> existingMembersMap = existingMembersList.stream()
+				.collect(Collectors.toMap(SavedBoardMemberDTO::getId, SavedBoardMemberDTO::getRole));
+
+		// getting updated-members of the task from taskDataDTO
+		BoardDataDTO.Member[] updatedMembersArr = boardData.getMembers();
+
+		// mapping user-id to role for updated-members
+		Map<Integer, Integer> updatedMembersMap = new HashMap<>();
+		for (BoardDataDTO.Member member : updatedMembersArr) {
+			updatedMembersMap.put(member.getId(), member.getRole());
+		}
+
+		// Lists for various purposes
+		List<BoardMember> addList = new ArrayList<>();
+		List<BoardMember> removeList = new ArrayList<>();
+		List<BoardMember> updateList = new ArrayList<>();
+
+		// boolean flag to detect change
+		boolean memberChanged = false;
+
+		// Checking existing-members
+		// To detect existing-members to be removed or updated
+		for (SavedBoardMemberDTO existingMember : existingMembersList) {
+			int userId = existingMember.getId();
+			int existingRole = existingMember.getRole();
+
+			// creating TaskMember obj.
+			BoardMember boardMember = new BoardMember();
+
+			// getting app-user
+			AppUser user = userRepository.findById(userId)
+					.orElseThrow(() -> new IllegalArgumentException("User not found"));
+
+			// setting board-member
+			boardMember.setUser(user);
+			boardMember.setBoard(board);
+			boardMember.setRole(existingRole);
+
+			// checking in updatedMembersMap
+			if (!updatedMembersMap.containsKey(userId)) {
+				// existing-member needs to be Removed
+
+				// add to removeList
+				removeList.add(boardMember);
+
+				memberChanged = true;
+			} else {
+				// existingMember is present in updatedMemberMap
+				// let's check for change in role
+				// getting new-role
+				int newRole = updatedMembersMap.get(userId);
+
+				// checking new-role & existing-role
+				if (!Objects.equals(existingRole, newRole)) {
+					// Role changed
+					boardMember.setRole(newRole);
+
+					// add to updateList
+					updateList.add(boardMember);
+
+					memberChanged = true;
+				}
+			}
+		}
+
+		// Checking new-members to
+		// Detect new-members to be added
+		for (Map.Entry<Integer, Integer> mapEntry : updatedMembersMap.entrySet()) {
+			int userId = mapEntry.getKey();
+			int role = mapEntry.getValue();
+
+			// new-member should not exist in existingMembersMap
+			if (!existingMembersMap.containsKey(userId)) {
+				// this is true, so it means -> add the new-member to the addList
+
+				// creating TaskMember obj.
+				BoardMember boardMember = new BoardMember();
+
+				// getting app-user
+				AppUser user = userRepository.findById(userId)
+						.orElseThrow(() -> new IllegalArgumentException("User not found"));
+
+				// setting task-member
+				boardMember.setUser(user);
+				boardMember.setBoard(board);
+				boardMember.setRole(role);
+
+				// pushing to addList
+				addList.add(boardMember);
+
+				memberChanged = true;
+			}
+		}
+
+		// saving the updates to Db
+		System.out.println("board-members to add: ");
+		for (BoardMember bm : addList) {
+			System.out.println(bm.toString());
+		}
+		boardMemberRepository.saveAll(addList);
+
+		System.out.println("board-members to update: ");
+		for (BoardMember bm : updateList) {
+			System.out.println(bm.toString());
+		}
+		boardMemberRepository.saveAll(updateList);
+
+		System.out.println("board-members to remove: ");
+		for (BoardMember bm : removeList) {
+			System.out.println(bm.toString());
+		}
+		boardMemberRepository.deleteAll(removeList);
+
+		if (memberChanged)
+			System.out.println("Updates to board-members are saved successfully");
+		else
+			System.out.println("No changes were made to the board-members of the board");
 	}
 
 	@Transactional
 	public ResponseEntity<?> deleteBoard(Integer boardId) {
-		System.out.println("Inside BoardService :: deleteBoard, boardId: "+boardId);
+		System.out.println("Inside BoardService :: deleteBoard, boardId: " + boardId);
 		try {
 			boardRepository.deleteById(boardId);
-			
+
 			// Data is saved successfully, let's send Api-Response for the same
 			boolean successFlag = true;
 			String msg = "Board deleted successfully";
 
-			ApiResponseDTO<Integer> apiResponse = new 
-					ApiResponseDTO<Integer>(successFlag, boardId, msg);
+			ApiResponseDTO<Integer> apiResponse = new ApiResponseDTO<Integer>(successFlag, boardId, msg);
 
 			return ResponseEntity.ok(apiResponse);
-		} 
-		catch (Exception e) {
+		} catch (Exception e) {
 			System.out.println("Exception while deleting board : " + e.getMessage());
-			return ResponseEntity
-					.status(HttpStatus.BAD_REQUEST)
-					.body("Error while deleting board , invalid id");
+			return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Error while deleting board , invalid id");
 		}
 	}
 
@@ -237,6 +421,7 @@ public class BoardService {
 		List<SavedBoardDataDTO> resultBoardDataDTOs = new ArrayList<SavedBoardDataDTO>();
 		for (Map.Entry<Integer, List<MemberDataDTO>> entry : memberIdsMap.entrySet()) {
 			int boardId = entry.getKey();
+			int boardCreatorId = -1;
 			List<MemberDataDTO> memberDataDTOList = entry.getValue();
 
 			// getting memberIds arr. from List of member-ids.
@@ -245,6 +430,11 @@ public class BoardService {
 
 			for (int i = 0; i < numOfMembers; i++) {
 				members[i] = memberDataDTOList.get(i);
+
+				// getting board-creator's userId
+				if (members[i].getMemberRole() == 1) {
+					boardCreatorId = members[i].getMemberId();
+				}
 			}
 
 			// this obj. contains board-info -> {name, desc, board-id, user-id, role}
@@ -256,6 +446,7 @@ public class BoardService {
 			boardData.setMembers(members);
 			boardData.setBoardName(projection.getBoardName());
 			boardData.setBoardDesc(projection.getBoardDesc());
+			boardData.setUserId(boardCreatorId);
 
 //			System.out.println("\n boardData: "+boardData.toString()+"\n");
 
@@ -271,6 +462,20 @@ public class BoardService {
 		return userId;
 	}
 
+	private List<SavedBoardMemberDTO> getSavedBoardMembers(int boardId) {
+		System.out.println("inside BoardService :: getSavedBoardMembers, boardId: " + boardId);
+		List<SavedBoardMemberProjection> rawData = boardMemberRepository.getAllBoardMembers(boardId);
+
+		List<SavedBoardMemberDTO> boardMembers = new ArrayList<>();
+
+		for (SavedBoardMemberProjection projection : rawData) {
+			SavedBoardMemberDTO savedBoardMember = new SavedBoardMemberDTO(projection.getUserId(), projection.getRole(),
+					projection.getName());
+			boardMembers.add(savedBoardMember);
+		}
+		return boardMembers;
+	}
+
 	public ResponseEntity<?> getAllBoardMembers(int boardId) {
 		System.out.println("Inside BoardService :: getAllBoardMembers, boardId: " + boardId);
 		try {
@@ -279,22 +484,7 @@ public class BoardService {
 				throw new IllegalArgumentException("Invalid user ID received");
 			}
 
-			List<SavedBoardMemberProjection> rawData = boardMemberRepository.getAllBoardMembers(boardId);
-//			System.out.println("rawData.len: "+rawData.size());
-			
-			List<SavedBoardMemberDTO> boardMembers = new ArrayList<>();
-
-			for (SavedBoardMemberProjection projection : rawData) {
-				SavedBoardMemberDTO savedBoardMember = new 
-						SavedBoardMemberDTO(
-								projection.getUserId(), 
-								projection.getRole(), 
-								projection.getName());
-				boardMembers.add(savedBoardMember);
-				System.out.println(savedBoardMember.toString());
-
-			}
-			
+			List<SavedBoardMemberDTO> boardMembers = getSavedBoardMembers(boardId);
 
 			// Data is fetched successfully, let's send Api-Response for the same
 			boolean successFlag = true;

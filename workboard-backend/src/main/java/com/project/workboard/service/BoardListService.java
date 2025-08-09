@@ -184,7 +184,7 @@ public class BoardListService {
 
 						// setting task-card
 						taskCard.setName(card.getName());
-						taskCard.setDescription(card.getDesc());
+						taskCard.setDescription(card.getDescription());
 						taskCard.setActive(card.isActive());
 						taskCard.setCompleted(card.isCompleted());
 						taskCard.setBoardList(boardList);
@@ -256,8 +256,8 @@ public class BoardListService {
 					taskChanged = true;
 				}
 
-				if (!Objects.equals(taskCard.getDescription(), cardDTO.getDesc())) {
-					taskCard.setDescription(cardDTO.getDesc());
+				if (!Objects.equals(taskCard.getDescription(), cardDTO.getDescription())) {
+					taskCard.setDescription(cardDTO.getDescription());
 					taskChanged = true;
 				}
 

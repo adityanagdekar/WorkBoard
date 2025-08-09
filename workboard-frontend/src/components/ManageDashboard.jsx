@@ -9,6 +9,8 @@ import BoardCardHeader from "./BoardCardHeader";
 import BoardHeader from "./BoardHeader";
 import Modal from "./Modal";
 import AddBoardModal from "./AddBoardModal";
+import ToastMsg from "./ToastMsg";
+
 import useAuthCheck from "../token/useAuthCheck";
 import capitaliseName from "../utility/capitaliseName";
 import handleLogout from "../utility/handleLogout";
@@ -23,6 +25,8 @@ const ManageDashboard = () => {
 
   const [toggleModal, setModal] = useState(false);
   const [toggleAddBoardModal, setAddBoardModal] = useState(false);
+
+  const [toasts, setToasts] = useState([]);
 
   const [boardList, setBoardList] = useState([]);
 
@@ -53,25 +57,12 @@ const ManageDashboard = () => {
     getBoards();
   }, []);
 
-  const headerBtnLabels = [
-    "Add Board",
-    "Add Members",
-    "Assign Roles",
-    "Logout",
-  ];
+  const headerBtnLabels = ["Add Board", "Logout"];
 
   const handleHeaderBtnClick = (label) => {
     switch (label) {
       case "Add Board":
         showAddBoardModal();
-        break;
-      case "Add Members":
-        console.log("Add Members clicked");
-        // addMembersOnClick();
-        break;
-      case "Assign Roles":
-        console.log("Assign Roles clicked");
-        // assignRolesOnClick();
         break;
       case "Logout":
         console.log("Logout btn clicked");
@@ -92,6 +83,11 @@ const ManageDashboard = () => {
     setAddBoardModal((prevState) => prevState && false);
   };
 
+  const handleBoardSaved = (updatedBoard) => {
+    console.log("updatedBoard: ", updatedBoard);
+    closeAddBoardModal();
+  };
+
   const closeModal = () => {
     setModal((prevState) => prevState && false);
   };
@@ -103,6 +99,7 @@ const ManageDashboard = () => {
       state: {
         userId: loggedIn_userId,
         boardName: board.boardName,
+        boardDesc: board.boardDesc,
       },
     });
   };
@@ -143,6 +140,36 @@ const ManageDashboard = () => {
       : { border: "2px solid #667eea" };
   };
 
+  const addToast = (message, type = "success") => {
+    const currId = Date.now(); // unique key
+
+    // Update the toasts-state
+    setToasts((prev) => {
+      const updatedToasts = [...prev];
+      const toastMsg = {
+        id: currId,
+        message: message,
+        type: type,
+      };
+      updatedToasts.push(toastMsg);
+      return updatedToasts;
+    });
+
+    // Auto-remove after 3 seconds
+    setTimeout(() => {
+      setToasts((prev) => {
+        // return all the toasts except the one which has it's id eq. to the currId
+        const updatedToasts = prev.filter((toast) => toast.id !== currId);
+        return updatedToasts;
+      });
+    }, 3000);
+  };
+
+  const removeToast = (id) => {
+    // return all the toasts except the one which has it's id eq. to the currId
+    setToasts((prev) => prev.filter((toast) => toast.id !== id));
+  };
+
   return (
     <BoardContainer>
       <div className="Dashboard-Container">
@@ -153,6 +180,8 @@ const ManageDashboard = () => {
           btnLabels={headerBtnLabels}
           headerBtnOnClick={handleHeaderBtnClick}
         />
+
+        <ToastMsg toasts={toasts} removeToast={removeToast} />
 
         <div className="BoardCardContainer">
           {boardList.length > 0 ? (
@@ -195,6 +224,9 @@ const ManageDashboard = () => {
           <AddBoardModal
             closeBtnOnClick={closeAddBoardModal}
             onBackDropClick={closeAddBoardModal}
+            addToast={addToast}
+            removeToast={removeToast}
+            onBoardSave={handleBoardSaved}
           />
         )}
       </div>

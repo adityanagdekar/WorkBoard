@@ -12,6 +12,7 @@ import BoardHeader from "./BoardHeader";
 import MainHeader from "./MainHeader";
 import AddTaskModal from "./AddTaskModal";
 import ToastMsg from "./ToastMsg";
+import AddBoardModal from "./AddBoardModal";
 
 /***********---custom styling---***********/
 import "../style/WorkBoard.css";
@@ -26,13 +27,15 @@ const WorkBoard = () => {
   useAuthCheck();
   const navigate = useNavigate();
 
-  const headerBtnLabels = [
-    "Projects",
-    "Add List",
-    "Add Members",
-    "Assign Roles",
-    "Logout",
-  ];
+  // getting state-params passed
+  // from ManageBoard.jsx to BoardGrid.jsx
+  const { boardId } = useParams();
+  const location = useLocation();
+  const userId = location.state?.userId;
+  // const boardName = location.state?.boardName;
+  // const boardDesc = location.state?.boardDesc;
+
+  const headerBtnLabels = ["Projects", "Add List", "Manage Board", "Logout"];
 
   const [dataLists, setDataLists] = useState([]);
 
@@ -52,13 +55,20 @@ const WorkBoard = () => {
 
   const [isDisabled, setIsDisabled] = useState(false);
 
+  const [boardName, setBoardName] = useState(location.state?.boardName ?? "");
+
+  const [boardDesc, setBoardDesc] = useState(location.state?.boardDesc ?? "");
+
   const [listName, setListName] = useState({});
 
   const [taskName, setTaskName] = useState("");
 
   const [taskDesc, setTaskDesc] = useState("");
 
+  // toggle for add-task-modal
   const [toggleAddTaskModal, setAddTaskModal] = useState(false);
+  // toggle for add-board-modal
+  const [toggleAddBoardModal, setAddBoardModal] = useState(false);
 
   // selected list id.
   const [selectedListId, setSelectedListId] = useState(-1);
@@ -68,6 +78,8 @@ const WorkBoard = () => {
   const [selectedTaskCard, setSelectedTaskCard] = useState({});
   // selected card's task-members.
   const [taskMembersMap, setTaskMembersMap] = useState([]);
+  // to have a ref. of all the board-members
+  const boardMembersMap = useRef({});
 
   // for drag events
   // src list & card idx.
@@ -81,13 +93,6 @@ const WorkBoard = () => {
   const debouncedTaskName = useDebounce(taskName, 1000);
   const debouncedTaskDesc = useDebounce(taskDesc, 1000);
   const debouncedLists = useDebounce(dataLists, 1000);
-
-  // getting state-params passed
-  // from ManageBoard.jsx to BoardGrid.jsx
-  const { boardId } = useParams();
-  const location = useLocation();
-  const userId = location.state?.userId;
-  const boardName = location.state?.boardName;
 
   // to get board-data --> (lists -> tasks)
   useEffect(() => {
@@ -106,6 +111,7 @@ const WorkBoard = () => {
             const updatedList = {
               ...list,
               cards: list.cards?.map((card) => ({ ...card })) || [], // deep copy of cards
+              canEdit: userId === list.userId,
             };
             return updatedList;
           });
@@ -201,14 +207,9 @@ const WorkBoard = () => {
       case "Add List":
         addListOnClick();
         break;
-      case "Add Members":
+      case "Manage Board":
         console.log("Add Members clicked");
-        addToast("Member added successfully");
-        // addMembersOnClick(); // Implement when ready
-        break;
-      case "Assign Roles":
-        console.log("Assign Roles clicked");
-        // assignRolesOnClick(); // Implement when ready
+        showAddBoardModal();
         break;
       case "Logout":
         console.log("Logout btn clicked");
@@ -217,6 +218,47 @@ const WorkBoard = () => {
       default:
         console.log("Unknown header button clicked");
     }
+  };
+
+  const showAddBoardModal = () => {
+    console.log("show Project modal");
+    const membersMap = {};
+
+    dataLists.forEach((list) => {
+      list.cards?.forEach((card) => {
+        card.members?.forEach((member) => {
+          if (member.hasOwnProperty("id")) membersMap[member.id] = member.role;
+          else if (member.hasOwnProperty("userId"))
+            membersMap[member.userId] = member.role;
+        });
+      });
+    });
+
+    boardMembersMap.current = membersMap;
+    setAddBoardModal((prevState) => prevState || true);
+  };
+
+  const closeAddBoardModal = () => {
+    console.log("close Project modal");
+    setAddBoardModal((prevState) => prevState && false);
+  };
+
+  const handleBoardSaved = (updatedBoard) => {
+    console.log("updatedBoard: ", updatedBoard);
+    setBoardName(updatedBoard.name);
+    setBoardDesc(updatedBoard.description);
+
+    // also update router state so refresh keeps latest values
+    navigate(".", {
+      replace: true,
+      state: {
+        ...(location.state || {}),
+        boardName: updatedBoard.name,
+        boardDesc: updatedBoard.description,
+      },
+    });
+
+    closeAddBoardModal();
   };
 
   const backToDashboard = () => {
@@ -885,7 +927,7 @@ const WorkBoard = () => {
                           }
                           handleTaskCardDragEnd={handleTaskCardDragEnd}
                           cardName={card.name}
-                          cardDescription={card.desc}
+                          cardDescription={card.description}
                           taskMenuOnClick={() => taskMenuOnClick(list.id, card)}
                           onNameChange={(e) => {
                             handleTaskNameChange(e.target.value, cardIdx);
@@ -949,6 +991,20 @@ const WorkBoard = () => {
           removeToast={removeToast}
           removeDummyTaskCard={removeDummyTaskCard}
           addTaskToState={addTaskToState}
+        />
+      )}
+
+      {toggleAddBoardModal && (
+        <AddBoardModal
+          boardId={boardId}
+          name={boardName}
+          desc={boardDesc}
+          closeBtnOnClick={closeAddBoardModal}
+          onBackDropClick={closeAddBoardModal}
+          membersMap={boardMembersMap.current}
+          addToast={addToast}
+          removeToast={removeToast}
+          onBoardSave={handleBoardSaved}
         />
       )}
     </BoardContainer>
