@@ -194,11 +194,7 @@ const AddBoardModal = ({
     if (response.success) {
       addToast("Board data is saved successfully", "success");
 
-      onBoardSave?.({
-        id: savedBoard.id,
-        name: savedBoard.name,
-        description: savedBoard.description,
-      });
+      onBoardSave?.(savedBoard);
     } else addToast("Unable to save Board data", "error");
   };
 

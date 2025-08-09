@@ -32,6 +32,7 @@ const WorkBoard = () => {
   const { boardId } = useParams();
   const location = useLocation();
   const userId = location.state?.userId;
+  const membersMap = location.state?.membersMap;
   // const boardName = location.state?.boardName;
   // const boardDesc = location.state?.boardDesc;
 
@@ -222,17 +223,22 @@ const WorkBoard = () => {
 
   const showAddBoardModal = () => {
     console.log("show Project modal");
-    const membersMap = {};
+    // const membersMap = {};
 
-    dataLists.forEach((list) => {
-      list.cards?.forEach((card) => {
-        card.members?.forEach((member) => {
-          if (member.hasOwnProperty("id")) membersMap[member.id] = member.role;
-          else if (member.hasOwnProperty("userId"))
-            membersMap[member.userId] = member.role;
+    if (membersMap && membersMap !== undefined) {
+      boardMembersMap.current = membersMap;
+    } else if (dataLists.length > 0) {
+      dataLists.forEach((list) => {
+        list.cards?.forEach((card) => {
+          card.members?.forEach((member) => {
+            if (member.hasOwnProperty("id"))
+              membersMap[member.id] = member.role;
+            else if (member.hasOwnProperty("userId"))
+              membersMap[member.userId] = member.role;
+          });
         });
       });
-    });
+    }
 
     boardMembersMap.current = membersMap;
     setAddBoardModal((prevState) => prevState || true);
@@ -891,7 +897,7 @@ const WorkBoard = () => {
                     }}
                   />
 
-                  {/*btn to delete task*/}
+                  {/*btn to delete list*/}
                   <BoardBtn
                     // onClick={() => openModalToDelete(list.id, listIdx)}
                     onClick={() => {

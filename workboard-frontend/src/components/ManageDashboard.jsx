@@ -23,7 +23,13 @@ const ManageDashboard = () => {
 
   const navigate = useNavigate();
 
-  const [toggleModal, setModal] = useState(false);
+  // const [toggleModal, setModal] = useState(false);
+  const [modalConfig, setModalConfig] = useState({
+    isOpen: false,
+    message: "",
+    onYesBtnClick: () => {},
+  });
+
   const [toggleAddBoardModal, setAddBoardModal] = useState(false);
 
   const [toasts, setToasts] = useState([]);
@@ -85,21 +91,62 @@ const ManageDashboard = () => {
 
   const handleBoardSaved = (updatedBoard) => {
     console.log("updatedBoard: ", updatedBoard);
+
+    const boardIdx = boardList.findIndex(
+      (board) => board.id === updatedBoard.id
+    );
+
+    setBoardList((prev) => {
+      const updatedboardList = [...prev];
+      if (boardIdx && boardIdx > 0) {
+        // update the board details
+        updatedboardList[boardIdx] = { ...updatedBoard };
+      } else {
+        // add the new board
+        updatedboardList.push(updatedBoard);
+      }
+      console.log(
+        "inside handleBoardSaved...updatedBoardList: ",
+        updatedboardList
+      );
+      return updatedboardList;
+    });
     closeAddBoardModal();
   };
 
+  const openModal = ({ msg, isOpen, onYesBtnClick }) => {
+    setModalConfig({
+      msg: msg,
+      isOpen: isOpen,
+      onYesBtnClick: onYesBtnClick,
+    });
+  };
+
   const closeModal = () => {
-    setModal((prevState) => prevState && false);
+    console.log("close the modal");
+    setModalConfig((prev) => ({ ...prev, isOpen: false }));
   };
 
   const boardCardHeaderOnClick = (board) => {
     console.log("boardCardHeaderOnClick");
     const loggedIn_userId = JSON.parse(localStorage.getItem("user")).id;
+
+    // map to store {member-id : member-role}
+    const membersMap = {};
+    boardList.forEach((board) => {
+      board.members.forEach((member) => {
+        membersMap[member.memberId] = member.memberRole;
+      });
+    });
+
+    console.log("membersMap: ", membersMap);
+
     navigate(`/board/${board.boardId}`, {
       state: {
         userId: loggedIn_userId,
         boardName: board.boardName,
         boardDesc: board.boardDesc,
+        membersMap: membersMap,
       },
     });
   };
@@ -110,15 +157,48 @@ const ManageDashboard = () => {
     setModal(true);
   };
 
-  const removeProjectOnClick = (index) => {
-    console.log("removeProjectOnClick index: ", index);
-    if (index != null) {
-      setBoardList((prev) => {
-        const updatedboardList = [...prev];
-        // Remove from source
-        updatedboardList.splice(index, 1);
-        return updatedboardList;
-      });
+  const removeBoardOnClick = async (boardId) => {
+    console.log("removeBoardOnClick, boardId: ", boardId);
+
+    const boardIdx = boardList.findIndex((board) => board.boardId === boardId);
+
+    if (boardIdx != null) {
+      const response = await deleteBoard(boardId);
+
+      if (response.success) {
+        setBoardList((prev) => {
+          const updatedboardList = [...prev];
+          // Remove from source
+          updatedboardList.splice(boardIdx, 1);
+          return updatedboardList;
+        });
+        addToast("Board deleted successfully", "success");
+      } else {
+        addToast("Failed to delete the Board", "error");
+      }
+    }
+  };
+
+  const deleteBoard = async (boardId) => {
+    try {
+      const url = "http://localhost:8080/api/board/delete";
+      const data = { id: boardId };
+      const headersObj = { "Content-Type": "application/json" };
+      const configObj = {
+        headers: headersObj,
+        withCredentials: true,
+      };
+      const response = await axios.post(url, data, configObj);
+      const responseData = response.data;
+
+      console.log("Response after deleting the board: ", responseData);
+      return responseData;
+    } catch (error) {
+      console.log(
+        "Failed to delete board: ",
+        error.response?.data || error.message
+      );
+      return { success: false };
     }
   };
 
@@ -193,7 +273,19 @@ const ManageDashboard = () => {
                     headerOnClick={() => {
                       boardCardHeaderOnClick(board);
                     }}
-                    closeBtnOnClick={headerCloseBtnOnClick}
+                    closeBtnOnClick={
+                      //headerCloseBtnOnClick
+                      () => {
+                        openModal({
+                          msg: "Do you want delete this board ?",
+                          isOpen: true,
+                          onYesBtnClick: () => {
+                            // sending list.id
+                            removeBoardOnClick(board.boardId);
+                          },
+                        });
+                      }
+                    }
                   />
                   <div className="BoardCardContent">
                     <p>Description: {board.boardDesc}</p>
@@ -206,11 +298,11 @@ const ManageDashboard = () => {
           )}
         </div>
 
-        {toggleModal && (
+        {modalConfig.isOpen && (
           <Modal
             modalMsg={"Do you want to remove this Project ?"}
             modalYesOnClick={() => {
-              removeProjectOnClick(projectToRemoveIdx);
+              modalConfig.onYesBtnClick();
               closeModal();
             }}
             modalNoOnClick={() => {
