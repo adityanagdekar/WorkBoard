@@ -21,11 +21,13 @@ import "../style/WorkBoard.css";
 import useAuthCheck from "../token/useAuthCheck";
 import handleLogout from "../utility/handleLogout";
 import useDebounce from "../hooks/usDebounce";
+import { createStompClient } from "../utility/wsClient";
 
 const WorkBoard = () => {
   // to do auth-check -> check whether user needs to login again or not
   useAuthCheck();
   const navigate = useNavigate();
+  const stompRef = useRef(null);
 
   // getting state-params passed
   // from ManageBoard.jsx to BoardGrid.jsx
@@ -97,6 +99,7 @@ const WorkBoard = () => {
 
   // to get board-data --> (lists -> tasks)
   useEffect(() => {
+    let cancelled = false;
     if (boardId && userId) {
       const getBoardData = async (boardId) => {
         try {
@@ -105,6 +108,8 @@ const WorkBoard = () => {
             withCredentials: true,
           };
           const response = await axios.get(url, configObj);
+
+          if (cancelled) return;
 
           const boardLists = response.data.data;
 
@@ -125,8 +130,65 @@ const WorkBoard = () => {
         }
       };
       getBoardData(boardId);
+
+      // create stomp client
+      if (!stompRef.current) {
+        stompRef.current = createStompClient();
+      }
+      const client = stompRef.current;
+
+      // subscription topic destination
+      const destination = `/topic/board.${boardId}`;
+      let subscription = null;
+
+      const subscribe = () => {
+        try {
+          subscription = client.subscribe(destination, (msg) => {
+            try {
+              console.log("full stomp msg sent by server: ", msg);
+
+              const evt = JSON.parse(msg.body);
+              // Example server payload:
+              // { type: "UPSERT", boardId, payload: { id, name, description }, version }
+              if (evt?.type === "UPSERT" && evt.boardId === boardId) {
+                if (evt.payload?.name) setBoardName(evt.payload.name);
+                if (evt.payload?.description)
+                  setBoardDesc(evt.payload.description);
+              }
+
+              // You can expand this to handle list/card updates:
+              // if (evt.type === "LISTS_UPDATED") { ...patch setDataLists... }
+              // if (evt.type === "CARD_MOVED") { ...patch setDataLists... }
+            } catch (err) {
+              console.error("Bad board event:", err, msg.body);
+            }
+          });
+        } catch (err) {
+          console.error("Subscribe failed:", err);
+        }
+      };
+
+      // check if client is connected or not
+      // based on that subscribe or wait for connect
+      if (client.connected) {
+        subscribe();
+      } else {
+        const prevOnConnect = client.onConnect;
+        client.onConnect = (frame) => {
+          subscribe();
+          prevOnConnect?.(frame);
+        };
+      }
+
+      // cleanup on unmount / board change
+      return () => {
+        cancelled = true;
+        try {
+          subscription?.unsubscribe();
+        } catch {}
+      };
     }
-  }, [boardId, userId]);
+  }, [boardId, userId, setDataLists, setBoardName, setBoardDesc]);
 
   // to update list-name
   useEffect(() => {

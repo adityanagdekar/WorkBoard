@@ -31,14 +31,6 @@ public class BoardController {
 		return boardService.getBoardsWithMembersIds(loggedIn_userId);
 	}
 
-	/*
-	 * @GetMapping("/{boardId}") public ResponseEntity<?>
-	 * getBoard(HttpServletRequest request, @PathVariable int boardId) { // getting
-	 * logged-in user's Id from the JWT token int loggedIn_userId =
-	 * boardService.getLoggedInUserId(request); return
-	 * boardService.getBoardData(boardId, loggedIn_userId); }
-	 */
-
 	@PostMapping("/save")
 	public ResponseEntity<?> saveBoard(@RequestBody BoardDataDTO boardData) {
 		System.out.println("Inside BoardController :: boardData: " + boardData.getBoardId());
@@ -47,6 +39,12 @@ public class BoardController {
 		else
 			return boardService.updateBoard(boardData);
 
+	}
+	
+	@GetMapping("/test/board-event")
+	public ResponseEntity<?> testEvent() {
+		System.out.println("Inside BoardController :: testEvent");
+		return boardService.testEvent();
 	}
 
 	@PostMapping("/delete")
