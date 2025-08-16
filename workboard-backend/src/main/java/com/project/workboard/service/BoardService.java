@@ -454,8 +454,8 @@ public class BoardService {
 				int boardId = row.getBoardId();
 				int userId = row.getUserId();
 				int userRole = row.getRole();
-				memberIdsMap.computeIfAbsent(boardId, k -> new ArrayList<MemberDataDTO>())
-						.add(new MemberDataDTO(userId, userRole));
+				memberIdsMap.computeIfAbsent(boardId, k -> 
+					new ArrayList<MemberDataDTO>()).add(new MemberDataDTO(userId, userRole));
 
 				boardProjectionMap.putIfAbsent(boardId, row);
 			}

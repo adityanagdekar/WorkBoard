@@ -35,6 +35,9 @@ const WorkBoard = () => {
   const location = useLocation();
   const userId = location.state?.userId;
   const membersMap = location.state?.membersMap;
+  const hasManageAccess = location.state?.hasManageAccess
+    ? location.state.hasManageAccess
+    : false;
   // const boardName = location.state?.boardName;
   // const boardDesc = location.state?.boardDesc;
 
@@ -58,9 +61,9 @@ const WorkBoard = () => {
 
   const [isDisabled, setIsDisabled] = useState(false);
 
-  const [boardName, setBoardName] = useState(location.state?.boardName ?? "");
+  const [boardName, setBoardName] = useState("");
 
-  const [boardDesc, setBoardDesc] = useState(location.state?.boardDesc ?? "");
+  const [boardDesc, setBoardDesc] = useState("");
 
   const [listName, setListName] = useState({});
 
@@ -96,6 +99,12 @@ const WorkBoard = () => {
   const debouncedTaskName = useDebounce(taskName, 1000);
   const debouncedTaskDesc = useDebounce(taskDesc, 1000);
   const debouncedLists = useDebounce(dataLists, 1000);
+
+  // to set board-name & desc.
+  useEffect(() => {
+    if (location.state?.boardName) setBoardName(location.state.boardName);
+    if (location.state?.boardDesc) setBoardDesc(location.state.boardDesc);
+  }, [location.state?.boardName, location.state?.boardDesc]);
 
   // to get board-data --> (lists -> tasks)
   useEffect(() => {
@@ -148,12 +157,46 @@ const WorkBoard = () => {
               console.log("full stomp msg sent by server: ", msg);
 
               const evt = JSON.parse(msg.body);
+              console.log("event: ", evt);
               // Example server payload:
               // { type: "UPSERT", boardId, payload: { id, name, description }, version }
-              if (evt?.type === "UPSERT" && evt.boardId === boardId) {
-                if (evt.payload?.name) setBoardName(evt.payload.name);
-                if (evt.payload?.description)
-                  setBoardDesc(evt.payload.description);
+              console.log(
+                "evt?.type === 'UPSERT' && evt.boardId === boardId: ",
+                evt?.type === "UPSERT" && evt?.boardId === boardId
+              );
+
+              console.log("evt?.type === 'UPSERT' ", evt?.type === "UPSERT");
+
+              console.log(
+                "evt?.boardId === boardId ",
+                evt?.boardId === boardId
+              );
+
+              console.log("evt?.boardId : ", evt?.boardId);
+              console.log("boardId: ", boardId);
+
+              if (
+                evt?.type === "UPSERT" &&
+                parseInt(evt.boardId) === parseInt(boardId)
+              ) {
+                if (evt.payload?.name && evt.payload.name !== boardName) {
+                  setBoardName((prev) =>
+                    prev === evt.payload.name
+                      ? `${evt.payload.name} `
+                      : evt.payload.name
+                  );
+                }
+
+                if (
+                  evt.payload?.description &&
+                  evt.payload.description !== boardDesc
+                ) {
+                  setBoardDesc((prev) =>
+                    prev === evt.payload.description
+                      ? `${evt.payload.description} `
+                      : evt.payload.description
+                  );
+                }
               }
 
               // You can expand this to handle list/card updates:
@@ -271,8 +314,9 @@ const WorkBoard = () => {
         addListOnClick();
         break;
       case "Manage Board":
-        console.log("Add Members clicked");
-        showAddBoardModal();
+        console.log("Manage board clicked, hasManageAccess: ", hasManageAccess);
+        if (hasManageAccess) showAddBoardModal();
+        else addToast("You dont have manage acces", "error");
         break;
       case "Logout":
         console.log("Logout btn clicked");
@@ -284,10 +328,10 @@ const WorkBoard = () => {
   };
 
   const showAddBoardModal = () => {
-    console.log("show Project modal");
-    // const membersMap = {};
+    console.log("show Board modal");
 
     if (membersMap && membersMap !== undefined) {
+      console.log("using the useRef---membersMap: ", membersMap);
       boardMembersMap.current = membersMap;
     } else if (dataLists.length > 0) {
       dataLists.forEach((list) => {
@@ -300,8 +344,9 @@ const WorkBoard = () => {
           });
         });
       });
-    }
 
+      console.log("using the dataLists---membersMap: ", membersMap);
+    }
     boardMembersMap.current = membersMap;
     setAddBoardModal((prevState) => prevState || true);
   };

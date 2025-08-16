@@ -1,7 +1,14 @@
+import { useEffect } from "react";
 import "../style/BoardHeader.css";
 import BoardBtn from "./BoardBtn";
 
 const BoardHeader = ({ headerMsg, btnLabels, headerBtnOnClick }) => {
+  useEffect(() => {
+    console.log("BoardHeader re-rendered, new headerMsg:", headerMsg);
+  }, [headerMsg]);
+
+  const loggedIn_userId = JSON.parse(localStorage.getItem("user")).id;
+
   return (
     <div className="BoardHeader">
       <div className="BoardHeaderTitle">

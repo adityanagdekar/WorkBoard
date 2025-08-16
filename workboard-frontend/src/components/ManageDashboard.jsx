@@ -130,13 +130,22 @@ const ManageDashboard = () => {
   const boardCardHeaderOnClick = (board) => {
     console.log("boardCardHeaderOnClick");
     const loggedIn_userId = JSON.parse(localStorage.getItem("user")).id;
+    let hasManageAccess = false;
 
     // map to store {member-id : member-role}
     const membersMap = {};
-    boardList.forEach((board) => {
-      board.members.forEach((member) => {
-        membersMap[member.memberId] = member.memberRole;
-      });
+    board.members.forEach((member) => {
+      console.log(
+        "memberId: ",
+        member.memberId,
+        " loggedIn_userId: ",
+        loggedIn_userId,
+        " memberRole: ",
+        member.memberRole
+      );
+      membersMap[member.memberId] = member.memberRole;
+      if (member.memberId === loggedIn_userId && member.memberRole === 1)
+        hasManageAccess = true;
     });
 
     console.log("membersMap: ", membersMap);
@@ -147,6 +156,7 @@ const ManageDashboard = () => {
         boardName: board.boardName,
         boardDesc: board.boardDesc,
         membersMap: membersMap,
+        hasManageAccess: hasManageAccess,
       },
     });
   };
@@ -208,12 +218,13 @@ const ManageDashboard = () => {
   };
 
   const getColorAsPerRole = (board) => {
-    console.log("inside getColorAsPerRole");
+    console.log("inside getColorAsPerRole, board: ", board);
     const loggedIn_userId = JSON.parse(localStorage.getItem("user")).id;
 
     const memberObj = board.members.find(
       (member) => member.memberId === loggedIn_userId
     );
+    console.log("memberObj: ", memberObj);
 
     return memberObj.memberRole === 1
       ? { border: "2px solid #4caf50" }
