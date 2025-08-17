@@ -47,7 +47,7 @@ public class BoardListController {
 
 	@PostMapping("/updateLists")
 	public ResponseEntity<?> saveUpdatedBoardLists(@RequestBody List<BoardListDTO> boardLists, HttpServletResponse response) {
-		System.out.println("Inside BoardListController: saveBoardLists");
+		System.out.println("Inside BoardListController: saveUpdatedBoardLists");
 		return boardListService.saveUpdatedBoardLists(boardLists, response);
 		// return ResponseEntity.status(HttpStatus.OK).body("Data received: " + boardLists.toString());
 	}

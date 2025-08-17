@@ -2,6 +2,7 @@ package com.project.workboard.service;
 
 import java.awt.CardLayout;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -10,15 +11,19 @@ import java.util.Optional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.project.workboard.dto.ApiResponseDTO;
+import com.project.workboard.dto.BoardEvent;
 import com.project.workboard.dto.BoardListDTO;
 import com.project.workboard.dto.SavedBoardListDTO;
 import com.project.workboard.dto.SavedTaskCardDTO;
 import com.project.workboard.dto.SavedTaskMemberDTO;
 import com.project.workboard.dto.TaskCardDTO;
+import com.project.workboard.dto.UpdatedBoardSummaryDTO;
+import com.project.workboard.dto.UpdatedListSummaryDTO;
 import com.project.workboard.entity.Board;
 import com.project.workboard.entity.BoardList;
 import com.project.workboard.entity.TaskCard;
@@ -44,6 +49,12 @@ public class BoardListService {
 
 	@Autowired
 	private TaskMemberRepository taskMemberRepository;
+
+	@Autowired
+	private SimpMessagingTemplate messagingTemplate;
+
+	@Autowired
+	private NotifyService notifyService;
 
 	public ResponseEntity<?> getLists(int boardId) {
 		System.out.println("inside BoardListService -> getLists(int boardId), boardId: " + boardId);
@@ -121,7 +132,7 @@ public class BoardListService {
 	}
 
 	private BoardList saveBoardListData(BoardListDTO boardListData) {
-		System.out.println("inside BoardListService :: saveBoardListData, boardListData: "+boardListData.toString());
+		System.out.println("inside BoardListService :: saveBoardListData, boardListData: " + boardListData.toString());
 		try {
 			// Setting boardList
 			BoardList boardList;
@@ -206,9 +217,8 @@ public class BoardListService {
 
 			// Saving BoardList
 			BoardList savedBoardList = boardListRepository.save(boardList);
-			System.out.println("Saved boardList with id: " 
-					+ savedBoardList.getId() + " & name: "
-					+ savedBoardList.getName());
+			System.out.println(
+					"Saved boardList with id: " + savedBoardList.getId() + " & name: " + savedBoardList.getName());
 
 			return savedBoardList;
 
@@ -220,8 +230,10 @@ public class BoardListService {
 			return null;
 		}
 	}
-	
+
 	private BoardList updateBoardListData(BoardListDTO boardListData) {
+		System.out.println("Inside BoardListService :: updateBoardListData, boardListData: "+boardListData.toString());
+		
 		Optional<BoardList> boardListOpt = boardListRepository.findById(boardListData.getId());
 		if (boardListOpt.isEmpty()) {
 			throw new IllegalArgumentException("BoardList not found");
@@ -279,13 +291,11 @@ public class BoardListService {
 
 				if (taskChanged) {
 					taskCard = taskCardRepository.save(taskCard);
-					System.out.println("Saved updates to taskCard with id: " 
-							+ taskCard.getId() + " & name: "
+					System.out.println("Saved updates to taskCard with id: " + taskCard.getId() + " & name: "
 							+ taskCard.getName());
 				} else {
-					System.out.println("No changes to taskCard with id: " 
-							+ taskCard.getId() + " & name: "
-							+ taskCard.getName());
+					System.out.println(
+							"No changes to taskCard with id: " + taskCard.getId() + " & name: " + taskCard.getName());
 				}
 			}
 		}
@@ -293,13 +303,11 @@ public class BoardListService {
 		// Save the boardList only if necessary
 		if (boardListChanged) {
 			boardList = boardListRepository.save(boardList);
-			System.out.println("Saved updates to boardList with id: " 
-					+ boardList.getId() + " & name: "
-					+ boardList.getName());
+			System.out.println(
+					"\n Saved updates to boardList with id: " + boardList.getId() + " & name: " + boardList.getName());
 		} else {
-			System.out.println("No changes to boardList with id: " 
-					+ boardList.getId() + " & name: "
-					+ boardList.getName());
+			System.out.println(
+					"\n No changes to boardList with id: " + boardList.getId() + " & name: " + boardList.getName());
 		}
 
 		return boardList;
@@ -312,15 +320,28 @@ public class BoardListService {
 		try {
 			// Saving board-list
 			SavedBoardListDTO savedBoardListData = new SavedBoardListDTO();
-
-			BoardList savedBoardList = saveBoardListData(boardListData);
+			BoardList savedBoardList;
+			
+			if (boardListData.getId() > 0) {
+	            System.out.println("Update scenario for board-list id: " + boardListData.getId());
+	            savedBoardList = updateBoardListData(boardListData);
+	        } else {
+	            System.out.println("Insert scenario for new board-list");
+	            savedBoardList = saveBoardListData(boardListData);
+	        }
 
 			if (savedBoardList == null) {
 				return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Board-list data received is invalid");
 			} else {
 
-				System.out.println("successfully saved board-list with id: " + savedBoardList.getId());
-
+				// NOTIFYING OTHER USERS ABOUT THE UPDATE
+				UpdatedListSummaryDTO listSummary = new UpdatedListSummaryDTO(savedBoardList.getId(), savedBoardList.getName());
+				
+				// BROADCAST to all viewers of this board
+				notifyService.notifyBoardViewers(savedBoardList.getBoard().getId(), listSummary, 
+						BoardEvent.Type.LIST_NAME_UPDATED,
+						messagingTemplate);
+				
 				// Setting SavedBoardListDTO obj.
 				savedBoardListData.setId(savedBoardList.getId());
 				savedBoardListData.setBoardId(savedBoardList.getBoard().getId());
@@ -366,8 +387,7 @@ public class BoardListService {
 			boolean successFlag = true;
 			String msg = "Updated Board-list & task-cards successfully";
 
-			ApiResponseDTO<List<Integer>> apiResponse = new 
-					ApiResponseDTO<List<Integer>>(successFlag, idsList, msg);
+			ApiResponseDTO<List<Integer>> apiResponse = new ApiResponseDTO<List<Integer>>(successFlag, idsList, msg);
 
 			return ResponseEntity.ok(apiResponse);
 		} catch (IllegalArgumentException e) {

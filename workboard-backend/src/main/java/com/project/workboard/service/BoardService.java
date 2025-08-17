@@ -56,6 +56,9 @@ public class BoardService {
 
 	@Autowired
 	private SimpMessagingTemplate messagingTemplate;
+	
+	@Autowired
+	private NotifyService notifyService;
 
 	public BoardService(SimpMessagingTemplate messagingTemplate) {
 		this.messagingTemplate = messagingTemplate;
@@ -214,16 +217,15 @@ public class BoardService {
 			if (boardChanged) {
 				// SAVING the updates to the board
 				board = boardRepository.save(board);
-
+				msg = "Successfully saved updates to board with id: " + board.getId() + " & name: " + board.getName();
+				System.out.println(msg);
+				
 				// NOTIFYING OTHER USERS ABOUT THE UPDATE
 				UpdatedBoardSummaryDTO boardSummary = new UpdatedBoardSummaryDTO(board.getId(), board.getName(),
 						board.getDescription());
 
 				// BROADCAST to all viewers of this board
-				notifyBoardViewers(board.getId(), boardSummary, 1);
-
-				msg = "Successfully saved updates to board with id: " + board.getId() + " & name: " + board.getName();
-				System.out.println(msg);
+				notifyService.notifyBoardViewers(board.getId(), boardSummary, BoardEvent.Type.UPSERT, messagingTemplate);
 			} else {
 				msg = "No changes were made to board with id: " + board.getId() + " & name: " + board.getName();
 				System.out.println(msg);
@@ -243,17 +245,6 @@ public class BoardService {
 			System.out.println("Exception while saving updates to board-data: " + e.getMessage());
 			return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Error while saving updated board-data");
 		}
-	}
-
-	private void notifyBoardViewers(int boardId, Object payload, int flag) {
-		BoardEvent evt = new BoardEvent();
-		evt.setType((flag == 1) ? BoardEvent.Type.UPSERT : BoardEvent.Type.DELETE);
-		evt.setBoardId(boardId);
-		evt.setPayload(payload);
-		evt.setVersion(System.currentTimeMillis());
-
-		String dest = "/topic/board." + boardId;
-		messagingTemplate.convertAndSend(dest, evt);
 	}
 
 	public ResponseEntity<?> testEvent() {

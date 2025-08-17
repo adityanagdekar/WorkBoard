@@ -160,20 +160,6 @@ const WorkBoard = () => {
               console.log("event: ", evt);
               // Example server payload:
               // { type: "UPSERT", boardId, payload: { id, name, description }, version }
-              console.log(
-                "evt?.type === 'UPSERT' && evt.boardId === boardId: ",
-                evt?.type === "UPSERT" && evt?.boardId === boardId
-              );
-
-              console.log("evt?.type === 'UPSERT' ", evt?.type === "UPSERT");
-
-              console.log(
-                "evt?.boardId === boardId ",
-                evt?.boardId === boardId
-              );
-
-              console.log("evt?.boardId : ", evt?.boardId);
-              console.log("boardId: ", boardId);
 
               if (
                 evt?.type === "UPSERT" &&
@@ -197,6 +183,28 @@ const WorkBoard = () => {
                       : evt.payload.description
                   );
                 }
+              } else if (evt.type === "LIST_NAME_UPDATED") {
+                setDataLists((prev) => {
+                  const updatedBoardLists = [...prev];
+
+                  const listIdx = updatedBoardLists.findIndex(
+                    (list) => list.id === parseInt(evt.payload.id)
+                  );
+
+                  if (listIdx !== -1) {
+                    updatedBoardLists[listIdx] = {
+                      ...updatedBoardLists[listIdx],
+                      name: evt.payload.name,
+                    };
+                  } else {
+                    console.log(
+                      "List with ID not found in dataLists:",
+                      evt.payload.id
+                    );
+                  }
+
+                  return updatedBoardLists;
+                });
               }
 
               // You can expand this to handle list/card updates:
@@ -311,7 +319,8 @@ const WorkBoard = () => {
         backToDashboard();
         break;
       case "Add List":
-        addListOnClick();
+        if (hasManageAccess) addListOnClick();
+        else addToast("You dont have manage acces", "error");
         break;
       case "Manage Board":
         console.log("Manage board clicked, hasManageAccess: ", hasManageAccess);
@@ -636,41 +645,37 @@ const WorkBoard = () => {
 
   const removeListOnClick = (listId) => {
     console.log("removeListOnClick  listId: ", listId);
-    const listIdx = dataLists.findIndex((list) => list.id === listId);
-
     // diabling yes btn for deletion
     setIsDisabled(true);
 
-    if (listIdx != null) {
-      // const response = await deleteBoardList(id);
-      deleteBoardList(listId)
-        .then((response) => {
-          if (response.success === true) {
-            setDataLists((prev) => {
-              const updatedBoardLists = [...prev];
-              updatedBoardLists.splice(listIdx, 1);
-              return updatedBoardLists;
-            });
-            addToast("Board-list deleted successfully", "success");
-          } else {
-            addToast("Failed to delete the Board-list", "error");
-          }
-        })
-        .catch((error) => {
-          console.log(
-            "Failed to delete the Board-list:",
-            error.response?.data || error.message
-          );
+    deleteBoardList(listId)
+      .then((response) => {
+        if (response.success === true) {
+          console.log("dataLists before: ", dataLists);
+          setDataLists((prev) => {
+            const listIdx = dataLists.findIndex((list) => list.id === listId);
+            console.log("listIdx: ", listIdx);
+            const updatedBoardLists = [...prev];
+            updatedBoardLists.splice(listIdx, 1);
+            console.log("dataLists after: ", updatedBoardLists);
+            return updatedBoardLists;
+          });
+          addToast("Board-list deleted successfully", "success");
+        } else {
           addToast("Failed to delete the Board-list", "error");
-        })
-        .finally(() => {
-          // enabling yes btn for deletion
-          setIsDisabled(false);
-        });
-    } else {
-      // enabling yes btn for deletion
-      setIsDisabled(false);
-    }
+        }
+      })
+      .catch((error) => {
+        console.log(
+          "Failed to delete the Board-list:",
+          error.response?.data || error.message
+        );
+        addToast("Failed to delete the Board-list", "error");
+      })
+      .finally(() => {
+        // enabling yes btn for deletion
+        setIsDisabled(false);
+      });
   };
 
   const deleteBoardList = async (id) => {
@@ -998,7 +1003,7 @@ const WorkBoard = () => {
 
                   <input
                     type="text"
-                    defaultValue={list.name}
+                    value={list.name}
                     onChange={(e) => {
                       handleListNameChange(e.target.value, list.id);
                     }}

@@ -30,7 +30,7 @@ const TaskCard = ({
       <div className="TaskCardHeader">
         {/* <h4>{cardName}</h4> */}
 
-        <input type="text" defaultValue={cardName} onChange={onNameChange} />
+        <input type="text" value={cardName} onChange={onNameChange} />
 
         <EllipsisVertical cursor="pointer" onClick={taskMenuOnClick} />
 
@@ -39,7 +39,7 @@ const TaskCard = ({
       <div className="TaskCardContent">
         {/* <p>{cardDescription}</p> */}
 
-        <textarea defaultValue={cardDescription} onChange={onDescChange} />
+        <textarea value={cardDescription} onChange={onDescChange} />
       </div>
     </div>
   );

@@ -2,7 +2,7 @@ package com.project.workboard.dto;
 
 public class BoardEvent {
 	public enum Type {
-		UPSERT, DELETE
+		UPSERT, DELETE, LIST_NAME_UPDATED
 	}
 
 	private Type type;
