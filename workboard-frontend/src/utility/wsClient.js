@@ -14,12 +14,3 @@ export function createStompClient() {
   client.activate();
   return client;
 }
-
-/*
-const client = new Client({
-    webSocketFactory: () => new SockJS("/ws"),
-    reconnectDelay: 2000,
-    // If the JWT is in an HttpOnly cookie, you usually don't need extra headers.
-    // If you ever move it to Authorization, you can set it here via beforeConnect.
-  });
-*/

@@ -109,136 +109,160 @@ const WorkBoard = () => {
   // to get board-data --> (lists -> tasks)
   useEffect(() => {
     let cancelled = false;
-    if (boardId && userId) {
-      const getBoardData = async (boardId) => {
-        try {
-          const url = `http://localhost:8080/api/list/lists/${boardId}`;
-          const configObj = {
-            withCredentials: true,
+
+    // getting board-data
+    const getBoardData = async (boardId) => {
+      try {
+        const url = `http://localhost:8080/api/list/lists/${boardId}`;
+        const configObj = {
+          withCredentials: true,
+        };
+        const response = await axios.get(url, configObj);
+
+        if (cancelled) return;
+
+        const boardLists = response.data.data;
+
+        const updatedBoardLists = boardLists.map((list) => {
+          const updatedList = {
+            ...list,
+            cards: list.cards?.map((card) => ({ ...card })) || [], // deep copy of cards
+            canEdit: userId === list.userId,
           };
-          const response = await axios.get(url, configObj);
+          return updatedList;
+        });
 
-          if (cancelled) return;
+        setDataLists(updatedBoardLists);
 
-          const boardLists = response.data.data;
-
-          const updatedBoardLists = boardLists.map((list) => {
-            const updatedList = {
-              ...list,
-              cards: list.cards?.map((card) => ({ ...card })) || [], // deep copy of cards
-              canEdit: userId === list.userId,
-            };
-            return updatedList;
-          });
-
-          setDataLists(updatedBoardLists);
-
-          console.log("board-lists fetched: ", updatedBoardLists);
-        } catch (error) {
-          console.log("Failed to get board-data: ", error);
-        }
-      };
-      getBoardData(boardId);
-
-      // create stomp client
-      if (!stompRef.current) {
-        stompRef.current = createStompClient();
+        console.log("board-lists fetched: ", updatedBoardLists);
+      } catch (error) {
+        console.log("Failed to get board-data: ", error);
       }
-      const client = stompRef.current;
+    };
 
-      // subscription topic destination
-      const destination = `/topic/board.${boardId}`;
-      let subscription = null;
+    // checking server-health & subscribing
+    const healthCheckAndSubscribe = async () => {
+      try {
+        // checking server health ---> if its active or not
+        const response = await axios.get(
+          "http://localhost:8080/api/health/check"
+        );
 
-      const subscribe = () => {
-        try {
-          subscription = client.subscribe(destination, (msg) => {
+        if (response.status === 200 && !cancelled) {
+          console.log("server is up & running");
+
+          // subscribe process
+          // create stomp client
+          if (!stompRef.current) {
+            stompRef.current = createStompClient();
+          }
+          const client = stompRef.current;
+
+          // subscription topic destination
+          const destination = `/topic/board.${boardId}`;
+          let subscription = null;
+
+          const subscribe = () => {
             try {
-              console.log("full stomp msg sent by server: ", msg);
+              subscription = client.subscribe(destination, (msg) => {
+                try {
+                  console.log("full stomp msg sent by server: ", msg);
 
-              const evt = JSON.parse(msg.body);
-              console.log("event: ", evt);
-              // Example server payload:
-              // { type: "UPSERT", boardId, payload: { id, name, description }, version }
+                  const evt = JSON.parse(msg.body);
+                  console.log("event: ", evt);
+                  // Example server payload:
+                  // { type: "UPSERT", boardId, payload: { id, name, description }, version }
 
-              if (
-                evt?.type === "UPSERT" &&
-                parseInt(evt.boardId) === parseInt(boardId)
-              ) {
-                if (evt.payload?.name && evt.payload.name !== boardName) {
-                  setBoardName((prev) =>
-                    prev === evt.payload.name
-                      ? `${evt.payload.name} `
-                      : evt.payload.name
-                  );
-                }
+                  if (
+                    evt?.type === "UPSERT" &&
+                    parseInt(evt.boardId) === parseInt(boardId)
+                  ) {
+                    if (evt.payload?.name && evt.payload.name !== boardName) {
+                      setBoardName((prev) =>
+                        prev === evt.payload.name
+                          ? `${evt.payload.name} `
+                          : evt.payload.name
+                      );
+                    }
 
-                if (
-                  evt.payload?.description &&
-                  evt.payload.description !== boardDesc
-                ) {
-                  setBoardDesc((prev) =>
-                    prev === evt.payload.description
-                      ? `${evt.payload.description} `
-                      : evt.payload.description
-                  );
-                }
-              } else if (evt.type === "LIST_NAME_UPDATED") {
-                setDataLists((prev) => {
-                  const updatedBoardLists = [...prev];
+                    if (
+                      evt.payload?.description &&
+                      evt.payload.description !== boardDesc
+                    ) {
+                      setBoardDesc((prev) =>
+                        prev === evt.payload.description
+                          ? `${evt.payload.description} `
+                          : evt.payload.description
+                      );
+                    }
+                  } else if (evt.type === "LIST_NAME_UPDATED") {
+                    setDataLists((prev) => {
+                      const updatedBoardLists = [...prev];
 
-                  const listIdx = updatedBoardLists.findIndex(
-                    (list) => list.id === parseInt(evt.payload.id)
-                  );
+                      const listIdx = updatedBoardLists.findIndex(
+                        (list) => list.id === parseInt(evt.payload.id)
+                      );
 
-                  if (listIdx !== -1) {
-                    updatedBoardLists[listIdx] = {
-                      ...updatedBoardLists[listIdx],
-                      name: evt.payload.name,
-                    };
-                  } else {
-                    console.log(
-                      "List with ID not found in dataLists:",
-                      evt.payload.id
-                    );
+                      if (listIdx !== -1) {
+                        updatedBoardLists[listIdx] = {
+                          ...updatedBoardLists[listIdx],
+                          name: evt.payload.name,
+                        };
+                      } else {
+                        console.log(
+                          "List with ID not found in dataLists:",
+                          evt.payload.id
+                        );
+                      }
+
+                      return updatedBoardLists;
+                    });
                   }
 
-                  return updatedBoardLists;
-                });
-              }
-
-              // You can expand this to handle list/card updates:
-              // if (evt.type === "LISTS_UPDATED") { ...patch setDataLists... }
-              // if (evt.type === "CARD_MOVED") { ...patch setDataLists... }
+                  // You can expand this to handle list/card updates:
+                  // if (evt.type === "LISTS_UPDATED") { ...patch setDataLists... }
+                  // if (evt.type === "CARD_MOVED") { ...patch setDataLists... }
+                } catch (err) {
+                  console.error("Bad board event:", err, msg.body);
+                }
+              });
             } catch (err) {
-              console.error("Bad board event:", err, msg.body);
+              console.error("Subscribe failed:", err);
             }
-          });
-        } catch (err) {
-          console.error("Subscribe failed:", err);
+          };
+
+          // check if client is connected or not
+          // based on that subscribe or wait for connect
+          if (client.connected) {
+            subscribe();
+          } else {
+            const prevOnConnect = client.onConnect;
+            client.onConnect = (frame) => {
+              subscribe();
+              prevOnConnect?.(frame);
+            };
+          }
         }
-      };
-
-      // check if client is connected or not
-      // based on that subscribe or wait for connect
-      if (client.connected) {
-        subscribe();
-      } else {
-        const prevOnConnect = client.onConnect;
-        client.onConnect = (frame) => {
-          subscribe();
-          prevOnConnect?.(frame);
-        };
+      } catch (error) {
+        console.error(
+          "Server health check failed. Skipping WebSocket connect."
+        );
       }
+    };
 
-      // cleanup on unmount / board change
-      return () => {
-        cancelled = true;
-        try {
-          subscription?.unsubscribe();
-        } catch {}
-      };
+    if (boardId && userId) {
+      getBoardData(boardId);
+      healthCheckAndSubscribe();
     }
+
+    // cleanup on unmount / board change
+    return () => {
+      cancelled = true;
+      try {
+        subscription?.unsubscribe();
+        stompRef.current?.deactivate();
+      } catch {}
+    };
   }, [boardId, userId, setDataLists, setBoardName, setBoardDesc]);
 
   // to update list-name
