@@ -35,6 +35,12 @@ public class BoardList {
     
     @Column(name = "created_by")
 	private int createdBy;
+    
+    @Column(name = "updated_by")
+	private int updatedBy;
+    
+    @Column(name = "updated_date", updatable = false, insertable = false)
+    private LocalDateTime updatedDate;
 
     public int getCreatedBy() {
 		return createdBy;
@@ -42,6 +48,14 @@ public class BoardList {
 
 	public void setCreatedBy(int createdBy) {
 		this.createdBy = createdBy;
+	}
+
+	public int getUpdatedBy() {
+		return createdBy;
+	}
+
+	public void setUpdatedBy(int updatedBy) {
+		this.updatedBy = updatedBy;
 	}
 
 	public Integer getId() {

@@ -173,6 +173,7 @@ const WorkBoard = () => {
                   // Example server payload:
                   // { type: "UPSERT", boardId, payload: { id, name, description }, version }
 
+                  console.log(`\n Event: ${evt.type} \n`);
                   if (
                     evt?.type === "UPSERT" &&
                     parseInt(evt.boardId) === parseInt(boardId)
@@ -195,7 +196,7 @@ const WorkBoard = () => {
                           : evt.payload.description
                       );
                     }
-                  } else if (evt.type === "LIST_NAME_UPDATED") {
+                  } else if (evt.type === "LIST_UPDATED") {
                     setDataLists((prev) => {
                       const updatedBoardLists = [...prev];
 
@@ -213,6 +214,22 @@ const WorkBoard = () => {
                           "List with ID not found in dataLists:",
                           evt.payload.id
                         );
+                      }
+
+                      return updatedBoardLists;
+                    });
+                  } else if (evt.type === "LIST_ADDED") {
+                    const newList = evt.payload;
+                    setDataLists((prev) => {
+                      const updatedBoardLists = [...prev];
+
+                      let listIdx = -1;
+                      listIdx = updatedBoardLists.findIndex(
+                        (list) => list.id === parseInt(evt.payload.id)
+                      );
+
+                      if (listIdx === -1) {
+                        updatedBoardLists.push(evt.payload);
                       }
 
                       return updatedBoardLists;
@@ -421,6 +438,14 @@ const WorkBoard = () => {
     }
   };
 
+  const updateListNameLocally = (updatedName, id) => {
+    setDataLists((prevLists) =>
+      prevLists.map((list) =>
+        list.id === id ? { ...list, name: updatedName } : list
+      )
+    );
+  };
+
   const saveTaskName = async (taskNameObj) => {
     console.log("taskName obj.: ", taskNameObj);
   };
@@ -482,8 +507,15 @@ const WorkBoard = () => {
               cards: [],
             };
 
-            // adding newly added list to the state var.
-            updatedLists.push(newList);
+            let listIdx = -1;
+            listIdx = updatedLists.findIndex(
+              (list) => list.id === parseInt(newList.id)
+            );
+
+            if (listIdx === -1) {
+              // adding newly added list to the state var.
+              updatedLists.push(newList);
+            }
           }
           console.log("inside saveOrUpdateList, updatedLists: ", updatedLists);
           return updatedLists;
@@ -1029,6 +1061,9 @@ const WorkBoard = () => {
                     type="text"
                     value={list.name}
                     onChange={(e) => {
+                      updateListNameLocally(e.target.value, list.id);
+                    }}
+                    onBlur={(e) => {
                       handleListNameChange(e.target.value, list.id);
                     }}
                   />

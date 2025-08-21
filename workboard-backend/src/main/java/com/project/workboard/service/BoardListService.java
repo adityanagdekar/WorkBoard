@@ -23,7 +23,7 @@ import com.project.workboard.dto.SavedTaskCardDTO;
 import com.project.workboard.dto.SavedTaskMemberDTO;
 import com.project.workboard.dto.TaskCardDTO;
 import com.project.workboard.dto.UpdatedBoardSummaryDTO;
-import com.project.workboard.dto.UpdatedListSummaryDTO;
+import com.project.workboard.dto.ListSummaryDTO;
 import com.project.workboard.entity.Board;
 import com.project.workboard.entity.BoardList;
 import com.project.workboard.entity.TaskCard;
@@ -155,6 +155,8 @@ public class BoardListService {
 			boardList.setName(boardListData.getName());
 			// setting list-createdBy
 			boardList.setCreatedBy(boardListData.getUserId());
+			// setting list-updatedBy
+			boardList.setUpdatedBy(boardListData.getUserId());
 
 			// Getting board obj.
 			Optional<Board> boardOpt = boardRepository.findById(boardListData.getBoardId());
@@ -220,6 +222,16 @@ public class BoardListService {
 			System.out.println(
 					"Saved boardList with id: " + savedBoardList.getId() + " & name: " + savedBoardList.getName());
 
+			if (savedBoardList.getId() > 0) {
+
+				// NOTIFYING OTHER USERS ABOUT THE UPDATE
+				// ListSummaryDTO listSummary = new ListSummaryDTO(savedBoardList.getId(), savedBoardList.getName());
+
+				// BROADCAST to all viewers of this board
+				notifyService.notifyBoardViewers(savedBoardList.getBoard().getId(), savedBoardList,
+						BoardEvent.Type.LIST_ADDED, messagingTemplate);
+			}
+
 			return savedBoardList;
 
 		} catch (IllegalArgumentException e) {
@@ -232,8 +244,9 @@ public class BoardListService {
 	}
 
 	private BoardList updateBoardListData(BoardListDTO boardListData) {
-		System.out.println("Inside BoardListService :: updateBoardListData, boardListData: "+boardListData.toString());
-		
+		System.out
+				.println("Inside BoardListService :: updateBoardListData, boardListData: " + boardListData.toString());
+
 		Optional<BoardList> boardListOpt = boardListRepository.findById(boardListData.getId());
 		if (boardListOpt.isEmpty()) {
 			throw new IllegalArgumentException("BoardList not found");
@@ -245,8 +258,8 @@ public class BoardListService {
 			boardList.setName(boardListData.getName());
 			boardListChanged = true;
 		}
-		if (boardList.getCreatedBy() != boardListData.getUserId()) {
-			boardList.setCreatedBy(boardListData.getUserId());
+		if (boardList.getUpdatedBy() != boardListData.getUserId()) {
+			boardList.setUpdatedBy(boardListData.getUserId());
 			boardListChanged = true;
 		}
 
@@ -305,6 +318,15 @@ public class BoardListService {
 			boardList = boardListRepository.save(boardList);
 			System.out.println(
 					"\n Saved updates to boardList with id: " + boardList.getId() + " & name: " + boardList.getName());
+			if (boardList.getId() > 0) {
+
+				// NOTIFYING OTHER USERS ABOUT THE UPDATE
+				ListSummaryDTO listSummary = new ListSummaryDTO(boardList.getId(), boardList.getName());
+
+				// BROADCAST to all viewers of this board
+				notifyService.notifyBoardViewers(boardList.getBoard().getId(), listSummary,
+						BoardEvent.Type.LIST_UPDATED, messagingTemplate);
+			}
 		} else {
 			System.out.println(
 					"\n No changes to boardList with id: " + boardList.getId() + " & name: " + boardList.getName());
@@ -321,27 +343,18 @@ public class BoardListService {
 			// Saving board-list
 			SavedBoardListDTO savedBoardListData = new SavedBoardListDTO();
 			BoardList savedBoardList;
-			
+
 			if (boardListData.getId() > 0) {
-	            System.out.println("Update scenario for board-list id: " + boardListData.getId());
-	            savedBoardList = updateBoardListData(boardListData);
-	        } else {
-	            System.out.println("Insert scenario for new board-list");
-	            savedBoardList = saveBoardListData(boardListData);
-	        }
+				System.out.println("Update scenario for board-list id: " + boardListData.getId());
+				savedBoardList = updateBoardListData(boardListData);
+			} else {
+				System.out.println("Insert scenario for new board-list");
+				savedBoardList = saveBoardListData(boardListData);
+			}
 
 			if (savedBoardList == null) {
 				return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Board-list data received is invalid");
 			} else {
-
-				// NOTIFYING OTHER USERS ABOUT THE UPDATE
-				UpdatedListSummaryDTO listSummary = new UpdatedListSummaryDTO(savedBoardList.getId(), savedBoardList.getName());
-				
-				// BROADCAST to all viewers of this board
-				notifyService.notifyBoardViewers(savedBoardList.getBoard().getId(), listSummary, 
-						BoardEvent.Type.LIST_NAME_UPDATED,
-						messagingTemplate);
-				
 				// Setting SavedBoardListDTO obj.
 				savedBoardListData.setId(savedBoardList.getId());
 				savedBoardListData.setBoardId(savedBoardList.getBoard().getId());
