@@ -15,6 +15,7 @@ import com.project.workboard.entity.TaskCard;
 public interface TaskCardRepository extends JpaRepository<TaskCard, Integer>{
 	@Query(value = """
 		    SELECT id as id, 
+		    list_id as list_id,
 		    name as name, 
 		    description as desc, 
 		    is_active as isActive, 

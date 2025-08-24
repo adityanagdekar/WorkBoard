@@ -106,6 +106,63 @@ const WorkBoard = () => {
     if (location.state?.boardDesc) setBoardDesc(location.state.boardDesc);
   }, [location.state?.boardName, location.state?.boardDesc]);
 
+  const updateBoardDetails = (data) => {
+    console.log("inside updateBoardDetails");
+    if (data?.name && data?.name !== boardName) {
+      setBoardName((prev) =>
+        prev === data.name ? `${data.name} ` : data.name
+      );
+    }
+
+    if (data?.description && data.description !== boardDesc) {
+      setBoardDesc((prev) =>
+        prev === data.description ? `${data.description} ` : data.description
+      );
+    }
+  };
+
+  const updateDataLists_withNewName = (data) => {
+    console.log("inside updateDataLists_withNewName");
+    setDataLists((prev) => {
+      const updatedBoardLists = [...prev];
+
+      const listIdx = updatedBoardLists.findIndex(
+        (list) => list.id === parseInt(data.id)
+      );
+
+      if (listIdx !== -1) {
+        updatedBoardLists[listIdx] = {
+          ...updatedBoardLists[listIdx],
+          name: data.name,
+        };
+      } else {
+        console.log("List with ID not found in dataLists:", data.id);
+      }
+
+      return updatedBoardLists;
+    });
+  };
+
+  const updateDataLists_withNewList = (data) => {
+    console.log("inside updateDataLists_withNewList");
+    setDataLists((prev) => {
+      const updatedBoardLists = [...prev];
+
+      let listIdx = -1;
+      listIdx = updatedBoardLists.findIndex(
+        (list) => list.id === parseInt(data.id)
+      );
+
+      if (listIdx === -1) {
+        updatedBoardLists.push(data);
+      }
+
+      return updatedBoardLists;
+    });
+  };
+
+  const updateDataLists_withNewTask = (data) => {};
+
   // to get board-data --> (lists -> tasks)
   useEffect(() => {
     let cancelled = false;
@@ -135,8 +192,10 @@ const WorkBoard = () => {
         setDataLists(updatedBoardLists);
 
         console.log("board-lists fetched: ", updatedBoardLists);
+        addToast("Board data fetched successfully", "success");
       } catch (error) {
         console.log("Failed to get board-data: ", error);
+        addToast("Failed to get the board data", "error");
       }
     };
 
@@ -174,66 +233,19 @@ const WorkBoard = () => {
                   // { type: "UPSERT", boardId, payload: { id, name, description }, version }
 
                   console.log(`\n Event: ${evt.type} \n`);
-                  if (
-                    evt?.type === "UPSERT" &&
-                    parseInt(evt.boardId) === parseInt(boardId)
-                  ) {
-                    if (evt.payload?.name && evt.payload.name !== boardName) {
-                      setBoardName((prev) =>
-                        prev === evt.payload.name
-                          ? `${evt.payload.name} `
-                          : evt.payload.name
-                      );
-                    }
-
+                  if (evt.payload !== undefined) {
                     if (
-                      evt.payload?.description &&
-                      evt.payload.description !== boardDesc
+                      evt?.type === "UPSERT" &&
+                      parseInt(evt.boardId) === parseInt(boardId)
                     ) {
-                      setBoardDesc((prev) =>
-                        prev === evt.payload.description
-                          ? `${evt.payload.description} `
-                          : evt.payload.description
-                      );
+                      updateBoardDetails(evt.payload);
+                    } else if (evt.type === "LIST_NAME_UPDATED") {
+                      updateDataLists_withNewName(evt.payload);
+                    } else if (evt.type === "LIST_ADDED") {
+                      updateDataLists_withNewList(evt.payload);
+                    } else if (evt.type === "TASK_ADDED") {
+                      updateDataLists_withNewTask(evt.payload);
                     }
-                  } else if (evt.type === "LIST_UPDATED") {
-                    setDataLists((prev) => {
-                      const updatedBoardLists = [...prev];
-
-                      const listIdx = updatedBoardLists.findIndex(
-                        (list) => list.id === parseInt(evt.payload.id)
-                      );
-
-                      if (listIdx !== -1) {
-                        updatedBoardLists[listIdx] = {
-                          ...updatedBoardLists[listIdx],
-                          name: evt.payload.name,
-                        };
-                      } else {
-                        console.log(
-                          "List with ID not found in dataLists:",
-                          evt.payload.id
-                        );
-                      }
-
-                      return updatedBoardLists;
-                    });
-                  } else if (evt.type === "LIST_ADDED") {
-                    const newList = evt.payload;
-                    setDataLists((prev) => {
-                      const updatedBoardLists = [...prev];
-
-                      let listIdx = -1;
-                      listIdx = updatedBoardLists.findIndex(
-                        (list) => list.id === parseInt(evt.payload.id)
-                      );
-
-                      if (listIdx === -1) {
-                        updatedBoardLists.push(evt.payload);
-                      }
-
-                      return updatedBoardLists;
-                    });
                   }
 
                   // You can expand this to handle list/card updates:
@@ -862,14 +874,16 @@ const WorkBoard = () => {
       "\n cardObj: ",
       cardObj
     );
-    <div className="W"></div>;
 
-    const membersMap = cardObj.members?.reduce((map, member) => {
-      if (member.hasOwnProperty("id")) map[member.id] = member.role;
-      else if (member.hasOwnProperty("userId"))
-        map[member.userId] = member.role;
-      return map;
-    }, {});
+    let membersMap = {};
+    if (cardObj.hasOwnProperty("members")) {
+      membersMap = cardObj.members?.reduce((map, member) => {
+        if (member.hasOwnProperty("id")) map[member.id] = member.role;
+        else if (member.hasOwnProperty("userId"))
+          map[member.userId] = member.role;
+        return map;
+      }, {});
+    }
 
     console.log("membersMap: ", membersMap);
 

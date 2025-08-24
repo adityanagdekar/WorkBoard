@@ -9,25 +9,28 @@ public class SavedTaskCardDTO {
 	private boolean isActive;
 	private boolean isCompleted;
 	private SavedTaskMemberDTO[] members;
+	private int listId;
 //	private TaskMemberData[] members;
 	
 	public SavedTaskCardDTO() {}
 	
-	public SavedTaskCardDTO (int taskId, String name, 
+	public SavedTaskCardDTO (int taskId, int listId, String name, 
 			String desc, boolean isActive, boolean isCompleted) {
 		super();
 		this.id = taskId;
+		this.listId = listId;
 		this.name = name;
 		this.description = desc;
 		this.isActive = isActive;
 		this.isCompleted = isCompleted;
 	}
 	
-	public SavedTaskCardDTO(int taskId, String name, 
+	public SavedTaskCardDTO(int taskId, int listId, String name, 
 			String desc, boolean isActive, 
 			boolean isCompleted, SavedTaskMemberDTO[] members) {
 		super();
 		this.id = taskId;
+		this.listId = listId;
 		this.name = name;
 		this.description = desc;
 		this.isActive = isActive;
@@ -41,6 +44,14 @@ public class SavedTaskCardDTO {
 
 	public void setId(int taskId) {
 		this.id = taskId;
+	}
+	
+	public int getListId() {
+		return id;
+	}
+
+	public void setListId(int ListId) {
+		this.id = listId;
 	}
 
 	public SavedTaskMemberDTO[] getMembers() {

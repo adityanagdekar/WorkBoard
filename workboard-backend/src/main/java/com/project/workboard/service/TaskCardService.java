@@ -11,10 +11,13 @@ import java.util.stream.Collectors;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.project.workboard.dto.ApiResponseDTO;
+import com.project.workboard.dto.BoardEvent;
+import com.project.workboard.dto.ListSummaryDTO;
 import com.project.workboard.dto.SavedTaskCardDTO;
 import com.project.workboard.dto.TaskDataDTO;
 import com.project.workboard.dto.SavedTaskMemberDTO;
@@ -42,6 +45,12 @@ public class TaskCardService {
 
 	@Autowired
 	private TaskMemberRepository taskMemberRepository;
+
+	@Autowired
+	private SimpMessagingTemplate messagingTemplate;
+	
+	@Autowired
+	private NotifyService notifyService;
 
 	public ResponseEntity<?> saveTaskCard(TaskDataDTO taskData) {
 		System.out.println("Inside TaskCardService :: saveTaskCard, taskData: " + taskData.toString() + "\n");
@@ -88,6 +97,7 @@ public class TaskCardService {
 
 				// Setting SavedTaskCardDTO obj.
 				savedTaskCardDTO.setId(taskCardId);
+				savedTaskCardDTO.setListId(taskCard.getBoardList().getId());
 				savedTaskCardDTO.setName(savedTaskCard.getName());
 				savedTaskCardDTO.setDescription(savedTaskCard.getDescription());
 				savedTaskCardDTO.setActive(savedTaskCard.isActive());
@@ -143,6 +153,11 @@ public class TaskCardService {
 
 					// once we have processed all task-members, save the arr. of task-members
 					savedTaskCardDTO.setMembers(taskMemberDataList.toArray(new SavedTaskMemberDTO[0]));
+					
+					// NOTIFYING OTHER USERS ABOUT THE UPDATE
+					// BROADCAST to all viewers of this board
+					notifyService.notifyBoardViewers(boardList.getBoard().getId(), savedTaskCardDTO,
+							BoardEvent.Type.TASK_ADDED, messagingTemplate);
 
 				} catch (Exception e) {
 					System.out.println("Exception while saving task-member: " + e.getMessage());
@@ -358,6 +373,11 @@ public class TaskCardService {
 				System.out.println(
 						"Saved updates to taskCard with id: " + 
 								taskCard.getId() + " & name: " + taskCard.getName());
+				
+				// NOTIFYING OTHER USERS ABOUT THE UPDATE
+				// BROADCAST to all viewers of this board
+				notifyService.notifyBoardViewers(taskCard.getBoardList().getBoard().getId(), taskDataDTO,
+						BoardEvent.Type.TASK_UPDATED, messagingTemplate);
 			} else {
 				System.out.println(
 						"No changes were made to taskCard with id: " + 

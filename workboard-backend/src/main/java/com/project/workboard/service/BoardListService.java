@@ -325,7 +325,7 @@ public class BoardListService {
 
 				// BROADCAST to all viewers of this board
 				notifyService.notifyBoardViewers(boardList.getBoard().getId(), listSummary,
-						BoardEvent.Type.LIST_UPDATED, messagingTemplate);
+						BoardEvent.Type.LIST_NAME_UPDATED, messagingTemplate);
 			}
 		} else {
 			System.out.println(
