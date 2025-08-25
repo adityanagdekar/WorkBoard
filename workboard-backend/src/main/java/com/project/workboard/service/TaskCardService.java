@@ -97,6 +97,9 @@ public class TaskCardService {
 
 				// Setting SavedTaskCardDTO obj.
 				savedTaskCardDTO.setId(taskCardId);
+				System.out.println("Task card with id: "+taskCardId
+						+" is created for list with id: "+taskCard.getBoardList().getId());
+				
 				savedTaskCardDTO.setListId(taskCard.getBoardList().getId());
 				savedTaskCardDTO.setName(savedTaskCard.getName());
 				savedTaskCardDTO.setDescription(savedTaskCard.getDescription());

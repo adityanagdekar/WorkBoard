@@ -47,11 +47,11 @@ public class SavedTaskCardDTO {
 	}
 	
 	public int getListId() {
-		return id;
+		return listId;
 	}
 
-	public void setListId(int ListId) {
-		this.id = listId;
+	public void setListId(int listId) {
+		this.listId = listId;
 	}
 
 	public SavedTaskMemberDTO[] getMembers() {

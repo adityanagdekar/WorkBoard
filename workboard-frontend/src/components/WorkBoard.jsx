@@ -161,7 +161,36 @@ const WorkBoard = () => {
     });
   };
 
-  const updateDataLists_withNewTask = (data) => {};
+  /*
+  {
+    "id": 50,
+    "name": "get list of unused items",
+    "description": "get list of unused items",
+    "members": [
+        {
+            "userId": 1,
+            "role": 0
+        },
+        {
+            "userId": 10,
+            "role": 1
+        }
+    ],
+    "listId": 49,
+    "isActive": true,
+    "isCompleted": false
+}
+  */
+
+  const updateDataLists_withNewTask = (data) => {
+    console.log("inside updateDataLists_withNewTask, data: ", data);
+
+    const listIdx = dataLists.findIndex(
+      (list) => list.id === parseInt(data.listId)
+    );
+    console.log("inside updateDataLists_withNewTask, listIdx: ", listIdx);
+    addTaskToState(listIdx, data, 0);
+  };
 
   // to get board-data --> (lists -> tasks)
   useEffect(() => {
@@ -199,69 +228,68 @@ const WorkBoard = () => {
       }
     };
 
-    // checking server-health & subscribing
-    const healthCheckAndSubscribe = async () => {
+    if (boardId && userId) {
+      getBoardData(boardId);
+    }
+
+    // cleanup on unmount / board change
+    return () => {
+      cancelled = true;
+    };
+  }, [boardId, userId]);
+
+  // to subscribe & get real-time websockets data updates
+  useEffect(() => {
+    // there's no use of this func. if we dont have boardId, userId & dataLists
+    if (!boardId || !userId || dataLists.length === 0) return;
+
+    let subscription;
+
+    // subscribe to get updates
+    const subscribeToBoardUpdates = async () => {
       try {
-        // checking server health ---> if its active or not
         const response = await axios.get(
           "http://localhost:8080/api/health/check"
         );
 
-        if (response.status === 200 && !cancelled) {
-          console.log("server is up & running");
-
-          // subscribe process
-          // create stomp client
+        if (response.status === 200) {
           if (!stompRef.current) {
             stompRef.current = createStompClient();
           }
-          const client = stompRef.current;
 
-          // subscription topic destination
+          const client = stompRef.current;
           const destination = `/topic/board.${boardId}`;
-          let subscription = null;
 
           const subscribe = () => {
-            try {
-              subscription = client.subscribe(destination, (msg) => {
-                try {
-                  console.log("full stomp msg sent by server: ", msg);
+            subscription = client.subscribe(destination, (msg) => {
+              try {
+                const evt = JSON.parse(msg.body);
+                console.log("WebSocket Event: ", evt);
 
-                  const evt = JSON.parse(msg.body);
-                  console.log("event: ", evt);
-                  // Example server payload:
-                  // { type: "UPSERT", boardId, payload: { id, name, description }, version }
-
-                  console.log(`\n Event: ${evt.type} \n`);
-                  if (evt.payload !== undefined) {
-                    if (
-                      evt?.type === "UPSERT" &&
-                      parseInt(evt.boardId) === parseInt(boardId)
-                    ) {
+                if (evt?.type && evt?.payload) {
+                  switch (evt.type) {
+                    case "UPSERT":
                       updateBoardDetails(evt.payload);
-                    } else if (evt.type === "LIST_NAME_UPDATED") {
+                      break;
+                    case "LIST_NAME_UPDATED":
                       updateDataLists_withNewName(evt.payload);
-                    } else if (evt.type === "LIST_ADDED") {
+                      break;
+                    case "LIST_ADDED":
                       updateDataLists_withNewList(evt.payload);
-                    } else if (evt.type === "TASK_ADDED") {
+                      break;
+                    case "TASK_ADDED":
                       updateDataLists_withNewTask(evt.payload);
-                    }
+                      break;
+                    default:
+                      break;
                   }
-
-                  // You can expand this to handle list/card updates:
-                  // if (evt.type === "LISTS_UPDATED") { ...patch setDataLists... }
-                  // if (evt.type === "CARD_MOVED") { ...patch setDataLists... }
-                } catch (err) {
-                  console.error("Bad board event:", err, msg.body);
                 }
-              });
-            } catch (err) {
-              console.error("Subscribe failed:", err);
-            }
+              } catch (err) {
+                console.error("Bad board event:", err, msg.body);
+              }
+            });
           };
 
-          // check if client is connected or not
-          // based on that subscribe or wait for connect
           if (client.connected) {
             subscribe();
           } else {
@@ -272,27 +300,21 @@ const WorkBoard = () => {
             };
           }
         }
-      } catch (error) {
-        console.error(
-          "Server health check failed. Skipping WebSocket connect."
-        );
+      } catch (err) {
+        console.error("Health check failed:", err);
       }
     };
 
-    if (boardId && userId) {
-      getBoardData(boardId);
-      healthCheckAndSubscribe();
-    }
+    subscribeToBoardUpdates();
 
-    // cleanup on unmount / board change
+    // cleanup unmount / board change
     return () => {
-      cancelled = true;
       try {
         subscription?.unsubscribe();
         stompRef.current?.deactivate();
       } catch {}
     };
-  }, [boardId, userId, setDataLists, setBoardName, setBoardDesc]);
+  }, [boardId, userId, dataLists]);
 
   // to update list-name
   useEffect(() => {
@@ -607,48 +629,64 @@ const WorkBoard = () => {
   };
 
   const addTaskToState = (listIdx, newCard, flag) => {
+    if (listIdx === -1)
+      dataLists.forEach((list, idx) => {
+        if (list.id === newCard.listId) listIdx = idx;
+      });
+
+    console.log("dataLists: ", dataLists);
+
     console.log(
       "inside addTaskToState, newCard: ",
       newCard,
-      "\n selectedListIdx: ",
-      listIdx
+      "\n listIdx: ",
+      listIdx,
+      "\n flag: ",
+      flag
     );
 
-    // update the state
-    setDataLists((prev) => {
-      const updatedLists = prev.map((list, idx) => {
-        if (idx !== listIdx) return { ...list };
+    try {
+      // update the state
+      setDataLists((prev) => {
+        const updatedLists = prev.map((list, idx) => {
+          if (idx !== listIdx) return { ...list };
 
-        const existingCards = list.cards ? [...list.cards] : [];
-        if (flag === 0) {
-          // inserting a new card
-          existingCards.push(newCard);
-        } else if (flag === 1) {
-          // update and existing card
-          const cardIdx = existingCards.findIndex(
-            (card) => card.id === newCard.id
-          );
-          if (cardIdx !== -1) {
-            existingCards[cardIdx] = { ...newCard };
-          } else if (cardIdx === -1) {
-            // Reqd. card not found, fallback to original list
-            console.warn("Card to update not found in list:", newCard.id);
-            return list;
+          const existingCards = list.cards ? [...list.cards] : [];
+          if (flag === 0) {
+            // inserting a new card
+            existingCards.push(newCard);
+          } else if (flag === 1) {
+            // update and existing card
+            const cardIdx = existingCards.findIndex(
+              (card) => card.id === newCard.id
+            );
+            if (cardIdx !== -1) {
+              existingCards[cardIdx] = { ...newCard };
+            } else if (cardIdx === -1) {
+              // Reqd. card not found, fallback to original list
+              console.warn("Card to update not found in list:", newCard.id);
+              return list;
+            }
           }
-        }
 
-        // adding all changes
-        const updatedList = {
-          ...list,
-          cards: existingCards,
-        };
+          // adding all changes
+          const updatedList = {
+            ...list,
+            cards: existingCards,
+          };
 
-        return updatedList;
+          return updatedList;
+        });
+
+        console.log("updatedLists: ", updatedLists);
+        return updatedLists;
       });
 
-      console.log("updatedLists: ", updatedLists);
-      return updatedLists;
-    });
+      if (flag === 0) addToast("Task-card added", "success");
+      else if (flag === 1) addToast("Task-card updated", "success");
+    } catch (error) {
+      addToast("Error with adding Task-card", "error");
+    }
   };
 
   /* TASK-CARD OBj.

@@ -129,17 +129,14 @@ const AddTaskModal = ({
   };
 
   const handleTaskNameChange = (name) => {
-    console.log("task name changed: ", name);
     setTaskName((prev) => name);
   };
 
   const handleTaskDescChange = (desc) => {
-    console.log("task desc. changed: ", desc);
     setTaskDesc((prev) => desc);
   };
 
   const saveTaskBtnOnClick = () => {
-    console.log("save btn clicked");
     const loggedIn_userId = JSON.parse(localStorage.getItem("user")).id;
 
     const selectedMembers = taskMembers.filter(
@@ -171,11 +168,9 @@ const AddTaskModal = ({
             // this means card already exists &
             // only updates are needed to be saved in the state
             flag = 1;
-            addToast("Task-card updated successfully", "success");
           } else {
             // this means card was created & needs to be added to state
             flag = 0;
-            addToast("Task-card added successfully", "success");
           }
 
           // adding newCard to state to render it
